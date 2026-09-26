@@ -1,0 +1,9 @@
+---
+import { site } from "../lib/site";
+import Brand from "./Brand.astro";
+---
+<footer class="site-footer wrap">
+  <Brand />
+  <p>A little more thought. A little less noise.</p>
+  <nav aria-label="Footer navigation"><a href={site.license}>Open source</a><a href={site.potion}>Made by Potion <span aria-hidden="true">↗</span></a></nav>
+</footer>

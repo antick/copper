@@ -1,0 +1,39 @@
+---
+import { getImage } from "astro:assets";
+import editor from "../../../../docs/images/editor.png";
+import icon from "../../../desktop/public/icon.png";
+import { site } from "../lib/site";
+import "../styles/global.css";
+
+const socialImage = await getImage({
+  src: editor,
+  width: 1200,
+  format: "webp",
+});
+const favicon = await getImage({ src: icon, width: 64, format: "png" });
+const touchIcon = await getImage({ src: icon, width: 180, format: "png" });
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{site.title}</title>
+    <meta name="description" content={site.description} />
+    <link rel="canonical" href={site.url} />
+    <link rel="icon" type="image/png" href={favicon.src} />
+    <link rel="apple-touch-icon" href={touchIcon.src} />
+    <meta name="theme-color" content="#f8f6f2" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={site.title} />
+    <meta property="og:description" content={site.description} />
+    <meta property="og:url" content={site.url} />
+    <meta property="og:image" content={new URL(socialImage.src, site.url).href} />
+    <meta property="og:image:alt" content="Copper's Markdown workspace in the Linen theme" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+  </body>
+</html>

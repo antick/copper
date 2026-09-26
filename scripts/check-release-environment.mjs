@@ -29,4 +29,4 @@ const active = await Promise.all(
 assertReleaseProtections(environment, policies, active, process.env.GITHUB_REF);
 console.log("Release environment and tag safeguards verified");
 
-import { assertReleaseProtections } from "./release-policy.mjs";
+import { assertReleaseProtections } from "../apps/desktop/scripts/release-policy.mjs";

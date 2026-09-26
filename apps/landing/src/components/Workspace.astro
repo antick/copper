@@ -1,0 +1,33 @@
+---
+import { Image } from "astro:assets";
+import settings from "../../../../docs/images/settings.png";
+import { features } from "../lib/site";
+---
+<section id="workspace" class="workspace wrap section-space" aria-labelledby="workspace-title">
+  <div class="section-heading">
+    <p class="eyebrow">Less managing. More making.</p>
+    <h2 id="workspace-title">From a passing thought<br />to something <em>worth keeping.</em></h2>
+    <p>A notebook when you need to think.<br />A workspace when it’s time to do.</p>
+  </div>
+  <div class="feature-grid">
+    {features.map((feature) => (
+      <article class="feature">
+        <div class="feature-label"><span>{feature.number}</span><span>{feature.label}</span></div>
+        <h3>{feature.title}</h3>
+        <p>{feature.description}</p>
+      </article>
+    ))}
+  </div>
+  <div class="appearance-panel">
+    <div class="appearance-copy">
+      <p class="eyebrow">Feels like your space</p>
+      <h3>A softer place<br />to land.</h3>
+      <p>Warm light. Quiet dark. A palette for the way you work, from the first note of the day to the last idea at night.</p>
+      <div class="palette" aria-label="Copper includes warm light and dark color themes">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <span class="small-label">A little less noise. A little more you.</span>
+    </div>
+    <Image src={settings} alt="Copper Appearance settings showing its light and dark theme palettes" widths={[640, 960, 1440]} sizes="(max-width: 760px) 90vw, 680px" loading="lazy" />
+  </div>
+</section>

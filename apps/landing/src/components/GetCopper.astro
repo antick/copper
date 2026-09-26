@@ -1,0 +1,14 @@
+---
+import { site } from "../lib/site";
+import { ActionLink } from "./ActionLink";
+---
+<section id="get-copper" class="get-copper wrap" aria-labelledby="get-title">
+  <p class="eyebrow">Small beginnings welcome</p>
+  <h2 id="get-title">Make something<br /><em>of that thought.</em></h2>
+  <p>Copper is growing, one thoughtful detail at a time.<br />Explore the source, or run it on your own machine.</p>
+  <div class="hero-actions">
+    <ActionLink href={site.repository} label="Explore on GitHub" size="lg" />
+    <ActionLink href={site.setup} label="Build it locally" variant="outline" size="lg" />
+  </div>
+  <p class="release-note">Early development. Approved installers are on the way.<br /><a href={site.releases}>Follow releases <span aria-hidden="true">↗</span></a></p>
+</section>

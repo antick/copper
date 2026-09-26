@@ -1,0 +1,14 @@
+---
+import { questions } from "../lib/site";
+---
+<section id="questions" class="questions wrap section-space" aria-labelledby="questions-title">
+  <div><p class="eyebrow">A few things to know</p><h2 id="questions-title">Curious?<br /><em>Good.</em></h2></div>
+  <div class="question-list">
+    {questions.map(({ question, answer }) => (
+      <details>
+        <summary>{question}<span aria-hidden="true">+</span></summary>
+        <p>{answer}</p>
+      </details>
+    ))}
+  </div>
+</section>

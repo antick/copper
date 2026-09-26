@@ -35,12 +35,50 @@ pnpm dev
 
 That opens the native Copper window (Electron + Chromium). Vite serves the
 renderer on `http://localhost:1420`. On macOS, `pnpm dev` copies Electron into
-`.copper-electron/` and stamps it with Copper’s name and icon so the Dock and
+`apps/desktop/.copper-electron/` and stamps it with Copper’s name and icon so the Dock and
 menu bar are not the stock Electron atom. For the browser-only frontend, use
 `pnpm dev:web`.
 
 Use **Open Vault** and pick any folder of Markdown files. A small demo vault
-lives at `tests/fixtures/demo-vault` if you want sample notes.
+lives at `apps/desktop/tests/fixtures/demo-vault` if you want sample notes.
+
+## Landing page and workspace layout
+
+This is a pnpm + Turborepo monorepo:
+
+- `apps/desktop`: the existing Electron app, renderer, native tests, and packaging.
+- `apps/landing`: the Astro site for `copper.potion.sh`, with Tailwind CSS and shadcn/ui.
+- `docs` and `scripts`: shared documentation, screenshots, and repository security checks.
+
+```sh
+pnpm dev:landing  # http://127.0.0.1:4321
+pnpm dev:desktop  # native Copper app (also pnpm dev)
+pnpm dev:all      # both apps
+```
+
+`pnpm build` builds both apps without packaging or publishing.
+`pnpm build:landing` builds only the static site into `apps/landing/dist`;
+`pnpm preview` serves that build locally. `pnpm build:web` still builds the
+browser version of the desktop renderer.
+
+For a later Vercel deployment, import this repository with its root directory
+left at the repository root. `vercel.json` installs only the landing workspace
+with install scripts disabled, builds the site, and serves `apps/landing/dist`.
+It does not install or rebuild the desktop app. Connect `copper.potion.sh` only
+after local review. No deployment is part of this change.
+
+The landing page uses the existing product artwork and screenshots directly.
+Edit copy and links in `apps/landing/src/lib/site.ts`. The reusable shadcn Button
+is rendered as static HTML through Astro’s React integration; FAQ disclosure
+uses native HTML and needs no client JavaScript. Setup follows the
+[shadcn Astro guide](https://ui.shadcn.com/docs/installation/astro) and
+[Tailwind Astro guide](https://tailwindcss.com/docs/installation/framework-guides/astro).
+New dependencies are pinned to releases at least two days old. Turbo 2.11.3
+is used because 2.11.4 had not reached that age when this change was made.
+TypeScript 6.0.3 is the newest supported by Astro’s checker; TypeScript 7 is not
+yet compatible. Existing desktop dependency versions are preserved. Astro’s
+checker validates its templates; Biome checks their frontmatter and the other
+source files.
 
 ## Supported files and file safety
 
@@ -127,10 +165,10 @@ The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh
 pnpm install
-pnpm build
+pnpm package
 ```
 
-This produces local test artifacts under `release/` and never publishes them.
+This produces local test artifacts under `apps/desktop/release/` and never publishes them.
 Public releases require signing, notarization, and the checks in
 [SECURITY.md](SECURITY.md) and [docs/release/macos.md](docs/release/macos.md).
 

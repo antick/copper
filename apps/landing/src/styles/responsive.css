@@ -1,0 +1,133 @@
+@media (max-width: 900px) {
+  .section-heading > p:last-child {
+    position: static;
+    margin-top: 20px;
+  }
+  .ownership-grid {
+    gap: 35px;
+  }
+  .questions {
+    gap: 40px;
+  }
+  .appearance-panel {
+    gap: 20px;
+    padding-left: 25px;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    width: calc(100% - 36px);
+  }
+  .site-header {
+    height: 78px;
+  }
+  .desktop-nav {
+    display: none;
+  }
+  .brand {
+    font-size: 23px;
+  }
+  .hero-copy {
+    padding: 56px 0 38px;
+  }
+  .hero .eyebrow {
+    font-size: 9px;
+    margin-bottom: 25px;
+  }
+  .hero-description {
+    font-size: 15px;
+    padding-inline: 6px;
+  }
+  .desktop-break {
+    display: none;
+  }
+  .hero-actions {
+    flex-direction: column;
+    gap: 19px;
+  }
+  .hero-note {
+    font-size: 10px;
+  }
+  .hero-note span {
+    padding-inline: 7px;
+  }
+  .screenshot-mat {
+    padding: 0 10px 12px;
+    border-radius: 7px;
+  }
+  .mat-label {
+    height: 33px;
+    font-size: 9px;
+  }
+  .hero-figure > figcaption {
+    font-size: 7px;
+    letter-spacing: 0.08em;
+  }
+  .hero-figure > figcaption span:last-child {
+    font-size: 10px;
+  }
+  .section-space {
+    padding-block: 68px;
+  }
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin-top: 35px;
+  }
+  .feature h3 {
+    margin-top: 20px;
+  }
+  .appearance-panel {
+    grid-template-columns: 1fr;
+    padding: 28px 22px;
+    gap: 28px;
+    margin-top: 40px;
+  }
+  .appearance-copy > p:not(.eyebrow) {
+    max-width: none;
+  }
+  .appearance-panel > img {
+    border-radius: 5px;
+  }
+  .ownership-grid,
+  .questions {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+  .folder-card {
+    padding: 20px;
+    transform: none;
+  }
+  .file-tree {
+    font-size: 11px;
+  }
+  .file-tree ul {
+    padding-left: 14px;
+  }
+  .get-copper {
+    padding: 55px 18px;
+  }
+  .site-footer {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    margin-top: 18px;
+    padding-block: 28px;
+  }
+  .site-footer p {
+    width: 100%;
+    order: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}

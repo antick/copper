@@ -10,7 +10,7 @@ bun-debug.log*
 node_modules
 dist
 out
-/release/
+release/
 .copper-electron
 dist-ssr
 *.local
@@ -22,7 +22,7 @@ dist-ssr
 /dogfood-output/
 
 # Generated performance fixtures (large)
-tests/fixtures/performance/*.md
+**/tests/fixtures/performance/*.md
 
 # Editor directories and files
 .vscode/*
@@ -49,3 +49,8 @@ release-verified
 
 # Package caches must never be committed.
 .pnpm-store/
+
+.turbo/
+.astro/
+.vercel/
+*.tsbuildinfo

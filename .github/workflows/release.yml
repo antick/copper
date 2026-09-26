@@ -50,4 +50,4 @@ jobs:
       - name: Publish verified artifacts
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/publish-release.mjs
+        run: pnpm release:publish

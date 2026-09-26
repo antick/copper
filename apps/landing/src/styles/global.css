@@ -1,0 +1,6 @@
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/newsreader";
+@import "tailwindcss";
+@import "./base.css";
+@import "./sections.css";
+@import "./responsive.css";

@@ -10,6 +10,16 @@ Track outstanding work and verification here. Completed implementation history l
 
 The initial source snapshot passed 246 frontend tests, 128 native tests, type checks, lint, web/Electron production builds, a dependency audit, and secret/privacy checks. Updates and release automation target this repository. The protected publishing job uses the automatic GitHub token. Only two selected demo images are retained in `docs/images`; temporary testing output is ignored.
 
+## Landing page and monorepo
+
+The desktop app lives in `apps/desktop`; `apps/landing` is the Astro, Tailwind, and shadcn/ui landing site. Root scripts coordinate both apps with Turborepo.
+
+Verified: 246 frontend tests, 128 native tests, the landing production-output test, both type checks, Biome, both production builds, and the desktop browser build. The landing page was checked at 320, 390, and 1280 pixels, including keyboard FAQ controls. A local unpacked macOS build loaded SQLite and retained its entry points and icons. The exact Vercel install/build commands passed in a disposable copy without desktop dependencies. Signed distribution and live deployment remain pending.
+
+- [ ] Review the landing page locally and approve its copy and design.
+- [ ] After approval, deploy the landing workspace on Vercel and connect `copper.potion.sh`.
+- [ ] Replace the early-development source/release links with download links after approved installers are available.
+
 ## Native acceptance
 
 - [ ] Complete attachment-import confirmation, external-link handoff, clipboard, and native development startup/hot-reload checks after the security changes. Packaged opening/editing, Git denial/grant/diff review, and remote-image consent have been verified.

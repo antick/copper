@@ -36,7 +36,7 @@ jobs:
       - name: Production builds
         run: |
           pnpm build:web
-          pnpm exec electron-vite build
+          pnpm build
       - name: Dependency audit
         run: pnpm audit --audit-level=moderate
       - name: Secret scan including history

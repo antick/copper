@@ -38,7 +38,7 @@ Re-checked 2026-08-16 after Live Preview markers, wiki/tag/task decorations, and
 
 No architectural blocker was found. 1 MB and 5 MB typing stay well inside a 16.7 ms frame budget on this machine in jsdom. 25 MB remains responsive for dispatch; expensive Live Preview enrichments must stay viewport-scoped.
 
-50 MB fixture is generated at `tests/fixtures/performance/abusive-50mb.md` for manual profiling. Do not bundle it.
+50 MB fixture is generated at `apps/desktop/tests/fixtures/performance/abusive-50mb.md` for manual profiling. Do not bundle it.
 
 ## Manual / WebView checklist
 
@@ -64,4 +64,4 @@ Open `/perf` in `bun run dev` and repeat for 1 / 5 / 25 MB:
 bun run fixtures:perf
 ```
 
-Writes gitignored files under `tests/fixtures/performance/`.
+Writes gitignored files under `apps/desktop/tests/fixtures/performance/`.

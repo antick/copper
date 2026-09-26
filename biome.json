@@ -8,18 +8,18 @@
   "files": {
     "includes": [
       "**",
-      "!src/routeTree.gen.ts",
-      "!src-tauri",
-      "!out",
-      "!release",
-      "!dist",
+      "!**/routeTree.gen.ts",
+      "!**/out",
+      "!**/release",
+      "!**/dist",
+      "!**/.astro",
+      "!**/.turbo",
       "!docs/images",
-      "!tests/fixtures",
+      "!**/tests/fixtures",
       "!.cursor",
       "!.agents",
-      "!bun.lock",
       "!pnpm-lock.yaml",
-      "!public/tauri.svg"
+      "!**/public/tauri.svg"
     ]
   },
   "formatter": {
@@ -53,5 +53,23 @@
       "quoteStyle": "double",
       "semicolons": "always"
     }
-  }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    }
+  ]
 }

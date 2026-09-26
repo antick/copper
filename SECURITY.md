@@ -12,7 +12,7 @@ Run `pnpm check`, `pnpm audit --audit-level=moderate`, and `pnpm security:scan` 
 - Enable private vulnerability reporting, secret scanning/push protection, and dependency alerts where the GitHub plan supports them. Recheck these settings when changing visibility.
 - Store `MAC_CSC_LINK`, `MAC_CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID` as release-environment secrets. The certificate must be a Developer ID Application certificate. Never commit certificate exports or passwords.
 - Publish to this repository using the automatic `GITHUB_TOKEN`. Only the protected publishing job receives `contents: write`; no personal upload token is needed.
-- Use a tag matching `package.json`'s version. Release CI verifies that exact commit, requires signing/notarization, checks the app identity and update checksums, then uploads artifacts as a draft before publishing. Ordinary `pnpm build` never publishes.
+- Use a tag matching `apps/desktop/package.json`'s version. Release CI verifies that exact commit, requires signing/notarization, checks the app identity and update checksums, then uploads artifacts as a draft before publishing. Ordinary `pnpm build` never publishes.
 - Verify a real signed automatic update on macOS before the first public distribution. Review screenshots, history, and documentation for private data. A clean pattern scan is not proof of complete security.
 
 Publishing the source does not approve an installer for distribution. Signing credentials and a successful signed update acceptance test remain release prerequisites.

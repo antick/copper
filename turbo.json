@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "out/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
+    }
+  },
+  "globalPassThroughEnv": ["GITHUB_REF"],
+  "globalDependencies": ["docs/images/**", "apps/desktop/public/icon.png"]
+}
