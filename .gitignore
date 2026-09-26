@@ -1,0 +1,51 @@
+# Logs
+logs
+*.log
+*.key
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+
+node_modules
+dist
+out
+/release/
+.copper-electron
+dist-ssr
+*.local
+.chrome-screenshot-profile
+.agent-browser-tmp
+.tanstack/
+
+# Temporary manual testing output. Keep curated README images in docs/images/.
+/dogfood-output/
+
+# Generated performance fixtures (large)
+tests/fixtures/performance/*.md
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local credentials; only deliberately sanitized examples belong in Git.
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.mobileprovision
+release-production-*
+release-verified
+*.p8
+
+# Package caches must never be committed.
+.pnpm-store/

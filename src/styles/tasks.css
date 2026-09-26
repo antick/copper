@@ -1,0 +1,500 @@
+:root {
+  --tasks-nav-width: 236px;
+  --tasks-column-min: 312px;
+  --tasks-detail-width: min(880px, calc(100vw - 72px));
+  --tasks-motion-fast: 140ms;
+  --tasks-card-gap: 7px;
+  --tasks-drop-slot-min-height: 96px;
+  --tasks-drop-slot-border-width: 1.5px;
+}
+
+.copper-panes-tasks {
+  grid-template-columns: var(--tasks-nav-width) 1px minmax(0, 1fr);
+  background: var(--editor-bg);
+}
+
+.copper-shell[data-left-collapsed="true"] .copper-panes-tasks {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.copper-pane-tasks-nav {
+  background: var(--list-bg);
+}
+
+.copper-task-main {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background: var(--editor-bg);
+}
+
+.copper-task-main > .copper-workspace-top-bar {
+  background: var(--editor-bg);
+}
+
+.copper-task-navigation-body {
+  flex: 1;
+  padding: 8px;
+}
+
+.copper-task-navigation-body nav {
+  margin-bottom: 18px;
+}
+
+.copper-task-projects-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.copper-task-projects-link[data-selected="true"] {
+  color: var(--accent);
+}
+
+.copper-task-nav-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copper-task-content {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--editor-bg);
+}
+
+.copper-task-content > .copper-task-content {
+  flex: 1;
+}
+
+.copper-task-content > .copper-task-content .copper-task-content-header {
+  display: none;
+}
+
+.copper-task-content-header {
+  display: flex;
+  min-height: 46px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.copper-task-header-middle {
+  min-width: 0;
+  flex: 1;
+  overflow: auto hidden;
+}
+
+.copper-task-header-middle > .copper-task-toolbar {
+  width: max-content;
+  min-width: 100%;
+  min-height: 32px;
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.copper-task-header-middle .copper-task-search {
+  max-width: 240px;
+}
+
+.copper-task-project-header {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.copper-task-project-header .copper-task-toolbar-button {
+  gap: 0;
+  padding-inline: 7px;
+  font-size: 0;
+}
+
+.copper-task-project-header .copper-task-toolbar-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.copper-task-project-header .copper-task-search {
+  min-width: 130px;
+}
+
+.copper-task-content-header h1 {
+  margin: 1px 0 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copper-task-eyebrow {
+  color: var(--text-tertiary);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.copper-task-header-title,
+.copper-task-header-actions,
+.copper-task-property-row,
+.copper-task-directory-toolbar,
+.copper-task-card-meta,
+.copper-task-card-footer,
+.copper-task-project-card-meta,
+.copper-task-create-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.copper-task-primary {
+  display: inline-flex;
+  min-height: 30px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 22%);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--text-inverse);
+  cursor: pointer;
+  font-weight: 580;
+}
+
+.copper-task-primary:hover {
+  background: var(--accent-hover);
+}
+
+.copper-task-primary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.copper-task-toolbar,
+.copper-task-directory-toolbar {
+  display: flex;
+  min-height: 46px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--pane-bg);
+}
+
+.copper-task-search {
+  display: flex;
+  min-width: 170px;
+  max-width: 320px;
+  height: 30px;
+  flex: 1;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--elevated-bg);
+  color: var(--text-tertiary);
+}
+
+.copper-task-search:focus-within {
+  border-color: var(--accent);
+}
+
+.copper-task-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.copper-task-search kbd {
+  padding: 0 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font: 10px var(--font-mono);
+}
+
+.copper-task-toolbar-button,
+.copper-task-property-button,
+.copper-task-native-filter {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--elevated-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.copper-task-toolbar-button:hover,
+.copper-task-property-button:hover {
+  border-color: var(--border-strong);
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.copper-task-menu,
+.copper-task-popover {
+  z-index: 100;
+  min-width: 190px;
+  padding: 5px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--elevated-bg);
+  box-shadow: var(--shadow-card-selected);
+}
+
+.copper-task-menu-label {
+  display: block;
+  padding: 6px 8px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.copper-task-menu-item {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  outline: 0;
+  cursor: pointer;
+}
+
+.copper-task-menu-item[data-highlighted] {
+  background: var(--hover-bg);
+}
+
+.copper-task-menu-check {
+  display: grid;
+  width: 15px;
+  place-items: center;
+}
+
+.copper-task-field {
+  display: grid;
+  gap: 6px;
+  padding: 7px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.copper-task-field input,
+.copper-task-composer-title,
+.copper-task-composer-body,
+.copper-task-detail-title,
+.copper-task-overview-title {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.copper-task-field input {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.copper-task-list {
+  flex: 1;
+  min-height: 0;
+  background: var(--editor-bg);
+}
+
+.copper-task-table {
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.copper-task-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--pane-bg);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 560;
+  text-align: left;
+}
+
+.copper-task-table th[data-column-id] {
+  position: sticky;
+}
+
+.copper-task-column-resizer {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.copper-task-column-resizer::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 3px;
+  bottom: 7px;
+  width: 1px;
+  background: transparent;
+}
+
+.copper-task-column-resizer:hover::after,
+.copper-task-column-resizer:focus-visible::after {
+  background: var(--accent);
+}
+
+.copper-task-table td {
+  height: 42px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.copper-task-table tbody tr {
+  cursor: pointer;
+}
+
+.copper-task-table tbody tr:hover,
+.copper-task-table tbody tr[data-selected="true"] {
+  background: var(--hover-bg);
+}
+
+.copper-task-table tbody tr[data-selected="true"] {
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.copper-task-table tbody tr:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.copper-issue-context-menu {
+  min-width: 230px;
+}
+
+.copper-menu-label {
+  display: block;
+  padding: 6px 8px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.copper-task-table-title {
+  min-width: 240px;
+  width: 100%;
+  overflow: hidden;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+}
+
+.copper-task-table-group th {
+  position: relative;
+  background: var(--list-bg);
+  color: var(--text-secondary);
+}
+
+.copper-task-id {
+  color: var(--text-tertiary);
+  font: 11px var(--font-mono);
+}
+
+.copper-task-property,
+.copper-task-label,
+.copper-task-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.copper-task-property[data-status="done"],
+.copper-task-property[data-project-status="completed"] {
+  color: var(--success);
+}
+
+.copper-task-property[data-status="in_progress"],
+.copper-task-property[data-project-status="active"] {
+  color: var(--accent);
+}
+
+.copper-task-priority-icon[data-priority="none"] {
+  color: var(--text-tertiary);
+}
+
+.copper-task-priority-icon[data-priority="low"] {
+  color: var(--pill-blue-fg);
+}
+
+.copper-task-priority-icon[data-priority="medium"] {
+  color: var(--success);
+}
+
+.copper-task-priority-icon[data-priority="high"] {
+  color: var(--warning);
+}
+
+.copper-task-priority-icon[data-priority="urgent"] {
+  color: var(--destructive);
+}
+
+.copper-task-labels {
+  display: inline-flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.copper-task-label {
+  max-width: 120px;
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent-muted);
+  color: var(--nav-selected-fg);
+  text-overflow: ellipsis;
+}

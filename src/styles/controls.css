@@ -1,0 +1,57 @@
+.copper-icon-button {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.copper-icon-button:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.copper-icon-button:disabled {
+  opacity: 0.4;
+}
+
+.copper-tooltip {
+  z-index: 50;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--elevated-bg);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(28, 27, 25, 0.12);
+}
+
+.copper-menu {
+  z-index: 60;
+  min-width: 160px;
+  max-height: min(420px, calc(100vh - 24px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--elevated-bg);
+  padding: 4px;
+  box-shadow: 0 10px 30px rgba(28, 27, 25, 0.16);
+}
+
+.copper-menu-item {
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  outline: none;
+}
+
+.copper-menu-item[data-highlighted] {
+  background: var(--hover-bg);
+}

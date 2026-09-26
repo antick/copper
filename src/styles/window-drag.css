@@ -1,0 +1,43 @@
+:root {
+  --window-drag-lane-height: 6px;
+}
+
+.copper-window-drag-lane {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--window-drag-lane-height);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.copper-window-drag-lane::after {
+  content: "";
+  position: fixed;
+  top: calc(var(--header-height) - var(--window-drag-lane-height));
+  right: 0;
+  left: 0;
+  height: var(--window-drag-lane-height);
+  -webkit-app-region: drag;
+}
+
+.copper-settings {
+  position: relative;
+}
+
+.copper-settings > .copper-settings-drag-region {
+  position: absolute;
+  z-index: 2;
+  grid-column: 2;
+  grid-row: 1;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--header-height);
+}
+
+#root > .copper-settings[data-platform="macos"] .copper-settings-title {
+  padding-left: calc(var(--rail-traffic-overflow) + var(--activity-rail-width));
+}

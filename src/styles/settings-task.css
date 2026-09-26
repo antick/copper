@@ -1,0 +1,15 @@
+.copper-settings-inline-control {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.copper-settings-inline-control .copper-settings-status {
+  max-width: 280px;
+  margin: 0;
+  font-size: 11px;
+}
+
+.copper-settings-status[data-tone="error"] {
+  color: var(--destructive);
+}

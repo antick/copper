@@ -1,0 +1,11 @@
+.copper-resizer[data-line-below-header="true"] {
+  background: transparent;
+}
+
+.copper-resizer[data-line-below-header="true"]::before {
+  content: "";
+  position: absolute;
+  inset: var(--header-height) 0 0;
+  background: var(--border-subtle);
+  pointer-events: none;
+}

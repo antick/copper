@@ -1,0 +1,171 @@
+.copper-task-management-dialog {
+  top: 18vh;
+  left: 50%;
+  width: min(430px, calc(100vw - 32px));
+  padding: 0 16px 16px;
+  border-radius: 12px;
+  transform: translateX(-50%);
+}
+
+.copper-task-management-dialog .copper-task-composer-header {
+  margin-inline: -16px;
+}
+
+.copper-task-dialog-body {
+  display: grid;
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.copper-task-form-field {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 580;
+}
+
+.copper-task-form-field > input {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  outline: 0;
+  background: var(--pane-bg);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.copper-task-form-field > input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent), transparent 82%);
+}
+
+.copper-task-form-field > input[aria-invalid="true"] {
+  border-color: var(--pill-red-fg);
+}
+
+.copper-task-form-field > .copper-task-property-button {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.copper-task-form-field small {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 1.4;
+}
+
+.copper-task-form-field small[data-error="true"] {
+  color: var(--pill-red-fg);
+}
+
+.copper-task-confirm-copy {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.copper-task-notice {
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-muted);
+  color: var(--text-secondary);
+}
+
+.copper-project-icon-grid {
+  display: grid;
+  gap: 8px;
+  max-height: 250px;
+  padding-block: 10px;
+  overflow-y: auto;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.copper-project-icon-picker {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.copper-project-icon-picker > input {
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--pane-bg);
+  color: var(--text-primary);
+}
+
+.copper-project-icon-picker-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.copper-project-icon-picker-tabs button {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.copper-project-icon-picker-tabs button[aria-selected="true"] {
+  background: var(--nav-selected-bg);
+  color: var(--nav-selected-fg);
+}
+
+.copper-project-emoji {
+  display: inline-grid;
+  width: 1.15em;
+  height: 1.15em;
+  flex: 0 0 auto;
+  place-items: center;
+  line-height: 1;
+}
+
+.copper-project-context-menu {
+  min-width: 190px;
+}
+
+.copper-project-context-menu .copper-menu-item {
+  min-height: 28px;
+  padding: 4px 7px;
+}
+
+.copper-task-project-nav-item {
+  cursor: grab;
+}
+
+.copper-task-project-nav-item:active {
+  cursor: grabbing;
+}
+
+.copper-project-icon-grid button {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--pane-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.copper-project-icon-grid button[data-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.copper-task-danger {
+  min-height: 30px;
+  padding-inline: 11px;
+  border: 1px solid var(--pill-red-fg);
+  border-radius: var(--radius-sm);
+  background: var(--pill-red-bg);
+  color: var(--pill-red-fg);
+  cursor: pointer;
+}

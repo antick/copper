@@ -1,0 +1,1881 @@
+@import "./tokens.css";
+@import "tailwindcss";
+
+[data-copper-drag-region] {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+button,
+a,
+input,
+textarea,
+select,
+[role="button"],
+[role="menuitem"],
+[role="treeitem"] {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-ui);
+  font-feature-settings: "cv11", "ss01";
+  letter-spacing: -0.011em;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+input,
+textarea,
+.cm-editor,
+.cm-content,
+.copper-pane-editor .copper-scroll {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.copper-app-loading {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background: var(--app-bg);
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.copper-shell {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  grid-template-rows: minmax(0, 1fr) var(--status-height);
+  background: var(--app-bg);
+}
+
+.copper-workspace {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: var(--activity-rail-width) minmax(0, 1fr);
+}
+
+.copper-activity-rail {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 8px;
+  background: var(--pane-bg);
+}
+
+.copper-activity-rail::after {
+  content: "";
+  position: absolute;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-subtle);
+  pointer-events: none;
+}
+
+.copper-activity-rail-header {
+  width: 100%;
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+
+.copper-activity-rail-modes {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.copper-activity-rail .copper-icon-button {
+  width: 32px;
+  height: 32px;
+  aspect-ratio: 1;
+}
+
+.copper-activity-rail .copper-icon-button[aria-pressed="true"] {
+  background: var(--nav-selected-bg);
+  color: var(--nav-selected-fg);
+}
+
+.copper-shell[data-right-collapsed="true"] {
+  --properties-width: 0px;
+}
+
+.copper-panes {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  grid-template-columns:
+    var(--left-sidebar-width) 1px var(--note-list-width) 1px minmax(0, 1fr) 1px
+    var(--properties-width);
+}
+
+.copper-shell[data-navigation-layout="tree"] .copper-panes {
+  grid-template-columns:
+    var(--left-sidebar-width) 1px minmax(0, 1fr) 1px
+    var(--properties-width);
+}
+
+.copper-shell[data-left-collapsed="true"] .copper-panes {
+  grid-template-columns: var(--note-list-width) 1px minmax(0, 1fr) 1px var(
+      --properties-width
+    );
+}
+
+.copper-shell[data-left-collapsed="true"][data-navigation-layout="tree"]
+  .copper-panes {
+  grid-template-columns: minmax(0, 1fr) 1px var(--properties-width);
+}
+
+.copper-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background: var(--pane-bg);
+  overflow: hidden;
+}
+
+.copper-pane-editor {
+  background: var(--editor-bg);
+}
+
+.copper-workspace > .copper-panes,
+.copper-workspace > .copper-panes-tasks {
+  height: 100%;
+  min-height: 0;
+}
+
+.copper-pane-editor .copper-scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+.copper-document-title {
+  flex-shrink: 0;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px clamp(28px, 7%, 48px) 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--syntax-heading, var(--text-primary));
+  font-size: var(--document-title-size);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.copper-pane-editor .copper-editor-document {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.copper-pane-list .copper-header-row {
+  background: var(--list-bg);
+}
+
+.copper-shell[data-right-collapsed="true"] .copper-pane-properties {
+  display: none;
+}
+
+.copper-header-row {
+  display: flex;
+  height: var(--header-height);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--pane-bg);
+  min-width: 0;
+}
+
+.copper-header-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.copper-header-row button,
+.copper-header-row a,
+.copper-header-row input,
+.copper-header-row select {
+  -webkit-app-region: no-drag;
+}
+
+.copper-pane-editor .copper-header-row {
+  background: var(--editor-bg);
+}
+
+.copper-shell[data-platform="macos"][data-left-collapsed="true"]
+  .copper-header-row[data-first-visible-pane="true"] {
+  padding-left: var(--rail-traffic-overflow);
+}
+
+.copper-pane-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.copper-title-region {
+  -webkit-app-region: drag;
+  user-select: none;
+  justify-content: flex-start;
+}
+
+.copper-shell[data-platform="macos"] .copper-title-region {
+  padding-left: var(--rail-traffic-overflow);
+}
+
+.copper-title-region button,
+.copper-title-region a,
+.copper-title-region input {
+  -webkit-app-region: no-drag;
+}
+
+.copper-sidebar-header {
+  justify-content: space-between;
+}
+
+.copper-header-title,
+.copper-vault-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-weight: 600;
+  font-size: var(--font-size-ui);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.copper-header-divider {
+  width: 1px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 0 4px;
+  background: var(--border-subtle);
+}
+
+.copper-header-spacer {
+  flex: 1;
+  align-self: stretch;
+  min-width: 24px;
+}
+
+.copper-left-extras {
+  padding: 0 var(--left-pane-pad-x) 8px;
+}
+
+.copper-nav-list {
+  margin: 8px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.copper-nav-item,
+.copper-tree-row {
+  display: flex;
+  min-height: var(--row-height);
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--left-row-inset);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.copper-nav-item {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  margin: 1px 0;
+  border: 0;
+  background: transparent;
+  padding: 6px var(--left-row-inset);
+  text-align: left;
+  font-size: 13px;
+}
+
+.copper-nav-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copper-nav-item svg {
+  flex-shrink: 0;
+}
+
+.copper-tree-row {
+  min-width: 0;
+  min-height: 26px;
+  gap: 6px;
+  padding: 0 var(--left-row-inset) 0 0;
+}
+
+.copper-tree-name {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copper-tree-type {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 9px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.copper-nav-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+}
+
+.copper-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-size: 10px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copper-sort {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  padding: 0 2px;
+}
+
+.copper-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.copper-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.copper-relation-list {
+  margin: 0;
+  padding: 0 12px 8px;
+  list-style: none;
+}
+
+.copper-relation-list button,
+.copper-unresolved-link {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  color: var(--success);
+  text-align: left;
+}
+
+.copper-unresolved-link {
+  color: var(--text-tertiary);
+}
+
+.copper-location-pill {
+  margin: 3px 0 4px;
+}
+
+.copper-status-bar {
+  display: flex;
+  height: var(--status-height);
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--pane-bg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+}
+
+.copper-status-bar .copper-header-spacer {
+  flex: 1;
+}
+
+.copper-status-update,
+.copper-status-git {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.copper-status-update {
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.copper-status-git.is-quiet {
+  color: var(--text-tertiary);
+}
+
+.copper-status-git {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.copper-update-failure-dialog {
+  position: fixed;
+  z-index: 71;
+  top: 50%;
+  left: 50%;
+  width: min(480px, calc(100vw - 32px));
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--elevated-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.copper-update-failure-dialog > h2 {
+  margin: 0;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 16px;
+}
+
+.copper-update-failure {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding: 16px 18px;
+}
+
+.copper-update-failure p,
+.copper-update-failure pre {
+  margin: 0;
+}
+
+.copper-update-failure > span,
+.copper-update-failure summary {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.copper-update-failure details {
+  min-width: 0;
+}
+
+.copper-update-failure pre {
+  max-height: 180px;
+  margin-top: 8px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--pane-bg);
+  color: var(--text-secondary);
+  font: 11px / 1.45 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.copper-update-failure-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.copper-settings-section-card > .copper-update-failure {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.copper-update-status-copy {
+  max-width: 420px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.copper-git-review-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(28, 27, 25, 0.28);
+}
+
+.copper-git-review {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 71;
+  display: grid;
+  width: min(760px, calc(100vw - 48px));
+  height: min(520px, calc(100vh - 72px));
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--elevated-bg);
+  padding: 14px 16px 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.copper-git-review-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.copper-git-review-body {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.copper-git-popover-list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.copper-git-file {
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+
+.copper-git-file[data-selected="true"] {
+  background: var(--selected-bg);
+}
+
+.copper-git-diff {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--list-bg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.copper-git-diff span {
+  padding: 0 10px;
+  white-space: pre-wrap;
+}
+
+.copper-git-diff span[data-kind="add"] {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+.copper-git-diff span[data-kind="del"] {
+  background: color-mix(in srgb, var(--destructive) 16%, transparent);
+  color: var(--destructive);
+}
+
+.copper-git-diff span[data-kind="hunk"] {
+  color: var(--accent);
+}
+
+.copper-git-diff span[data-kind="file"] {
+  color: var(--text-tertiary);
+}
+
+.copper-git-review-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.copper-git-review-status {
+  margin-right: auto;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.copper-git-publish {
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  padding: 8px 14px;
+  color: var(--text-inverse);
+  font: inherit;
+  cursor: pointer;
+}
+
+.copper-git-publish:disabled {
+  opacity: 0.7;
+}
+
+.copper-status-update:disabled,
+.copper-status-git:disabled {
+  cursor: default;
+  color: var(--text-secondary);
+}
+
+.copper-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.copper-empty {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.copper-left-extras .copper-empty {
+  padding: 10px var(--left-row-inset);
+}
+
+.copper-nav-item[data-selected="true"] {
+  background: var(--nav-selected-bg);
+  color: var(--nav-selected-fg);
+}
+
+.copper-nav-item[data-selected="true"] .copper-badge {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+.copper-tree-row[data-selected="true"] {
+  background: var(--selected-bg);
+}
+
+.copper-nav-item:hover,
+.copper-tree-row:hover {
+  background: var(--hover-bg);
+}
+
+.copper-nav-item[data-selected="true"]:hover {
+  background: var(--nav-selected-bg);
+}
+
+.copper-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  margin-top: 10px;
+  padding-right: var(--left-row-inset);
+}
+
+.copper-section-heading .copper-section-label {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.copper-section-add {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.copper-section-add:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.copper-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 6px;
+  padding: 0 var(--left-row-inset);
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.copper-note-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.copper-note-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 92px;
+  padding: 11px 14px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--list-bg);
+  box-shadow: none;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: default;
+  outline-offset: -2px;
+}
+
+.copper-note-row[data-selected="true"] {
+  background: var(--selected-bg);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.copper-note-row:hover:not([data-selected="true"]) {
+  background: var(--hover-bg);
+}
+
+.copper-note-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--warning);
+}
+
+.copper-note-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.copper-note-title {
+  font-weight: 650;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.copper-note-snippet {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.copper-note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.copper-note-time {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.copper-chip {
+  border-radius: 999px;
+  background: var(--accent-muted);
+  color: var(--accent);
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.copper-resizer {
+  width: 1px;
+  background: var(--border-subtle);
+  cursor: col-resize;
+  position: relative;
+}
+
+.copper-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 0 -3px;
+}
+
+.copper-file-tree {
+  padding: 0 0 16px;
+}
+
+.copper-tree-icon {
+  flex-shrink: 0;
+  width: var(--tree-row-icon-size);
+  height: var(--tree-row-icon-size);
+  min-width: var(--tree-row-icon-size);
+}
+
+.copper-tree-row[data-focused="true"]:not([data-selected="true"]) {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.copper-property-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 5px 14px;
+  font-size: 12px;
+}
+
+.copper-property-row dt {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.copper-property-row dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.copper-backlinks {
+  padding-bottom: 16px;
+}
+
+.copper-relation-list .copper-empty {
+  padding: 4px 0 8px;
+}
+
+.copper-relation-add {
+  color: var(--text-tertiary) !important;
+  font-size: 12px;
+}
+
+.copper-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1100px) {
+  .copper-panes {
+    grid-template-columns:
+      var(--left-sidebar-width) 1px var(--note-list-width) 1px minmax(0, 1fr)
+      0 0;
+  }
+
+  .copper-shell[data-navigation-layout="tree"] .copper-panes {
+    grid-template-columns: var(--left-sidebar-width) 1px minmax(0, 1fr) 0 0;
+  }
+
+  .copper-shell[data-left-collapsed="true"] .copper-panes {
+    grid-template-columns: var(--note-list-width) 1px minmax(0, 1fr) 0 0;
+  }
+
+  .copper-shell[data-left-collapsed="true"][data-navigation-layout="tree"]
+    .copper-panes {
+    grid-template-columns: minmax(0, 1fr) 0 0;
+  }
+
+  .copper-pane-editor + .copper-resizer {
+    display: none;
+  }
+
+  .copper-pane-properties {
+    position: absolute;
+    z-index: 30;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(var(--properties-width), calc(100% - 24px));
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: -12px 0 28px rgba(28, 27, 25, 0.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.copper-search-field {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--elevated-bg);
+  color: var(--text-tertiary);
+}
+
+.copper-search-field input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.copper-search-field .copper-icon-button {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.copper-text-button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.copper-pill input {
+  min-width: 4ch;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.copper-tag-editor {
+  margin-top: 4px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  opacity: 0;
+  height: 0;
+}
+
+.copper-property-row:hover .copper-tag-editor,
+.copper-tag-editor:focus {
+  opacity: 1;
+  height: auto;
+}
+
+.copper-property-row input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.copper-property-actions {
+  padding: 8px 12px;
+}
+
+.copper-tab-strip {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  align-items: center;
+  gap: 2px;
+  overflow: auto hidden;
+  overscroll-behavior: contain;
+  background: transparent;
+  scrollbar-width: none;
+}
+
+.copper-tab-strip::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.copper-tab {
+  position: relative;
+  display: flex;
+  height: var(--row-height);
+  max-width: var(--tab-max-width);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 0 4px 0 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.copper-tab[data-drop-edge="before"]::before,
+.copper-tab[data-drop-edge="after"]::after {
+  content: "";
+  position: absolute;
+  top: var(--tab-drop-marker-inset);
+  bottom: var(--tab-drop-marker-inset);
+  width: var(--tab-drop-marker-width);
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  pointer-events: none;
+}
+
+.copper-tab[data-drop-edge="before"]::before {
+  left: calc(var(--tab-drop-marker-width) / -2);
+}
+
+.copper-tab[data-drop-edge="after"]::after {
+  right: calc(var(--tab-drop-marker-width) / -2);
+}
+
+.copper-tab[data-active="true"] {
+  background: var(--selected-bg);
+  color: var(--text-primary);
+}
+
+.copper-tab[data-preview="true"] .copper-tab-label {
+  font-style: italic;
+}
+
+.copper-tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.copper-tab-close {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+}
+
+.copper-tab-close:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.copper-command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(28, 27, 25, 0.24);
+  display: flex;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.copper-command-menu {
+  width: min(520px, calc(100% - 32px));
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--elevated-bg);
+  overflow: hidden;
+}
+
+.copper-command-menu input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.copper-command-menu ul {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 320px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.copper-command-menu button {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  border: 0;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.copper-command-menu button:hover {
+  background: var(--hover-bg);
+}
+
+.copper-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(28, 27, 25, 0.24);
+}
+
+.copper-vault-search {
+  position: fixed;
+  z-index: 71;
+  top: 10vh;
+  left: 50%;
+  display: grid;
+  width: min(640px, calc(100% - 32px));
+  max-height: min(680px, 80vh);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  transform: translateX(-50%);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--elevated-bg);
+  box-shadow: 0 24px 72px rgba(28, 27, 25, 0.24);
+}
+
+.copper-vault-search-header,
+.copper-vault-search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copper-vault-search-header {
+  height: 42px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.copper-vault-search-header h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+}
+
+.copper-vault-search-input {
+  margin: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  padding: 0 10px;
+  color: var(--text-tertiary);
+}
+
+.copper-vault-search-input input {
+  min-width: 0;
+  height: 36px;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.copper-vault-search-results {
+  min-height: 160px;
+  overflow: hidden;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.copper-vault-search-results > .copper-scroll {
+  max-height: calc(min(680px, 80vh) - 104px);
+}
+
+.copper-settings-overlay {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.copper-settings {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  grid-template-columns: 236px minmax(0, 1fr);
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--app-bg);
+}
+
+.copper-settings aside {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--border-subtle);
+  padding: 0 14px 18px;
+  background: var(--pane-bg);
+}
+
+.copper-settings-title {
+  display: flex;
+  height: var(--header-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.copper-shell[data-platform="macos"] .copper-settings-title {
+  padding-left: var(--rail-traffic-overflow);
+}
+
+.copper-settings-title > div {
+  min-width: 0;
+}
+
+.copper-settings-eyebrow {
+  display: block;
+  margin-bottom: 1px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.copper-settings h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.025em;
+}
+
+.copper-settings nav {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.copper-settings-nav-item {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 0 10px;
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: default;
+}
+
+.copper-settings-nav-item:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.copper-settings-nav-item[data-active="true"] {
+  background: var(--nav-selected-bg);
+  color: var(--nav-selected-fg);
+  font-weight: 600;
+}
+
+.copper-settings-content {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--header-height) + 24px) clamp(28px, 5vw, 72px) 56px;
+}
+
+.copper-settings-overlay .copper-settings-eyebrow {
+  display: none;
+}
+
+.copper-settings-overlay .copper-settings h1 {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.copper-settings-vaults-link {
+  margin-top: auto;
+  border: 0;
+  background: transparent;
+  padding: 10px;
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: default;
+}
+
+.copper-settings-vaults-link:hover {
+  color: var(--text-primary);
+}
+
+.copper-settings-page {
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+
+.copper-settings-page-header {
+  margin-bottom: 34px;
+}
+
+.copper-settings-page-header h2 {
+  margin: 0 0 7px;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.copper-settings-page-header p,
+.copper-settings-section-heading p,
+.copper-settings-row-copy p,
+.copper-settings-footnote {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.copper-settings-page-header p {
+  max-width: 560px;
+  font-size: 13px;
+}
+
+.copper-settings-section {
+  margin: 0 0 28px;
+}
+
+.copper-settings-section-heading {
+  margin: 0 0 9px;
+  padding: 0 2px;
+}
+
+.copper-settings-section-heading h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.copper-settings-section-heading p {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.copper-settings-section-card {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--elevated-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.copper-appearance-mode-row {
+  padding: 14px;
+}
+
+.copper-appearance-mode {
+  display: grid;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--active-bg);
+  padding: 3px;
+}
+
+.copper-appearance-mode label {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: default;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.copper-appearance-mode label:hover {
+  color: var(--text-primary);
+}
+
+.copper-appearance-mode label[data-selected="true"] {
+  background: var(--elevated-bg);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.copper-appearance-mode input,
+.copper-theme-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.copper-appearance-mode label:has(input:focus-visible),
+.copper-theme-card:has(input:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.copper-theme-gallery {
+  display: grid;
+  margin: 0;
+  border: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.copper-theme-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background: var(--pane-bg);
+  padding: 10px;
+  cursor: default;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.copper-theme-card:hover {
+  border-color: var(--border-strong);
+  background: var(--hover-bg);
+}
+
+.copper-theme-card[data-selected="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.copper-theme-card-preview {
+  position: relative;
+  display: grid;
+  width: 92px;
+  height: 58px;
+  overflow: hidden;
+  grid-template-columns: 27px 1fr;
+  border: 1px solid
+    color-mix(in srgb, var(--theme-preview-text) 16%, transparent);
+  border-radius: 6px;
+  background: var(--theme-preview-background);
+}
+
+.copper-theme-card-preview-sidebar {
+  background: var(--theme-preview-surface);
+  opacity: 0.72;
+}
+
+.copper-theme-card-preview-page {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 9px;
+  background: var(--theme-preview-surface);
+}
+
+.copper-theme-card-preview-page span {
+  width: 100%;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--theme-preview-text);
+  opacity: 0.74;
+}
+
+.copper-theme-card-preview-page span:last-child {
+  width: 66%;
+  opacity: 0.35;
+}
+
+.copper-theme-card-preview-accent {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 16px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--theme-preview-accent);
+}
+
+.copper-theme-card-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.copper-theme-card-title {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.copper-theme-card-title small {
+  border-radius: 99px;
+  background: var(--accent-muted);
+  padding: 1px 5px;
+  color: var(--nav-selected-fg);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.copper-settings-row {
+  display: grid;
+  min-height: 68px;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 46%);
+  align-items: center;
+  gap: 24px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.copper-settings-row:last-child {
+  border-bottom: 0;
+}
+
+.copper-settings-row-copy {
+  min-width: 0;
+}
+
+.copper-settings-row-label {
+  margin-bottom: 2px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.copper-settings-row-copy p {
+  max-width: 460px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.copper-settings-row-control {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: right;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.copper-settings-select,
+.copper-settings-number,
+.copper-settings-text {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--pane-bg);
+  padding: 0 9px;
+  color: var(--text-primary);
+}
+
+.copper-settings-number {
+  width: 92px;
+}
+
+.copper-settings-switch {
+  position: relative;
+  display: inline-flex;
+  width: 36px;
+  height: 21px;
+  flex-shrink: 0;
+}
+
+.copper-settings-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.copper-settings-switch span {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--active-bg);
+  transition: background 120ms ease;
+}
+
+.copper-settings-switch span::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--elevated-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 120ms ease;
+}
+
+.copper-settings-switch input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.copper-settings-switch input:checked + span::after {
+  transform: translateX(15px);
+}
+
+.copper-settings-switch input:focus-visible + span {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.copper-settings-action {
+  min-height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--pane-bg);
+  padding: 6px 10px;
+  color: var(--text-primary);
+}
+
+.copper-settings-action:hover:not(:disabled) {
+  background: var(--hover-bg);
+}
+
+.copper-settings-action:disabled {
+  opacity: 0.5;
+}
+
+.copper-settings-status,
+.copper-settings-footnote {
+  margin: 10px 2px 0;
+  font-size: 12px;
+}
+
+.copper-hotkey-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.copper-hotkey-table th,
+.copper-hotkey-table td {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.copper-hotkey-table tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .copper-settings {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+
+  .copper-settings aside {
+    padding-inline: 10px;
+  }
+
+  .copper-settings-content {
+    padding: 48px 22px 40px;
+  }
+
+  .copper-settings-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .copper-theme-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .copper-settings-row-control {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+.copper-save-indicator {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+}
+
+.copper-save-indicator.is-saved {
+  color: var(--success);
+}
+
+.copper-save-indicator.is-dirty {
+  color: var(--warning);
+}
+
+.copper-save-indicator.is-saving svg {
+  animation: copper-spin 0.8s linear infinite;
+}
+
+.copper-save-indicator.is-error {
+  color: var(--destructive);
+}
+
+@keyframes copper-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.copper-menu-item-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copper-menu-separator {
+  height: 1px;
+  margin: 4px -4px;
+  background: var(--border-subtle);
+}
+
+.copper-menu-item-danger {
+  color: var(--destructive);
+}

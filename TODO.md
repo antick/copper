@@ -1,0 +1,40 @@
+# Copper TODO
+
+Track outstanding work and verification here. Completed implementation history lives in Git.
+
+## Public repository and releases
+
+- [ ] Configure main/tag protections and a reviewed release environment. Secret scanning, push protection, vulnerability alerts, and private vulnerability reporting are enabled.
+- [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before public distribution.
+- [ ] Retire the legacy release repository: its history, metadata, and checksum-verified assets are backed up privately, but GitHub rejected deletion because the CLI token lacks `delete_repo` permission. Old clients will need a manual reinstall from this repository once a verified release is available.
+
+The initial source snapshot passed 246 frontend tests, 128 native tests, type checks, lint, web/Electron production builds, a dependency audit, and secret/privacy checks. Updates and release automation target this repository. The protected publishing job uses the automatic GitHub token. Only two selected demo images are retained in `docs/images`; temporary testing output is ignored.
+
+## Native acceptance
+
+- [ ] Complete attachment-import confirmation, external-link handoff, clipboard, and native development startup/hot-reload checks after the security changes. Packaged opening/editing, Git denial/grant/diff review, and remote-image consent have been verified.
+- [ ] Confirm right-edge painting after manual macOS resizing and moving between displays.
+- [ ] Confirm physical window dragging with ordinary native input.
+- [ ] Verify the installed app's icon in Finder, Dock, Stage Manager, and Mission Control after replacing any stale installed copy.
+
+## Advanced task workflows
+
+- [ ] Add the index schema/data for task links and checkboxes in ordinary notes.
+- [ ] Add parent/dependency links with cycle rejection, milestones, and shared Properties/backlink controls.
+- [ ] Add explicit saved views in `Tasks/views.md`; changing a filter must not silently overwrite a saved view.
+- [ ] Add a note-task inbox, exact-line checkbox toggling, and conversion to an issue. Keep note tasks out of board cards.
+- [ ] Verify the complete flows, accessibility, persistence, and documentation before shipping.
+
+## Follow-up improvements
+
+- [ ] Split optional editor language data to reduce large production chunks.
+- [ ] Verify and fix accessible names for rendered editor task checkboxes and editable Properties values in the full narrow workspace.
+
+## Future ideas
+
+- [ ] GitHub onboarding for non-Git vaults: sign in, create/link a private repository, and clone from Welcome.
+- [ ] Optional idle/on-quit vault backup after the manual commit/push flow is proven.
+- [ ] User-created color themes with editing, import/export, validation, preview, and recovery.
+- [ ] A plugin system with explicit capabilities, isolation, compatibility, crash recovery, and safe mode.
+- [ ] Opt-in custom CSS with documented selectors, live reload, validation, and reliable recovery to the stock UI.
+- [ ] Excalidraw canvases as a separate feature, preserving the existing Tasks data model.

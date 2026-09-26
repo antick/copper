@@ -1,0 +1,60 @@
+@keyframes copper-task-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes copper-task-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --tasks-nav-width: 210px;
+    --tasks-column-min: 276px;
+  }
+
+  .copper-task-toolbar {
+    overflow-x: auto;
+  }
+
+  .copper-task-toolbar .copper-task-search {
+    min-width: 170px;
+  }
+
+  .copper-task-project-grid {
+    grid-template-columns: minmax(220px, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .copper-task-content-header {
+    padding-inline: 12px;
+  }
+
+  .copper-task-property-row {
+    flex-wrap: wrap;
+  }
+
+  .copper-task-toolbar-button {
+    gap: 0;
+    font-size: 0;
+  }
+
+  .copper-task-toolbar-button svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copper-task-card,
+  .copper-task-column,
+  .copper-task-dialog-overlay,
+  .copper-task-spinner {
+    animation: none;
+    transition: none;
+  }
+}

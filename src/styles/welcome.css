@@ -1,0 +1,319 @@
+.copper-welcome {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  grid-template-rows: var(--header-height) minmax(0, 1fr);
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+.copper-welcome-chrome {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  padding-left: var(--traffic-light-inset);
+  padding-right: 10px;
+}
+
+.copper-welcome-chrome-spacer {
+  flex: 1;
+  height: 100%;
+}
+
+.copper-welcome-chrome .copper-icon-button {
+  text-decoration: none;
+}
+
+.copper-welcome-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--welcome-pad);
+  overflow: auto;
+}
+
+.copper-welcome-column {
+  display: flex;
+  width: min(var(--welcome-column), 100%);
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.copper-welcome[data-layout="recents"] .copper-welcome-body {
+  display: grid;
+  grid-template-columns: var(--welcome-identity-width) minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: var(--welcome-gap);
+  padding: 0;
+  overflow: hidden;
+}
+
+.copper-welcome[data-layout="recents"] .copper-welcome-column {
+  display: contents;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-body,
+.copper-welcome[data-layout="status"] .copper-welcome-body {
+  align-items: center;
+  justify-content: center;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-column,
+.copper-welcome[data-layout="status"] .copper-welcome-column {
+  align-items: center;
+  text-align: center;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-identity,
+.copper-welcome[data-layout="status"] .copper-welcome-identity {
+  align-items: center;
+}
+
+.copper-welcome-identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.copper-welcome[data-layout="recents"] .copper-welcome-identity {
+  height: 100%;
+  min-height: 0;
+  padding: var(--welcome-pad);
+}
+
+.copper-welcome-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-wordmark {
+  flex-direction: column;
+  gap: 18px;
+}
+
+.copper-welcome-mark {
+  display: block;
+  width: var(--welcome-mark-size);
+  height: var(--welcome-mark-size);
+  flex-shrink: 0;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-mark {
+  width: calc(var(--welcome-mark-size) * 2);
+  height: calc(var(--welcome-mark-size) * 2);
+}
+
+.copper-welcome-identity h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 1.1;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-identity h1,
+.copper-welcome[data-layout="status"] .copper-welcome-identity h1 {
+  font-size: 40px;
+}
+
+.copper-welcome-thesis,
+.copper-welcome-invite,
+.copper-welcome-footnote,
+.copper-welcome-status {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.copper-welcome-thesis {
+  margin-top: 10px;
+  font-size: 15px;
+  max-width: 22rem;
+}
+
+.copper-welcome-invite {
+  margin-top: 8px;
+  font-size: 14px;
+  max-width: 24rem;
+}
+
+.copper-welcome-footnote {
+  margin-top: auto;
+  padding-top: 28px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-meta);
+  max-width: 22rem;
+}
+
+.copper-welcome[data-layout="empty"] .copper-welcome-footnote,
+.copper-welcome[data-layout="status"] .copper-welcome-footnote {
+  margin-top: 28px;
+  padding-top: 0;
+}
+
+.copper-welcome-primary {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 20px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--text-inverse);
+  padding: 8px 14px;
+  font-weight: 550;
+  text-decoration: none;
+}
+
+.copper-welcome-primary:hover {
+  background: var(--accent-hover);
+}
+
+.copper-welcome-error {
+  margin: 12px 0 0;
+  color: var(--destructive);
+  font-size: 12px;
+  max-width: 22rem;
+}
+
+.copper-welcome-recents {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  border-left: 1px solid var(--border-subtle);
+  background: var(--list-bg);
+  padding: 0;
+}
+
+.copper-welcome-recents h2 {
+  display: flex;
+  height: var(--header-height);
+  flex-shrink: 0;
+  align-items: center;
+  margin: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 16px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.copper-welcome-recents ul {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  list-style: none;
+}
+
+.copper-welcome-recents li {
+  display: flex;
+  min-height: var(--welcome-folio-min-height);
+  flex: 0 0 auto;
+}
+
+.copper-welcome-folio {
+  display: grid;
+  width: 100%;
+  min-height: var(--welcome-folio-min-height);
+  flex: 1;
+  grid-template-columns: var(--welcome-spine-width) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--elevated-bg);
+  padding: 0;
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.copper-welcome-folio:hover {
+  background: color-mix(in srgb, var(--elevated-bg) 86%, var(--accent) 14%);
+  box-shadow: var(--shadow-card-selected);
+  transform: translateY(-1px);
+}
+
+.copper-welcome-folio-spine {
+  display: block;
+  background: var(--accent);
+}
+
+.copper-welcome-folio-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 18px;
+}
+
+.copper-welcome-folio-body strong {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.copper-welcome-folio-path {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copper-welcome-status {
+  font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copper-welcome-folio {
+    transition: none;
+  }
+
+  .copper-welcome-folio:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 840px) {
+  .copper-welcome[data-layout="recents"] .copper-welcome-body {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+
+  .copper-welcome[data-layout="recents"] .copper-welcome-identity,
+  .copper-welcome[data-layout="recents"] .copper-welcome-recents {
+    height: auto;
+    flex: 0 0 auto;
+  }
+
+  .copper-welcome[data-layout="recents"] .copper-welcome-recents {
+    flex: 1 1 auto;
+    min-height: 240px;
+    border-top: 1px solid var(--border-subtle);
+    border-left: 0;
+  }
+
+  .copper-welcome[data-layout="empty"] .copper-welcome-identity h1,
+  .copper-welcome[data-layout="status"] .copper-welcome-identity h1 {
+    font-size: 32px;
+  }
+}

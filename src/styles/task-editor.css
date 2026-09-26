@@ -1,0 +1,124 @@
+.copper-task-project-description,
+.copper-task-detail-description {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  min-height: 0;
+  align-items: flex-start;
+  border: 0;
+}
+
+.copper-task-description-shell {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--elevated-bg);
+  box-shadow: 0 1px 2px color-mix(in srgb, #000, transparent 94%);
+  transition:
+    border-color var(--tasks-motion-fast) ease,
+    box-shadow var(--tasks-motion-fast) ease;
+}
+
+.copper-task-description-shell:hover {
+  border-color: var(--border-strong);
+}
+
+.copper-task-description-shell:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent), transparent 82%);
+}
+
+.copper-task-description-toolbar {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 7px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.copper-task-description-status {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.copper-task-description-shell[data-save-state="error"]
+  .copper-task-description-status {
+  color: var(--pill-red-fg);
+}
+
+.copper-task-description-toolbar button {
+  display: inline-grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.copper-task-description-toolbar button:hover,
+.copper-task-description-toolbar button:focus-visible {
+  outline: 0;
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.copper-task-description-toolbar .copper-task-description-retry {
+  width: auto;
+  padding-inline: 8px;
+  color: var(--pill-red-fg);
+  font-size: 11px;
+}
+
+.copper-task-description {
+  height: clamp(190px, 30vh, 320px);
+  --editor-bg: transparent;
+  --editor-content-pad-top: 14px;
+}
+
+.copper-task-description-shell[data-compact="true"] {
+  margin-top: 10px;
+}
+
+.copper-task-description-shell[data-compact="true"] .copper-task-description {
+  height: 150px;
+}
+
+.copper-task-description .cm-editor,
+.copper-task-description .cm-scroller {
+  height: 100%;
+}
+
+.copper-task-description .cm-content {
+  max-width: 760px;
+  margin: 0;
+  padding: 14px 16px 42px;
+}
+
+.copper-task-description .cm-placeholder {
+  color: var(--text-tertiary);
+  font-style: normal;
+}
+
+@media (max-width: 720px) {
+  .copper-task-description {
+    height: 180px;
+  }
+
+  .copper-task-description .cm-content {
+    padding-inline: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copper-task-description-shell {
+    transition: none;
+  }
+}
