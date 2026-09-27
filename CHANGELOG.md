@@ -27,9 +27,10 @@ Electron app replaces the legacy Tauri app and its separate release feed.
 
 ### Release status
 
-- macOS installers require Apple Developer ID signing, notarization, and a verified signed update before public distribution.
+- Include macOS Apple Silicon/Intel DMG and ZIP, Windows x64 EXE, and Linux x64/ARM64 AppImage and DEB installers.
+- macOS uses ad-hoc signing; Windows has no publisher certificate. Installation warnings are documented, and updates are manual.
 - Saved task views, dependencies, milestones, and note-checkbox ingestion are not included.
-- Legacy installations use a different update feed and need a fresh installation when verified installers become available. Back up your vault before migrating.
+- Legacy installations use a different update feed and need a fresh installation from this repository. Back up your vault before migrating.
 
 ## Legacy history
 

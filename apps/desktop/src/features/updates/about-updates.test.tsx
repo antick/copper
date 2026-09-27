@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AboutUpdates } from "@/features/updates/about-updates";
+import { RELEASE_UPDATES } from "@/lib/updates/release-policy";
 
 const mocks = vi.hoisted(() => ({
   status: {
@@ -54,4 +55,25 @@ describe("About updates", () => {
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(mocks.retryUpdate).toHaveBeenCalledTimes(1);
   });
+});
+
+vi.mock("@/lib/updates/release-policy", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/updates/release-policy")>();
+  return { RELEASE_UPDATES: { ...actual.RELEASE_UPDATES, automatic: true } };
+});
+
+it("offers manual downloads for the unsigned release", () => {
+  RELEASE_UPDATES.automatic = false;
+  try {
+    render(<AboutUpdates />);
+    expect(
+      screen.getByRole("link", { name: "Open Copper releases" }),
+    ).toHaveAttribute("href", RELEASE_UPDATES.url);
+    expect(
+      screen.queryByRole("button", { name: "Check for updates" }),
+    ).not.toBeInTheDocument();
+  } finally {
+    RELEASE_UPDATES.automatic = true;
+  }
 });

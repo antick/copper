@@ -5,6 +5,7 @@ import {
 } from "@/features/settings/settings-controls";
 import { UpdateFailureDetails } from "@/features/updates/update-failure-details";
 import { useUpdates } from "@/features/updates/update-provider";
+import { RELEASE_UPDATES } from "@/lib/updates/release-policy";
 import { updateProgressPercent } from "@/lib/updates/restart-prompt";
 
 function aboutStatusCopy(
@@ -39,6 +40,15 @@ export function AboutUpdates() {
     useUpdates();
   const checking = status.kind === "checking";
   const downloading = status.kind === "downloading";
+
+  if (!RELEASE_UPDATES.automatic) {
+    return (
+      <SettingsSection title="Updates">
+        <p>{RELEASE_UPDATES.message}</p>
+        <a href={RELEASE_UPDATES.url}>Open Copper releases</a>
+      </SettingsSection>
+    );
+  }
 
   return (
     <SettingsSection title="Updates">

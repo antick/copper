@@ -174,10 +174,11 @@ pnpm check
 
 ## Production build
 
-Copper's source is available here. Verified macOS installers will be published in
-[GitHub Releases](https://github.com/antick/copper/releases); this new repository
-does not yet have an approved installer. The app version is **0.1.0**, starting fresh in this repository.
-The maintainer process is in [docs/release/github.md](docs/release/github.md).
+Download installers from [GitHub Releases](https://github.com/antick/copper/releases/latest).
+See [the installation guide](docs/INSTALL.md) for macOS, Windows, and Linux.
+The app version is **0.1.0**, starting fresh in this repository. These early
+builds have no paid publisher certificates; macOS uses ad-hoc signing and
+updates are manual. The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh
 pnpm install
@@ -185,8 +186,8 @@ pnpm package
 ```
 
 This produces local test artifacts under `apps/desktop/release/` and never publishes them.
-Public releases require signing, notarization, and the checks in
-[SECURITY.md](SECURITY.md) and [docs/release/macos.md](docs/release/macos.md).
+Public releases follow the approved installer policy and checks in
+[SECURITY.md](SECURITY.md) and [docs/release/github.md](docs/release/github.md).
 
 Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
 

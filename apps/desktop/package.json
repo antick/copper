@@ -120,12 +120,47 @@
         "CFBundleIconFile": "Copper.icns",
         "CFBundleName": "Copper",
         "CFBundleDisplayName": "Copper"
-      }
+      },
+      "identity": "-",
+      "hardenedRuntime": false,
+      "artifactName": "Copper-${version}-mac-${arch}.${ext}"
     },
     "publish": {
       "provider": "github",
       "owner": "antick",
       "repo": "copper"
+    },
+    "win": {
+      "icon": "resources/icons/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "artifactName": "Copper-Setup-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "category": "Office",
+      "executableName": "copper",
+      "maintainer": "Pankaj <antick@users.noreply.github.com>",
+      "icon": "resources/icons/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "appImage": {
+      "artifactName": "Copper-${version}-${arch}.${ext}"
+    },
+    "deb": {
+      "packageName": "copper",
+      "artifactName": "copper_${version}_${arch}.${ext}"
     }
+  },
+  "description": "A local-first workspace for notes, tasks, and projects.",
+  "homepage": "https://copper.potion.sh",
+  "author": {
+    "name": "Pankaj",
+    "email": "antick@users.noreply.github.com"
   }
 }

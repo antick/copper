@@ -4,10 +4,14 @@ Track outstanding work and verification here. Completed implementation history l
 
 ## Public repository and releases
 
-The first release in this repository is prepared as `0.1.0`, with matching workspace, desktop, and macOS build versions. The changelog separates this release from the legacy Tauri history. Verified: 376 tests, both type checks, Biome, both production builds, and `git diff --check`. The owner has no Apple Developer membership yet, so signed installers remain blocked; source-only publication is awaiting confirmation.
+The owner approved a fresh `0.1.0` release using Loadout’s installer approach: ad-hoc-signed macOS, unsigned Windows, and Linux packages. Versions and changelog are reset. Five native build jobs must produce all nine installers before a draft can be published; automatic updates are disabled until their signing and full flow are verified.
+
+Local verification passed 380 tests, both type checks, Biome, the desktop and landing builds, macOS ad-hoc signature verification, and packaged version/SQLite checks. Cross-platform builds and public downloads remain pending.
+
+- [ ] Complete and verify the v0.1.0 installer builds, publish the draft, and verify the public downloads.
 
 - [ ] Configure main/tag protections and a reviewed release environment. Secret scanning, push protection, vulnerability alerts, and private vulnerability reporting are enabled.
-- [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before public distribution.
+- [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before enabling signed distribution and automatic updates.
 - [ ] Retire the legacy release repository: its history, metadata, and checksum-verified assets are backed up privately, but GitHub rejected deletion because the CLI token lacks `delete_repo` permission. Old clients will need a manual reinstall from this repository once a verified release is available.
 
 The initial source snapshot passed 246 frontend tests, 128 native tests, type checks, lint, web/Electron production builds, a dependency audit, and secret/privacy checks. Updates and release automation target this repository. The protected publishing job uses the automatic GitHub token. Selected demo images are retained in `docs/images`; temporary testing output is ignored.

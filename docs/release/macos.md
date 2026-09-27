@@ -2,10 +2,15 @@
 
 - Product: Copper
 - Bundle identifier: `app.copper.desktop`
-- Packaging configuration: `apps/desktop/package.json`, `build`
+- Configuration: `apps/desktop/package.json`, `build`
+- Architectures: Apple Silicon (arm64) and Intel (x64), each built natively
+- Artifacts: DMG and ZIP
 
-Use `pnpm install --frozen-lockfile` and `pnpm package` for local test artifacts under `apps/desktop/release/`. Those files are not approved public distributables.
+Version 0.1.0 follows Loadout’s ad-hoc signing approach (`identity: "-"`, hardened
+runtime disabled). It is not Apple-notarized. CI verifies the signature and DMG;
+installation warnings and manual updates are documented in [INSTALL.md](../INSTALL.md).
 
-Public builds require a Developer ID Application certificate, hardened runtime, and notarization. Configure the protected environment described in [SECURITY.md](../../SECURITY.md), then follow the [release workflow](github.md). The release script verifies the final app using `codesign`, Gatekeeper, and the stapled notarization ticket, and verifies artifact checksums against update metadata before upload.
-
-Do not distribute ad-hoc signed builds or instruct users to disable Gatekeeper/quarantine. A real signed automatic update must be verified before the first public release. If signing or protection prerequisites are absent, keep public publication blocked.
+`pnpm package` makes local artifacts under `apps/desktop/release/` and never
+publishes. See the [release workflow](github.md) for publishing a complete draft.
+Developer ID signing, notarization, and a verified signed update remain future
+work, not prerequisites for the explicitly approved ad-hoc release.

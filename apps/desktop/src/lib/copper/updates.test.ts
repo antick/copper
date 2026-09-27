@@ -5,6 +5,7 @@ import {
   downloadUpdate,
   installUpdate,
 } from "@/lib/copper/updates";
+import { RELEASE_UPDATES } from "@/lib/updates/release-policy";
 
 function setDesktop(packaged: boolean, preview = false) {
   window.copperDesktop = {
@@ -61,4 +62,20 @@ describe("copper.updates", () => {
     expect(invoke).toHaveBeenCalledWith("download_update");
     expect(invoke).toHaveBeenCalledWith("install_update");
   });
+});
+
+vi.mock("@/lib/updates/release-policy", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/updates/release-policy")>();
+  return { RELEASE_UPDATES: { ...actual.RELEASE_UPDATES, automatic: true } };
+});
+
+it("does not offer automatic checks for the manual release", () => {
+  RELEASE_UPDATES.automatic = false;
+  try {
+    setDesktop(true);
+    expect(canCheckUpdates()).toBe(false);
+  } finally {
+    RELEASE_UPDATES.automatic = true;
+  }
 });

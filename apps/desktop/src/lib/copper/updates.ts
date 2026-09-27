@@ -1,3 +1,5 @@
+import { RELEASE_UPDATES } from "@/lib/updates/release-policy";
+
 export type UpdateCheckResult =
   | { kind: "not-packaged" }
   | { kind: "unavailable" }
@@ -9,7 +11,7 @@ export type UpdateCheckResult =
     };
 
 export function canCheckUpdates(): boolean {
-  if (typeof window === "undefined") {
+  if (!RELEASE_UPDATES.automatic || typeof window === "undefined") {
     return false;
   }
   if (

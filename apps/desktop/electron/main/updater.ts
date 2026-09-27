@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import { app } from "electron";
+import { RELEASE_UPDATES } from "../../src/lib/updates/release-policy";
 import { UPDATE_CHECK_INTERVAL_MS } from "../native/constants";
 import { isPackagedApp } from "./runtime";
 
@@ -19,7 +20,7 @@ autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;
 
 export function startUpdateChecks(): void {
-  if (!isPackagedApp()) {
+  if (!isPackagedApp() || !RELEASE_UPDATES.automatic) {
     return;
   }
   const check = () => {
@@ -43,7 +44,7 @@ export async function checkForUpdate(): Promise<
       notes: string | null;
     }
 > {
-  if (!isPackagedApp()) {
+  if (!isPackagedApp() || !RELEASE_UPDATES.automatic) {
     return { kind: "not-packaged" };
   }
   const result = await autoUpdater.checkForUpdates();
@@ -60,9 +61,11 @@ export async function checkForUpdate(): Promise<
 }
 
 export async function downloadUpdate(): Promise<void> {
+  if (!RELEASE_UPDATES.automatic) throw new Error(RELEASE_UPDATES.message);
   await autoUpdater.downloadUpdate();
 }
 
 export function installUpdate(): void {
+  if (!RELEASE_UPDATES.automatic) throw new Error(RELEASE_UPDATES.message);
   autoUpdater.quitAndInstall();
 }
