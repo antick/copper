@@ -2,6 +2,8 @@
 
 A fast, beautiful, local-first Markdown editor.
 
+**Website: [copper.potion.sh](https://copper.potion.sh)**
+
 Copper is a desktop knowledge workspace. A **Vault** is any folder you choose;
 Markdown files in that folder are the source of truth. There is no account and
 no cloud. The SQLite search index lives in app data, not inside your notes.
@@ -61,11 +63,12 @@ pnpm dev:all      # both apps
 `pnpm preview` serves that build locally. `pnpm build:web` still builds the
 browser version of the desktop renderer.
 
-For a later Vercel deployment, import this repository with its root directory
+The landing page is hosted on Vercel at [copper.potion.sh](https://copper.potion.sh).
+The `copper` Vercel project connects to this repository with its root directory
 left at the repository root. `vercel.json` installs only the landing workspace
 with install scripts disabled, builds the site, and serves `apps/landing/dist`.
-It does not install or rebuild the desktop app. Connect `copper.potion.sh` only
-after local review. No deployment is part of this change.
+Pushes to `main` deploy the production site. This does not package or publish
+the desktop app. Cloudflare manages the DNS-only CNAME for `copper`.
 
 The landing page uses the existing product artwork and screenshots directly.
 Edit copy and links in `apps/landing/src/lib/site.ts`. The reusable shadcn Button
