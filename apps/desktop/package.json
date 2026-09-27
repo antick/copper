@@ -2,7 +2,7 @@
   "name": "@copper/desktop",
   "productName": "Copper",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.1.0",
   "license": "AGPL-3.0-only",
   "type": "module",
   "main": "./out/main/index.js",
@@ -86,7 +86,7 @@
   },
   "build": {
     "appId": "app.copper.desktop",
-    "buildVersion": "0.2.1",
+    "buildVersion": "0.1.0",
     "productName": "Copper",
     "directories": {
       "output": "release"

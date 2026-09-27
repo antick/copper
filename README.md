@@ -176,7 +176,7 @@ pnpm check
 
 Copper's source is available here. Verified macOS installers will be published in
 [GitHub Releases](https://github.com/antick/copper/releases); this new repository
-does not yet have an approved installer. The app version is **0.2.0**.
+does not yet have an approved installer. The app version is **0.1.0**, starting fresh in this repository.
 The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh

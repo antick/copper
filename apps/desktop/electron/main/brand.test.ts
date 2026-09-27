@@ -40,7 +40,7 @@ describe("brand icon files", () => {
         mac: { icon: string; extendInfo: { CFBundleIconFile: string } };
       };
     };
-    expect(pkg.build.buildVersion).toBe("0.2.1");
+    expect(pkg.build.buildVersion).toBe("0.1.0");
     expect(pkg.build.mac.icon).toBe("resources/icons/copper.icns");
     expect(pkg.build.mac.extendInfo.CFBundleIconFile).toBe("Copper.icns");
     expect(pkg.build.extraResources).toContainEqual({

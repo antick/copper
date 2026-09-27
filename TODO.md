@@ -4,6 +4,8 @@ Track outstanding work and verification here. Completed implementation history l
 
 ## Public repository and releases
 
+The first release in this repository is prepared as `0.1.0`, with matching workspace, desktop, and macOS build versions. The changelog separates this release from the legacy Tauri history. Verified: 376 tests, both type checks, Biome, both production builds, and `git diff --check`. The owner has no Apple Developer membership yet, so signed installers remain blocked; source-only publication is awaiting confirmation.
+
 - [ ] Configure main/tag protections and a reviewed release environment. Secret scanning, push protection, vulnerability alerts, and private vulnerability reporting are enabled.
 - [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before public distribution.
 - [ ] Retire the legacy release repository: its history, metadata, and checksum-verified assets are backed up privately, but GitHub rejected deletion because the CLI token lacks `delete_repo` permission. Old clients will need a manual reinstall from this repository once a verified release is available.

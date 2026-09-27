@@ -9,7 +9,7 @@ vi.mock("@/lib/copper", () => ({
     system: {
       appInfo: async () => ({
         name: "Copper",
-        version: "0.2.0",
+        version: "0.1.0",
         platform: "macos",
       }),
     },
@@ -35,7 +35,7 @@ describe("About & Diagnostics", () => {
     if (!Page) throw new Error("About settings route has no component");
     wrap(<Page />);
 
-    expect(await screen.findByText("0.2.0")).toBeVisible();
+    expect(await screen.findByText("0.1.0")).toBeVisible();
     expect(screen.getByText("About & Diagnostics")).toBeVisible();
     expect(screen.getByText("Version")).toBeVisible();
     expect(screen.queryByText("License")).not.toBeInTheDocument();

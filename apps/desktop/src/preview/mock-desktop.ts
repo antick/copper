@@ -296,7 +296,7 @@ function dispatch(cmd: string, args?: Record<string, unknown>) {
   if (taskResult !== PREVIEW_TASK_UNHANDLED) return taskResult;
   switch (cmd) {
     case "app_info":
-      return { name: "Copper", version: "0.2.0", platform: "macos" };
+      return { name: "Copper", version: "0.1.0", platform: "macos" };
     case "pick_vault_folder":
       return DEMO_PATH;
     case "list_recent_vaults":

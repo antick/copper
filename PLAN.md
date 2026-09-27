@@ -1,6 +1,6 @@
 # Copper Desktop — Master Product & Implementation Plan
 
-> **Runtime note (0.2.0):** Copper now ships Electron + Node.js + pnpm. Sections below that still mention Tauri/`src-tauri`/Bun describe the original 0.1.0 build and are historical unless updated.
+> **Runtime note:** Copper now ships Electron + Node.js + pnpm. Sections below that still mention Tauri/`src-tauri`/Bun describe the legacy Tauri build and are historical unless updated.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
@@ -161,7 +161,7 @@ Rejected as the default because achieving Copper's highly polished custom interf
 Chosen for one Chromium renderer on every OS, Node.js as the native core language, and a denser upcoming UI (boards, canvases). RAM and installer size are accepted costs. Native work stays in the main process; the renderer stays sandboxed and talks only through `copper.*`.
 
 #### Tauri
-Used through 0.1.0. Replaced in 0.2.0 because system WebViews (WKWebView / WebView2 / WebKitGTK) would make later issue-board and Excalidraw surfaces non-deterministic across platforms.
+Used by the legacy Tauri app. Replaced with Electron because system WebViews (WKWebView / WebView2 / WebKitGTK) would make later issue-board and Excalidraw surfaces non-deterministic across platforms.
 
 **Important:** Electron does not automatically guarantee a smooth UI. Bad React work, synchronous parsing, excessive CodeMirror decorations, DOM churn, or chatty IPC can still make Copper slow.
 
