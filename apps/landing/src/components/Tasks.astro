@@ -1,0 +1,22 @@
+---
+import board from "../../../../docs/images/tasks-board.png";
+import list from "../../../../docs/images/tasks-list.png";
+import ProductScreenshot from "./ProductScreenshot.astro";
+---
+<section id="tasks" class="tasks" aria-labelledby="tasks-title">
+  <div class="section-heading">
+    <p class="eyebrow">Tasks, with room to think</p>
+    <h2 id="tasks-title">Give your ideas<br /><em>a next step.</em></h2>
+    <p>Notes for the thinking. Tasks for the doing.<br />One workspace, all on your computer.</p>
+  </div>
+  <div class="task-showcases">
+    <figure>
+      <ProductScreenshot src={list} label="Tasks / All issues" alt="Copper Tasks: the All issues table with demo issues, statuses, priorities, labels, and project names" />
+      <figcaption><h3>See what needs your attention.</h3><p>Search, filter, and group your issues. Set priorities, labels, and due dates, and keep your projects within reach.</p></figcaption>
+    </figure>
+    <figure>
+      <ProductScreenshot src={board} label="Tasks / Project board" alt="Copper's project board with demo cards organized into Todo, In Progress, and In Review columns" />
+      <figcaption><h3>Make progress visible.</h3><p>Move between a project’s overview, issues, and board. Drag cards as work moves forward, or use your keyboard. Shape the workflow to fit the project.</p></figcaption>
+    </figure>
+  </div>
+</section>

@@ -1,13 +1,13 @@
 ---
-import { Image } from "astro:assets";
 import editor from "../../../../docs/images/editor.png";
 import { ActionLink } from "./ActionLink";
+import ProductScreenshot from "./ProductScreenshot.astro";
 ---
 <section class="hero wrap" aria-labelledby="hero-title">
   <div class="hero-copy">
     <p class="eyebrow"><span class="status-dot"></span> A quieter kind of workspace</p>
     <h1 id="hero-title">A little space to<br /><em>think clearly.</em></h1>
-    <p class="hero-description">Your notes, ideas, and next steps. Together in a calm<br class="desktop-break" /> desktop app, in files that belong to you.</p>
+    <p class="hero-description">Your notes, tasks, and projects. Together in a calm<br class="desktop-break" /> desktop app, in files that belong to you.</p>
     <div class="hero-actions">
       <ActionLink href="#get-copper" label="Make room for your ideas" size="lg" />
       <a class="text-link" href="#workspace">Take a look inside <span aria-hidden="true">↓</span></a>
@@ -15,10 +15,7 @@ import { ActionLink } from "./ActionLink";
     <p class="hero-note">Local first <span>·</span> Plain Markdown <span>·</span> Open source</p>
   </div>
   <figure class="hero-figure">
-    <div class="screenshot-mat">
-      <div class="mat-label"><span class="tiny-star" aria-hidden="true">✳</span> A home for unfinished thoughts.</div>
-      <Image src={editor} alt="Copper's real editor: a folder of notes on the left, Markdown writing in the center, and note properties on the right" widths={[640, 960, 1440, 1920]} sizes="(max-width: 1160px) 92vw, 1060px" loading="eager" fetchpriority="high" class="product-screenshot" />
-    </div>
+    <ProductScreenshot src={editor} label="Notes / A home for unfinished thoughts" alt="Copper's Notes editor: a folder of notes on the left, Markdown writing in the center, and note properties on the right" eager />
     <figcaption><span>YOUR IDEAS. YOUR FILES. YOUR PACE.</span><span>Meet Copper <span aria-hidden="true">↙</span></span></figcaption>
   </figure>
 </section>

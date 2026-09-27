@@ -1,9 +1,9 @@
 export const site = {
   name: "Copper",
   url: "https://copper.potion.sh",
-  title: "Copper — A little space to think clearly",
+  title: "Copper — Notes, tasks, and projects. Yours.",
   description:
-    "A calm desktop workspace for your notes, ideas, and projects. Plain Markdown files, stored on your computer. No account. No cloud required.",
+    "A calm desktop workspace for your notes, tasks, and projects. Plain Markdown files, stored on your computer. No account. No cloud required.",
   repository: "https://github.com/antick/copper",
   releases: "https://github.com/antick/copper/releases",
   setup: "https://github.com/antick/copper#run-locally",
@@ -12,7 +12,8 @@ export const site = {
 };
 
 export const navigation = [
-  { label: "The workspace", href: "#workspace" },
+  { label: "Notes", href: "#workspace" },
+  { label: "Tasks", href: "#tasks" },
   { label: "Your files", href: "#your-files" },
   { label: "Questions", href: "#questions" },
 ];
@@ -45,7 +46,7 @@ export const questions = [
   {
     question: "What is Copper?",
     answer:
-      "Copper is a desktop workspace for Markdown notes and projects. It brings writing, linked notes, search, properties, and task boards together around a folder on your computer.",
+      "Copper is a desktop workspace for Markdown notes, tasks, and projects. It brings writing, linked notes, search, properties, and task boards together around a folder on your computer.",
   },
   {
     question: "Do I need an account or an internet connection?",

@@ -1,12 +1,12 @@
 ---
 import { getImage } from "astro:assets";
-import editor from "../../../../docs/images/editor.png";
+import board from "../../../../docs/images/tasks-board.png";
 import icon from "../../../desktop/public/icon.png";
 import { site } from "../lib/site";
 import "../styles/global.css";
 
 const socialImage = await getImage({
-  src: editor,
+  src: board,
   width: 1200,
   format: "webp",
 });
@@ -29,7 +29,7 @@ const touchIcon = await getImage({ src: icon, width: 180, format: "png" });
     <meta property="og:description" content={site.description} />
     <meta property="og:url" content={site.url} />
     <meta property="og:image" content={new URL(socialImage.src, site.url).href} />
-    <meta property="og:image:alt" content="Copper's Markdown workspace in the Linen theme" />
+    <meta property="og:image:alt" content="Copper Tasks: a project board in the same local workspace as your Markdown notes" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>

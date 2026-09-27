@@ -25,12 +25,13 @@ tags:
 
 # Copper
 
-A fast, beautiful, local-first Markdown editor.
+A local-first workspace for notes, tasks, and projects.
 
 Markdown files in this folder are the source of truth. See [[Architecture]] and #research.
 
 - [x] Open a Vault
 - [ ] Write notes
+- [ ] Plan the next step in Tasks
 `;
 
 const ARCHITECTURE_MD = `---
@@ -184,7 +185,7 @@ let NOTES = [
     path: "Inbox/copper.md",
     title: "Copper",
     snippet:
-      "A fast, beautiful, local-first Markdown editor. Markdown files in this folder are the source of truth.",
+      "A local-first workspace for notes, tasks, and projects. Markdown files in this folder are the source of truth.",
     tags: ["product", "research"],
     mtimeNs: Date.now() * 1_000_000,
   },

@@ -10,9 +10,10 @@ tags:
 
 # Copper
 
-A fast, beautiful, local-first Markdown editor.
+A local-first workspace for notes, tasks, and projects.
 
 Markdown files in this folder are the source of truth. See [[Architecture]] and #research.
 
 - [x] Open a Vault
 - [ ] Write notes
+- [ ] Plan the next step in Tasks

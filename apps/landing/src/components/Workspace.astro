@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import settings from "../../../../docs/images/settings.png";
 import { features } from "../lib/site";
+import Tasks from "./Tasks.astro";
 ---
 <section id="workspace" class="workspace wrap section-space" aria-labelledby="workspace-title">
   <div class="section-heading">
@@ -18,6 +19,7 @@ import { features } from "../lib/site";
       </article>
     ))}
   </div>
+  <Tasks />
   <div class="appearance-panel">
     <div class="appearance-copy">
       <p class="eyebrow">Feels like your space</p>

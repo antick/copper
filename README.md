@@ -1,16 +1,24 @@
 # Copper
 
-A fast, beautiful, local-first Markdown editor.
+A local-first workspace for notes, tasks, and projects.
 
 **Website: [copper.potion.sh](https://copper.potion.sh)**
 
-Copper is a desktop knowledge workspace. A **Vault** is any folder you choose;
-Markdown files in that folder are the source of truth. There is no account and
-no cloud. The SQLite search index lives in app data, not inside your notes.
+Copper brings **Notes** and **Tasks** into one desktop workspace. A **Vault** is
+any folder you choose. Notes, projects, and issues are Markdown files in that
+folder. There is no account and no cloud. The SQLite search index lives in app data, not inside your notes.
 
 ![Copper editor showing demo notes and properties in the Linen theme](docs/images/editor.png)
 
 *Browse notes, edit Markdown, and manage properties in one workspace.*
+
+![Copper Tasks showing the All issues list with statuses, priorities, and projects](docs/images/tasks-list.png)
+
+*Plan work in Tasks: find issues, set priorities, and keep projects close at hand.*
+
+![Copper project board showing demo issues organized by workflow status](docs/images/tasks-board.png)
+
+*Switch between project overview, issue list, and board. Move cards as work progresses.*
 
 ![Appearance settings](docs/images/settings.png)
 
@@ -70,7 +78,10 @@ with install scripts disabled, builds the site, and serves `apps/landing/dist`.
 Pushes to `main` deploy the production site. This does not package or publish
 the desktop app. Cloudflare manages the DNS-only CNAME for `copper`.
 
-The landing page uses the existing product artwork and screenshots directly.
+The landing page and README share the current Notes, Tasks list, project board,
+and Appearance screenshots in `docs/images`. They show the real renderer with
+demo data. To refresh them, start `pnpm dev:web --host 127.0.0.1 --port 1422`,
+then run `bash scripts/capture-readme-screenshots.sh` (requires `agent-browser`).
 Edit copy and links in `apps/landing/src/lib/site.ts`. The reusable shadcn Button
 is rendered as static HTML through Astro’s React integration; FAQ disclosure
 uses native HTML and needs no client JavaScript. Setup follows the
@@ -126,9 +137,11 @@ Unmarked Markdown in `Tasks/` stays an ordinary note. Copper does not create a
 `.copper/` directory in the Vault; the SQLite index stays in app data.
 
 Tasks mode uses a compact task navigation pane and one full-width issue canvas.
-It includes All, Active, Backlog, and Completed destinations; a searchable
-Projects directory; project Overview, Issues, and Board tabs; virtualized issue
-lists; and pointer- plus keyboard-accessible kanban movement. Issue and project
+It includes All issues, user-managed Pinned and Projects navigation, project
+Overview, Issues, and Board tabs, searchable and filterable issue lists, and
+pointer- plus keyboard-accessible kanban movement. Set statuses, priorities,
+labels, and due dates; customize a project’s workflow; and keep multiple task
+tabs open alongside your notes. Issue and project
 forms reuse compact property controls, native date fields, and dismissible
 detail sheets. Failed writes keep the current draft or restore the optimistic
 board order so the user can retry. These views still read and write only the

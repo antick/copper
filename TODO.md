@@ -8,7 +8,7 @@ Track outstanding work and verification here. Completed implementation history l
 - [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before public distribution.
 - [ ] Retire the legacy release repository: its history, metadata, and checksum-verified assets are backed up privately, but GitHub rejected deletion because the CLI token lacks `delete_repo` permission. Old clients will need a manual reinstall from this repository once a verified release is available.
 
-The initial source snapshot passed 246 frontend tests, 128 native tests, type checks, lint, web/Electron production builds, a dependency audit, and secret/privacy checks. Updates and release automation target this repository. The protected publishing job uses the automatic GitHub token. Only two selected demo images are retained in `docs/images`; temporary testing output is ignored.
+The initial source snapshot passed 246 frontend tests, 128 native tests, type checks, lint, web/Electron production builds, a dependency audit, and secret/privacy checks. Updates and release automation target this repository. The protected publishing job uses the automatic GitHub token. Selected demo images are retained in `docs/images`; temporary testing output is ignored.
 
 ## Landing page and monorepo
 
@@ -18,6 +18,9 @@ Verified: 246 frontend tests, 128 native tests, the landing production-output te
 
 The landing page is live at [copper.potion.sh](https://copper.potion.sh) on Vercel. Cloudflare’s DNS-only CNAME is configured, and HTTPS, page content, the canonical URL, robots.txt, sitemap.xml, and the 404 response have been verified.
 
+Notes and Tasks are now both represented in the landing hero, navigation, dedicated Tasks section, social metadata, README, welcome copy, and demo note. Four refreshed screenshots cover Notes, the Tasks list, the project board, and Appearance. Screenshot preparation uses only demo preview data. Verified: 246 frontend tests, 128 native tests, two landing checks (production output with all four images, plus safe and repeatable demo preparation), both type checks, Biome, both production builds, screenshot helper syntax, and the real capture steps through the shared browser. The production page loads every image and fits 320, 390, and 1440 pixel widths. The standalone screenshot CLI wrapper was syntax-checked; browser steps were executed through T3. This update is local and still needs publication.
+
+- [ ] Publish the Tasks presentation update after review.
 - [ ] Replace the early-development source/release links with download links after approved installers are available.
 
 ## Native acceptance

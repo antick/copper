@@ -1,0 +1,16 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  label: string;
+  eager?: boolean;
+}
+const { src, alt, label, eager = false } = Astro.props;
+---
+<div class="screenshot-mat">
+  <div class="mat-label"><span class="tiny-star" aria-hidden="true">✳</span> {label}</div>
+  <Image src={src} alt={alt} widths={[640, 960, 1440, 1920]} sizes="(max-width: 1160px) 92vw, 1060px" loading={eager ? "eager" : "lazy"} fetchpriority={eager ? "high" : "auto"} class="product-screenshot" />
+</div>

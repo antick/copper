@@ -291,3 +291,30 @@
 .skip-link:focus {
   top: 12px;
 }
+
+.tasks {
+  margin-top: 80px;
+}
+.task-showcases {
+  display: grid;
+  gap: 48px;
+  margin-top: 44px;
+}
+.task-showcases figure {
+  margin: 0;
+}
+.task-showcases figcaption {
+  margin-top: 22px;
+  max-width: 680px;
+}
+.task-showcases h3 {
+  font-family: var(--font-serif);
+  font-size: 29px;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+.task-showcases p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+}

@@ -1,8 +1,8 @@
 export const WELCOME_COPY = {
   heading: "Copper",
-  thesis: "Notes live in a folder on this computer.",
+  thesis: "Your notes, tasks, and projects. On this computer.",
   invitation: "Open a folder of Markdown files.",
-  footnote: "Markdown stays on disk. Copper does not write into the folder.",
+  footnote: "Notes and tasks stay yours, as Markdown files on disk.",
   openVault: "Open Vault",
   recentHeading: "Recent Vaults",
   settings: "Settings",

@@ -27,8 +27,25 @@ capture() {
   echo "wrote $OUT/$name"
 }
 
-capture welcome.png "/welcome?preview=1" ".copper-welcome"
 capture editor.png "/vault/demo-vault?preview=1" ".cm-editor"
+# Stay on the same preview document so sample issues remain in memory.
+agent-browser --session "$SESSION" eval "$(cat "$ROOT/scripts/screenshot-demo.js")"
+agent-browser --session "$SESSION" click 'button[aria-label="Tasks"]'
+agent-browser --session "$SESSION" wait '[aria-label="Kanban board"]'
+agent-browser --session "$SESSION" click 'button[aria-label="Show list"]'
+agent-browser --session "$SESSION" wait 'table'
+agent-browser --session "$SESSION" wait 2000
+agent-browser --session "$SESSION" screenshot "$OUT/tasks-list.png"
+agent-browser --session "$SESSION" click '.copper-task-project-nav-item'
+agent-browser --session "$SESSION" wait '[aria-label="Project views"]'
+agent-browser --session "$SESSION" find role button click --name Board --exact
+agent-browser --session "$SESSION" wait '[aria-label="Kanban board"]'
+agent-browser --session "$SESSION" wait 2000
+agent-browser --session "$SESSION" set viewport 1920 1000 2
+agent-browser --session "$SESSION" wait 1000
+agent-browser --session "$SESSION" screenshot "$OUT/tasks-board.png"
+agent-browser --session "$SESSION" set viewport 1440 900 2
+
 capture settings.png "/settings/appearance?preview=1" ".copper-settings"
 
 agent-browser --session "$SESSION" close >/dev/null 2>&1 || true
