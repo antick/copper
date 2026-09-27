@@ -6,6 +6,7 @@ export const site = {
     "A calm desktop workspace for your notes, tasks, and projects. Plain Markdown files, stored on your computer. No account. No cloud required.",
   repository: "https://github.com/antick/copper",
   releases: "https://github.com/antick/copper/releases",
+  install: "https://github.com/antick/copper/blob/main/docs/INSTALL.md",
   setup: "https://github.com/antick/copper#run-locally",
   potion: "https://potion.sh",
   license: "https://github.com/antick/copper/blob/main/LICENSE",
@@ -64,8 +65,8 @@ export const questions = [
       "Projects and issues are Markdown files too, stored in your Vault’s Tasks folder. Their properties live in YAML frontmatter, a small block of readable fields at the top of each file.",
   },
   {
-    question: "Can I download Copper yet?",
+    question: "Which computers does Copper support?",
     answer:
-      "Copper is in early development. The source is available now under the AGPL-3.0 license. Approved installers are still being prepared; the GitHub releases page will carry them when they are ready. You can build and run the app locally today.",
+      "Download Copper for Apple Silicon or Intel Macs, Windows x64, and Linux x64 or ARM64. This early release has no paid publisher certificates: macOS is ad-hoc signed, not notarized, and Windows may show a warning. Follow the installation guide. Updates are manual; the source is also available under AGPL-3.0.",
   },
 ];

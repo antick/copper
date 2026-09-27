@@ -9,10 +9,12 @@ test("the landing page ships working navigation, assets, and honest release link
   const html = readFileSync("dist/index.html", "utf8");
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
   assert.equal((html.match(/<details\b/g) ?? []).length, 5);
-  assert.match(html, /Approved installers are on the way/);
+  assert.match(html, /Early release for macOS, Windows, and Linux/);
   assert.match(html, /https:\/\/github.com\/antick\/copper\/releases/);
   assert.match(html, /<link rel="canonical" href="https:\/\/copper.potion.sh"/);
   assert.doesNotMatch(html, /<astro-island\b/);
+  assert.match(html, /Download Copper/);
+  assert.match(html, /Updates are manual/);
   assert.match(
     html,
     /<meta name="description" content="[^"]*notes, tasks, and projects/,

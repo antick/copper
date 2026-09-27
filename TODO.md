@@ -6,9 +6,7 @@ Track outstanding work and verification here. Completed implementation history l
 
 The owner approved a fresh `0.1.0` release using Loadout’s installer approach: ad-hoc-signed macOS, unsigned Windows, and Linux packages. Versions and changelog are reset. Five native build jobs must produce all nine installers before a draft can be published; automatic updates are disabled until their signing and full flow are verified.
 
-Local verification passed 380 tests, both type checks, Biome, the desktop and landing builds, macOS ad-hoc signature verification, and packaged version/SQLite checks. Cross-platform builds and public downloads remain pending.
-
-- [ ] Complete and verify the v0.1.0 installer builds, publish the draft, and verify the public downloads.
+Release verification passed 380 tests, both type checks, Biome, production builds, the dependency audit, and secret scanning. All five native CI runners verified the packaged version and SQLite; both macOS jobs verified signatures and disk images. A local Apple Silicon GUI startup check passed with an isolated profile. All nine uploaded installer digests match `SHA256SUMS`. The `v0.1.0` tag points to `cc5a899`; the complete release is published at [Copper 0.1.0](https://github.com/antick/copper/releases/tag/v0.1.0). Full Windows/Linux interactive acceptance remains a follow-up; native packaging checks are not a complete UI test.
 
 - [ ] Configure main/tag protections and a reviewed release environment. Secret scanning, push protection, vulnerability alerts, and private vulnerability reporting are enabled.
 - [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before enabling signed distribution and automatic updates.
@@ -24,12 +22,12 @@ Verified: 246 frontend tests, 128 native tests, the landing production-output te
 
 The landing page is live at [copper.potion.sh](https://copper.potion.sh) on Vercel. Cloudflare’s DNS-only CNAME is configured, and HTTPS, page content, the canonical URL, robots.txt, sitemap.xml, and the 404 response have been verified.
 
-Notes and Tasks are now both represented in the landing hero, navigation, dedicated Tasks section, social metadata, README, welcome copy, and demo note. Four refreshed screenshots cover Notes, the Tasks list, the project board, and Appearance. Screenshot preparation uses only demo preview data. Verified: 246 frontend tests, 128 native tests, two landing checks (production output with all four images, plus safe and repeatable demo preparation), both type checks, Biome, both production builds, screenshot helper syntax, and the real capture steps through the shared browser. The production page loads every image and fits 320, 390, and 1440 pixel widths. The standalone screenshot CLI wrapper was syntax-checked; browser steps were executed through T3. This update is local and still needs publication.
+Notes and Tasks are now both represented in the landing hero, navigation, dedicated Tasks section, social metadata, README, welcome copy, and demo note. Four refreshed screenshots cover Notes, the Tasks list, the project board, and Appearance. Screenshot preparation uses only demo preview data. Verified: 246 frontend tests, 128 native tests, two landing checks (production output with all four images, plus safe and repeatable demo preparation), both type checks, Biome, both production builds, screenshot helper syntax, and the real capture steps through the shared browser. The production page loads every image and fits 320, 390, and 1440 pixel widths. The standalone screenshot CLI wrapper was syntax-checked; browser steps were executed through T3. The Tasks presentation is published; the landing download link and platform/installation copy now target the first installer release.
 
-- [ ] Publish the Tasks presentation update after review.
-- [ ] Replace the early-development source/release links with download links after approved installers are available.
 
 ## Native acceptance
+
+- [ ] Complete interactive installation and primary UI flows on Windows and Linux; native CI packaging and SQLite checks passed.
 
 - [ ] Complete attachment-import confirmation, external-link handoff, clipboard, and native development startup/hot-reload checks after the security changes. Packaged opening/editing, Git denial/grant/diff review, and remote-image consent have been verified.
 - [ ] Confirm right-edge painting after manual macOS resizing and moving between displays.
