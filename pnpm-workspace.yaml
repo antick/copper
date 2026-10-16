@@ -10,3 +10,15 @@ onlyBuiltDependencies:
   - electron
   - electron-winstaller
   - esbuild
+
+# Patched versions for advisories reported by `pnpm audit`.
+overrides:
+  http-cache-semantics: ">=4.3.0"
+  source-map-js: ">=1.2.2"
+  sharp: ">=0.35.5"
+
+auditConfig:
+  # No patched release exists yet for these. Remove each entry when a fix ships.
+  ignoreGhsas:
+    - GHSA-vfj7-8cjw-p6xm # braces: stack-exhaustion DoS on deeply nested patterns (build tooling only)
+    - GHSA-hp3w-g68c-fv3c # sprintf-js: unbounded precision DoS (electron-builder, build time only)
