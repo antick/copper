@@ -5,7 +5,7 @@ Track outstanding work and verification here. Completed implementation history l
 ## Public repository and releases
 
 The published baseline is [Copper 0.1.0](https://github.com/antick/copper/releases/tag/v0.1.0),
-which used ad-hoc macOS signing and manual updates. Version 0.2.0 adds Developer ID signed,
+which used ad-hoc macOS signing and manual updates. Version 0.2.2 adds Developer ID signed,
 Apple-notarized macOS installers and in-app updates, while Windows/Linux keep manual updates.
 Copper Dev has independent identity and app data; explicitly shared Vault folders are still shared.
 
@@ -15,7 +15,7 @@ Copper Dev has independent identity and app data; explicitly shared Vault folder
 - [x] Implement update progress, explicit restart, save-before-restart, and retry behavior.
 - [x] Finish local integrated verification and record the results below; CI/public gates remain below.
 - [x] Verify a real signed/notarized installer and signed-version-to-signed-version update on macOS.
-- [ ] Resolve Intel CI notarization validation, publish the complete 0.2.1 installer set and verify public downloads, updater metadata, and website.
+- [ ] Publish the Apple Silicon-only macOS and Windows/Linux 0.2.2 installer set and verify public downloads, updater metadata, and website.
 - [ ] Complete Windows/Linux interactive acceptance; native packaging checks are not a complete UI test.
 - [ ] Retire the legacy release repository separately; its private backup exists, but deletion was previously blocked by token permissions. Legacy clients need a manual installation from this repository.
 

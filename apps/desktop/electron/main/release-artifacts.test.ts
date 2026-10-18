@@ -11,6 +11,7 @@ import {
   verifyReleaseArtifacts,
 } from "../../../../scripts/release-artifacts.mjs";
 import { assertDraftRelease } from "../../scripts/publish-release.mjs";
+import { validateUpdateMetadata } from "../../scripts/release-metadata.mjs";
 
 const version = "1.2.3";
 
@@ -46,7 +47,6 @@ function writeMacArtifact(directory: string, arch: "arm64" | "x64") {
 function createArtifactInput(root: string) {
   const input = path.join(root, "downloaded");
   writeMacArtifact(path.join(input, "installers-mac-arm64"), "arm64");
-  writeMacArtifact(path.join(input, "installers-mac-x64"), "x64");
   const files = {
     "installers-win-x64": [`Copper-Setup-${version}-x64.exe`],
     "installers-linux-arm64": [
@@ -72,13 +72,13 @@ it("requires all platform installers before creating release checksums", () => {
   );
   try {
     const names = expectedInstallers(version);
-    expect(names).toHaveLength(9);
+    expect(names).toHaveLength(7);
     expect(() => verifyInstallers(directory, version)).toThrow();
     for (const name of names)
       fs.writeFileSync(path.join(directory, name), "fixture");
     expect(
       verifyInstallers(directory, version).trim().split("\n"),
-    ).toHaveLength(9);
+    ).toHaveLength(7);
     fs.writeFileSync(path.join(directory, names[0]), "");
     expect(() => verifyInstallers(directory, version)).toThrow(
       /Empty release artifact/,
@@ -112,13 +112,13 @@ it("only permits a matching draft with a readable asset list to publish", () => 
   ).toThrow(/asset list/);
 });
 
-it("merges signed Mac architectures without metadata collisions and checks all assets", () => {
+it("collects Apple Silicon macOS and Windows/Linux assets with verified metadata", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "copper-release-assets-"));
   const input = createArtifactInput(root);
   const output = path.join(root, "final");
   try {
     const assets = mergeReleaseArtifacts(input, output, version);
-    expect(assets).toHaveLength(12);
+    expect(assets).toHaveLength(9);
     const metadata: {
       files: Array<{ url: string }>;
       path?: string;
@@ -128,7 +128,6 @@ it("merges signed Mac architectures without metadata collisions and checks all a
     );
     expect(metadata.files.map((file) => file.url)).toEqual([
       `Copper-${version}-mac-arm64.zip`,
-      `Copper-${version}-mac-x64.zip`,
     ]);
     expect(metadata.path).toBeUndefined();
     expect(metadata.sha512).toBeUndefined();
@@ -163,6 +162,24 @@ it("rejects missing update blockmaps, tampering, and extra release files", () =>
     );
     expect(() => verifyReleaseArtifacts(extraOutput, version)).toThrow(
       /no unexpected files/i,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("rejects Intel Mac artifacts and Intel update metadata", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "copper-intel-rejected-"));
+  try {
+    const input = createArtifactInput(root);
+    const intel = path.join(input, "installers-mac-x64");
+    writeMacArtifact(intel, "x64");
+    expect(() =>
+      mergeReleaseArtifacts(input, path.join(root, "final"), version),
+    ).toThrow(/four immutable platform artifacts/);
+    expect(() => validateUpdateMetadata(intel, version)).toThrow(/mismatched/);
+    expect(() => validateUpdateMetadata(intel, version, "x64")).toThrow(
+      /Unsupported/,
     );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

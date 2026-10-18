@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import electron from "electron";
+import { macReleaseArchitectures } from "./release-metadata.mjs";
 import {
   cleanupReleaseSigning,
   normalizeMacUpdateMetadata,
@@ -226,8 +227,8 @@ function copyVerifiedArtifacts(output, names) {
 function buildRelease(arch, env) {
   if (process.platform !== "darwin")
     throw new Error("macOS releases must be built on macOS");
-  if (!new Set(["arm64", "x64"]).has(arch))
-    throw new Error("macOS release architecture must be arm64 or x64");
+  if (!macReleaseArchitectures.includes(arch))
+    throw new Error("macOS releases support Apple Silicon (arm64) only");
   assertReleaseTag(env);
   requireReleaseCredentials(env);
   if (!env.CSC_NAME?.trim() && !env.CSC_LINK?.trim())
@@ -281,7 +282,7 @@ function main(args, env = process.env) {
   if (command === "cleanup") return cleanupReleaseSigning(env);
   if (command !== "build")
     throw new Error(
-      "Usage: build-release.mjs prepare|build [--arch arm64|x64]|cleanup",
+      "Usage: build-release.mjs prepare|build [--arch arm64]|cleanup",
     );
   const archIndex = optionArgs.indexOf("--arch");
   const arch = archIndex >= 0 ? optionArgs[archIndex + 1] : process.arch;

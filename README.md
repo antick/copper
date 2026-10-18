@@ -177,7 +177,7 @@ pnpm check
 
 Download installers from [GitHub Releases](https://github.com/antick/copper/releases/latest).
 See [the installation guide](docs/INSTALL.md) for macOS, Windows, and Linux.
-The app version is **0.2.0**. Public macOS installers are Developer ID signed
+The app version is **0.2.2**. Public macOS installers support Apple Silicon only and are Developer ID signed
 and Apple-notarized, with in-app updates. Windows installers remain unsigned;
 Windows and Linux updates use the latest installer. The maintainer process is in [docs/release/github.md](docs/release/github.md).
 

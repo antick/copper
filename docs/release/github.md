@@ -1,7 +1,7 @@
 # Copper release process
 
 The desktop version in `apps/desktop/package.json` determines the tag and artifacts. Keep the root
-package version and desktop `buildVersion` synchronized. Public macOS releases are signed and
+package version and desktop `buildVersion` synchronized. Public macOS releases support Apple Silicon only and are signed and
 notarized; Windows and Linux use manual installer updates.
 
 ## One-time setup
@@ -32,10 +32,10 @@ No signing or GitHub credentials are included in the app.
    `pnpm security:scan`, and `git diff --check`. Review any configured audit exceptions.
 3. Commit and push the verified change to main. Create and push the matching `v<version>` tag.
    Never move an existing release tag; fix a failed release with a new version.
-4. Approve the protected release environment. All five native builds must finish. macOS jobs sign,
+4. Approve the protected release environment. All four native builds must finish. macOS jobs sign,
    notarize, verify native SQLite and bundle identity, and validate Apple's approval. The final
-   job assembles all nine installers, update files, and checksums into a GitHub draft.
-5. Download the candidate installers. Verify Apple Silicon and Intel artifacts, launch on the
+   job assembles all seven installers, update files, and checksums into a GitHub draft.
+5. Download the candidate installers. Verify Apple Silicon macOS artifacts, launch on the
    available hardware, and test a signed-version-to-signed-version update on a controlled feed.
    Confirm the installed app and Copper Dev coexist and saved data survives an update. Keep
    Windows/Linux interactive gaps explicit when hardware is unavailable.

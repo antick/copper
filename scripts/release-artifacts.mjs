@@ -12,13 +12,13 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  mergeUpdateMetadata,
+  macReleaseArchitectures,
+  normalizeMacUpdateMetadata,
   validateUpdateMetadata,
 } from "../apps/desktop/scripts/release-metadata.mjs";
 
 const releaseDirectories = [
   "installers-mac-arm64",
-  "installers-mac-x64",
   "installers-win-x64",
   "installers-linux-arm64",
   "installers-linux-x64",
@@ -26,7 +26,7 @@ const releaseDirectories = [
 
 export function expectedInstallers(version) {
   return [
-    ...["arm64", "x64"].flatMap((arch) =>
+    ...macReleaseArchitectures.flatMap((arch) =>
       ["dmg", "zip"].map(
         (extension) => `Copper-${version}-mac-${arch}.${extension}`,
       ),
@@ -56,7 +56,7 @@ export function verifyInstallers(directory, version) {
   assert.deepEqual(
     actual,
     expected,
-    "Release must contain all nine installers, with no unexpected files",
+    "Release must contain all seven installers, with no unexpected files",
   );
   return checksumLines(directory, expected);
 }
@@ -97,7 +97,7 @@ export function verifyReleaseArtifacts(directory, version) {
   const required = [
     ...expectedInstallers(version),
     "latest-mac.yml",
-    ...["arm64", "x64"].map(
+    ...macReleaseArchitectures.map(
       (arch) => `Copper-${version}-mac-${arch}.zip.blockmap`,
     ),
   ];
@@ -128,7 +128,7 @@ export function mergeReleaseArtifacts(
   assert.deepEqual(
     actualDirectories,
     [...releaseDirectories].sort(),
-    "Release must download each of the five immutable platform artifacts",
+    "Release must download each of the four immutable platform artifacts",
   );
   assert.ok(
     actualDirectories.every((name) =>
@@ -142,7 +142,7 @@ export function mergeReleaseArtifacts(
   );
   mkdirSync(outputDirectory, { recursive: true });
 
-  for (const arch of ["arm64", "x64"]) {
+  for (const arch of macReleaseArchitectures) {
     const source = path.join(inputDirectory, `installers-mac-${arch}`);
     copyUnique(
       source,
@@ -165,12 +165,12 @@ export function mergeReleaseArtifacts(
     readArtifactDirectory(source, names, platform);
     copyUnique(source, names, outputDirectory);
   }
-  mergeUpdateMetadata(
+  copyUnique(
     path.join(inputDirectory, "installers-mac-arm64"),
-    path.join(inputDirectory, "installers-mac-x64"),
+    ["latest-mac.yml"],
     outputDirectory,
-    version,
   );
+  normalizeMacUpdateMetadata(outputDirectory, version, "arm64");
   const files = readdirSync(outputDirectory).sort();
   writeFileSync(
     path.join(outputDirectory, "SHA256SUMS"),

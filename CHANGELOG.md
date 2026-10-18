@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-10-18
+
+- Support Apple Silicon only for macOS releases; remove Intel builds and download guidance.
+- Retain Windows x64 and Linux x64/ARM64 installers.
+
 ## 0.2.1 — 2026-10-18
 
 Adds bounded, credential-free diagnostics for macOS signature and notarization verification.

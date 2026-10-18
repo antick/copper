@@ -50,7 +50,14 @@ A locally signed Intel app passes ticket validation. The next immutable version 
 with bounded signature/ticket diagnostics; no validation requirement has been removed.
 The diagnostics passed 152 native tests and desktop typechecks.
 
-Pending: Intel CI diagnosis, final public artifact verification, and public downloads.
+The maintainer subsequently limited macOS support to Apple Silicon. The 0.2.1 workflow was
+cancelled before publication; 0.2.2 removes Intel from builds, metadata, and current download guidance.
+
+The Apple Silicon-only change passed 153 native tests, both typechecks, Biome, desktop/landing
+production builds, landing tests, secret scanning, and diff checks. The frontend suite also
+passed 251 tests before the release-only platform change.
+
+Pending: final 0.2.2 public artifact verification and public downloads.
 
 Test builds use a local-only generic update feed and isolated `COPPER_USER_DATA_DIR`. They must
 never be published or left installed as the everyday app. Public artifacts use GitHub Releases.
@@ -63,6 +70,6 @@ Live production deployment verification remains pending publication.
 
 ## Hardware boundary
 
-This machine can validate Apple Silicon launch and update behavior. Intel macOS artifacts can be
-checked by the Intel CI runner; physical Intel-Mac UI acceptance remains separate. Windows/Linux
+This machine can validate Apple Silicon launch and update behavior. Intel macOS is no longer
+a supported release target. Windows/Linux
 native packaging and SQLite checks do not replace interactive acceptance on those systems.

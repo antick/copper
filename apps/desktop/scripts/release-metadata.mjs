@@ -4,7 +4,7 @@ import path from "node:path";
 import YAML from "yaml";
 
 const metadataFilename = "latest-mac.yml";
-const architectures = ["arm64", "x64"];
+export const macReleaseArchitectures = ["arm64"];
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -28,7 +28,7 @@ function verifyFileEntry(directory, entry, version, expectedArch) {
     typeof entry.url === "string" &&
     entry.url.match(
       new RegExp(
-        `^Copper-${escapeRegex(version)}-mac-(arm64|x64)\\.(zip|dmg)$`,
+        `^Copper-${escapeRegex(version)}-mac-(${macReleaseArchitectures.join("|")})\\.(zip|dmg)$`,
       ),
     );
   if (
@@ -75,7 +75,7 @@ function verifyFileEntry(directory, entry, version, expectedArch) {
 
 export function validateUpdateMetadata(directory, version, arch) {
   const data = parseMetadata(directory, version);
-  if (arch && !architectures.includes(arch))
+  if (arch && !macReleaseArchitectures.includes(arch))
     throw new Error(`Unsupported macOS architecture: ${arch}`);
   const entries = data.files.map((entry) =>
     verifyFileEntry(directory, entry, version, arch),
@@ -83,7 +83,7 @@ export function validateUpdateMetadata(directory, version, arch) {
   if (data.files.some((entry) => !entry.url.endsWith(".zip")))
     throw new Error("Mac update metadata may contain only ZIP artifacts");
   const zipEntries = data.files.filter((entry) => entry.url.endsWith(".zip"));
-  const requiredArches = arch ? [arch] : architectures;
+  const requiredArches = arch ? [arch] : macReleaseArchitectures;
   for (const requiredArch of requiredArches) {
     const count = zipEntries.filter((entry) =>
       entry.url.includes(`-mac-${requiredArch}.`),
@@ -100,7 +100,7 @@ export function validateUpdateMetadata(directory, version, arch) {
 
 export function normalizeMacUpdateMetadata(directory, version, arch) {
   const data = parseMetadata(directory, version);
-  if (!architectures.includes(arch))
+  if (!macReleaseArchitectures.includes(arch))
     throw new Error(`Unsupported macOS architecture: ${arch}`);
   const expectedName = new RegExp(
     `^Copper-${escapeRegex(version)}-mac-${arch}\\.(zip|dmg)$`,
@@ -134,32 +134,4 @@ export function normalizeMacUpdateMetadata(directory, version, arch) {
     YAML.stringify(normalized, { lineWidth: 0 }),
   );
   return validateUpdateMetadata(directory, version, arch);
-}
-
-export function mergeUpdateMetadata(
-  arm64Directory,
-  x64Directory,
-  outputDirectory,
-  version,
-) {
-  const arm64 = parseMetadata(arm64Directory, version);
-  const x64 = parseMetadata(x64Directory, version);
-  const files = [...arm64.files, ...x64.files].sort((left, right) =>
-    left.url.localeCompare(right.url),
-  );
-  const names = files.map((entry) => entry.url);
-  if (new Set(names).size !== names.length)
-    throw new Error("Duplicate macOS update artifact names");
-
-  const releaseDates = [arm64.releaseDate, x64.releaseDate]
-    .filter((date) => typeof date === "string")
-    .sort();
-  const merged = { version, files };
-  if (releaseDates.length) merged.releaseDate = releaseDates.at(-1);
-  fs.mkdirSync(outputDirectory, { recursive: true });
-  fs.writeFileSync(
-    path.join(outputDirectory, metadataFilename),
-    YAML.stringify(merged, { lineWidth: 0 }),
-  );
-  return validateUpdateMetadata(outputDirectory, version);
 }

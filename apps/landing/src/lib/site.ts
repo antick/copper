@@ -67,6 +67,6 @@ export const questions = [
   {
     question: "Which computers does Copper support?",
     answer:
-      "Download Copper for Apple Silicon or Intel Macs, Windows x64, and Linux x64 or ARM64. macOS releases are signed and Apple-notarized, with in-app updates. Windows may show a publisher warning; Windows and Linux updates use the latest installer. Follow the installation guide; the source is also available under AGPL-3.0.",
+      "Download Copper for Apple Silicon Macs, Windows x64, and Linux x64 or ARM64. macOS releases are signed and Apple-notarized, with in-app updates. Windows may show a publisher warning; Windows and Linux updates use the latest installer. Follow the installation guide; the source is also available under AGPL-3.0.",
   },
 ];

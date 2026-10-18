@@ -6,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export {
-  mergeUpdateMetadata,
   normalizeMacUpdateMetadata,
   validateUpdateMetadata,
 } from "./release-metadata.mjs";

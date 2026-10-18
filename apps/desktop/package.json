@@ -2,7 +2,7 @@
   "name": "@copper/desktop",
   "productName": "Copper",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "AGPL-3.0-only",
   "type": "module",
   "main": "./out/main/index.js",
@@ -86,7 +86,7 @@
   },
   "build": {
     "appId": "app.copper.desktop",
-    "buildVersion": "0.2.1",
+    "buildVersion": "0.2.2",
     "productName": "Copper",
     "directories": {
       "output": "release"
@@ -111,8 +111,18 @@
     ],
     "mac": {
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
       ],
       "icon": "resources/icons/copper.icns",
       "category": "public.app-category.productivity",
