@@ -7,9 +7,16 @@ import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import { rendererCsp } from "./scripts/renderer-csp";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+// Only the signed release helper opts into updates. Ordinary builds stay local.
+const releaseDefines = {
+  __COPPER_UPDATES_ENABLED__: JSON.stringify(
+    process.env.COPPER_RELEASE_UPDATES === "1" && process.platform === "darwin",
+  ),
+};
 
 export default defineConfig({
   main: {
+    define: releaseDefines,
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
@@ -20,6 +27,7 @@ export default defineConfig({
     },
   },
   preload: {
+    define: releaseDefines,
     build: {
       externalizeDeps: false,
       rollupOptions: {
@@ -36,6 +44,7 @@ export default defineConfig({
     },
   },
   renderer: {
+    define: releaseDefines,
     root: ".",
     plugins: [
       rendererCsp(),

@@ -27,7 +27,7 @@ const PNG_FILES = [
   { file: "Square310x310Logo.png", size: 310 },
   { file: "StoreLogo.png", size: 50 },
 ];
-const ICNS_REPRESENTATIONS = [
+export const ICNS_REPRESENTATIONS = [
   { size: 16, type: "icp4" },
   { size: 32, type: "icp5" },
   { size: 64, type: "icp6" },
@@ -41,7 +41,7 @@ const ICNS_REPRESENTATIONS = [
   { size: 1024, type: "ic14" },
 ];
 
-function downscale(source, sourceSize, targetSize) {
+export function downscale(source, sourceSize, targetSize) {
   if (targetSize === sourceSize) {
     return source;
   }
@@ -111,7 +111,7 @@ function encodeIco(images) {
   return Buffer.concat([header, ...entries, ...blobs]);
 }
 
-function encodeIcns(images) {
+export function encodeIcns(images) {
   const entries = images.map(({ size, type, rgba }) => {
     const png = encodePng(size, size, rgba);
     const entry = Buffer.alloc(8 + png.length);

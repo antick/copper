@@ -1,5 +1,5 @@
 import { Menu, type MenuItemConstructorOptions } from "electron";
-import { APP_NAME } from "../native/constants";
+import { APP_IDENTITY } from "./identity";
 
 export function applicationMenuTemplate(
   platform = process.platform,
@@ -12,7 +12,7 @@ export function applicationMenuTemplate(
   ];
   if (platform === "darwin") {
     menus.unshift({
-      label: APP_NAME,
+      label: APP_IDENTITY.appName,
       submenu: [
         { role: "about" },
         { type: "separator" },

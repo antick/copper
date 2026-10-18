@@ -1,26 +1,60 @@
 # Copper release process
 
-Copper follows Loadout’s draft-first installer workflow. The owner approved
-publishing without paid Apple or Windows certificates: macOS uses an ad-hoc
-signature, Windows is unsigned, and installation notes disclose this clearly.
+The desktop version in `apps/desktop/package.json` determines the tag and artifacts. Keep the root
+package version and desktop `buildVersion` synchronized. Public macOS releases are signed and
+notarized; Windows and Linux use manual installer updates.
 
-1. Set matching versions in the workspace packages and desktop build metadata.
-2. Update the changelog and release notes. Run `pnpm check`, `pnpm build`,
-   `pnpm build:web`, `pnpm audit --audit-level=moderate`, and `pnpm security:scan`.
-3. Commit, push, and tag the verified commit with its version (`v0.1.0`).
-4. Release CI verifies that commit, then builds on five matching native runners:
-   macOS ARM64/x64, Windows x64, and Linux ARM64/x64. It rebuilds SQLite for each.
-5. macOS jobs verify ad-hoc signatures and disk images. The draft job requires
-   all nine installers and writes `SHA256SUMS` before uploading anything.
-6. Review the draft, verify downloaded checksums and packaged startup, then
-   publish it. The workflow never publishes a partial release automatically.
+## One-time setup
 
-`workflow_dispatch` on main checks all installer builds without creating a release; on a tag it can build the release draft. Never move a
-published tag. `pnpm package` remains a local build with `--publish never`.
+Configure GitHub's `release` environment with a required maintainer reviewer and a deployment
+policy allowing only `v*.*.*` tags. A sole maintainer may review their own deployment. Restrict
+release-tag creation, updates, and deletion to maintainers through an active tag ruleset. Protect
+main with CI and reviewed changes. Signing secrets must never be available to pull-request jobs.
 
-Automatic updates are disabled for this release. A future signed release can
-use the strict `pnpm release:build` and `pnpm release:publish` path, which still
-requires credentials, notarization, and validated update metadata. Before
-switching to that path, configure the protections and credentials in SECURITY.md
-and verify a real update. Release builds currently need only GitHub’s automatic
-token, not a personal publishing token.
+| Setting | Kind | Purpose |
+| --- | --- | --- |
+| `APPLE_TEAM_ID` | Environment variable | Apple Developer team |
+| `MACOS_CERTIFICATE_P12` | Environment secret | Base64 Developer ID Application certificate/private key |
+| `MACOS_CERTIFICATE_PASSWORD` | Environment secret | Password protecting the certificate export |
+| `APPLE_API_KEY_P8` | Environment secret | Apple notarization private key contents |
+| `APPLE_API_KEY_ID` | Environment secret | Apple API key ID |
+| `APPLE_API_ISSUER` | Environment secret | Apple API issuer ID |
+
+Keep an encrypted backup outside GitHub. GitHub cannot export secret values. The workflow uses a
+temporary signing keychain and removes it and the API key after packaging, including failed jobs.
+No signing or GitHub credentials are included in the app.
+
+## Ship a version
+
+1. Update versions, `CHANGELOG.md`, and `docs/release/<version>.md`. Synchronize `TODO.md` with
+   actual verification. Do not claim platform acceptance based only on a passing build.
+2. Run `pnpm check`, `pnpm build:web`, `pnpm build`, `pnpm audit --audit-level=moderate`,
+   `pnpm security:scan`, and `git diff --check`. Review any configured audit exceptions.
+3. Commit and push the verified change to main. Create and push the matching `v<version>` tag.
+   Never move an existing release tag; fix a failed release with a new version.
+4. Approve the protected release environment. All five native builds must finish. macOS jobs sign,
+   notarize, verify native SQLite and bundle identity, and validate Apple's approval. The final
+   job assembles all nine installers, update files, and checksums into a GitHub draft.
+5. Download the candidate installers. Verify Apple Silicon and Intel artifacts, launch on the
+   available hardware, and test a signed-version-to-signed-version update on a controlled feed.
+   Confirm the installed app and Copper Dev coexist and saved data survives an update. Keep
+   Windows/Linux interactive gaps explicit when hardware is unavailable.
+6. Publish the verified draft using the maintainer CLI (`pnpm release:publish` with the matching
+   `GITHUB_REF_NAME`). The script revalidates downloaded assets before publication. A maintainer
+   GitHub credential is needed for this action; never ship it inside the application.
+7. Confirm public downloads, update metadata, signatures, checksums, and the production website.
+   Publication using a maintainer credential triggers Vercel production. GitHub's automatic
+   `GITHUB_TOKEN` does not trigger a second release-event workflow: if used, manually dispatch
+   `vercel-production.yml` after publication and verify the deployed page.
+
+`workflow_dispatch` can rebuild a candidate from an existing matching version tag without publishing. Ordinary `pnpm build` and
+`pnpm package` never publish. Local packaging is not proof of a verified public release.
+
+## Update and recovery policy
+
+The first signed installation replaces 0.1.0 manually. Later signed macOS apps use GitHub's public
+update feed without a token. Dev, web preview, Windows, and Linux do not perform automatic installs.
+
+Do not overwrite published installers or move tags. If a release fails before publication, keep it
+a draft. If a published update has a problem, stop advertising it while preparing a higher-version
+fix; automatic downgrades are disabled. Preserve user data and back up Vaults before migrations.

@@ -14,7 +14,11 @@ test("the landing page ships working navigation, assets, and honest release link
   assert.match(html, /<link rel="canonical" href="https:\/\/copper.potion.sh"/);
   assert.doesNotMatch(html, /<astro-island\b/);
   assert.match(html, /Download Copper/);
-  assert.match(html, /Updates are manual/);
+  assert.match(
+    html,
+    /macOS releases are signed and Apple-notarized, with in-app updates/,
+  );
+  assert.match(html, /Windows and Linux updates use the latest installer/);
   assert.match(
     html,
     /<meta name="description" content="[^"]*notes, tasks, and projects/,

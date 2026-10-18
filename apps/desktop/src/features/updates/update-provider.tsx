@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { copper } from "@/lib/copper";
+import { flushOpenDocuments } from "@/lib/copper/events";
 import {
   UPDATE_CHECK_FOCUS_MIN_MS,
   UPDATE_CHECK_INTERVAL_MS,
@@ -26,11 +27,12 @@ export type UpdateStatus =
       received: number;
       total: number | null;
     }
+  | { kind: "saving"; version: string }
   | { kind: "ready"; version: string }
   | { kind: "restarting"; version: string }
   | {
       kind: "error";
-      phase: "check" | "download" | "install" | "restart";
+      phase: "check" | "download" | "save" | "install";
       summary: string;
       detail: string;
       version?: string;
@@ -69,8 +71,8 @@ function updateFailure(
   const summaries = {
     check: "Copper could not check for updates.",
     download: "Copper could not download the update.",
+    save: "Copper could not save open documents before restarting.",
     install: "Copper could not install the update.",
-    restart: "Copper could not restart to finish the update.",
   } as const;
   return {
     kind: "error",
@@ -87,36 +89,51 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<UpdateStatus>({ kind: "idle" });
   const statusRef = useRef(status);
   const lastCheckRef = useRef(0);
+  const checkInFlightRef = useRef<Promise<void> | null>(null);
+  const downloadInFlightRef = useRef(false);
+  const installInFlightRef = useRef(false);
   statusRef.current = status;
 
   const checkNow = useCallback(async () => {
     if (!copper.updates?.canCheckUpdates()) {
       return;
     }
+    if (checkInFlightRef.current) {
+      return checkInFlightRef.current;
+    }
     const current = statusRef.current.kind;
     if (
       current === "downloading" ||
+      current === "saving" ||
       current === "ready" ||
       current === "restarting"
     ) {
       return;
     }
 
-    setStatus({ kind: "checking" });
+    const pending = (async () => {
+      setStatus({ kind: "checking" });
+      try {
+        const result = await copper.updates?.checkForUpdate();
+        lastCheckRef.current = Date.now();
+        if (result?.kind === "available") {
+          setStatus({ kind: "available", version: result.version });
+          return;
+        }
+        if (result?.kind === "unavailable") {
+          setStatus({ kind: "up-to-date" });
+          return;
+        }
+        setStatus({ kind: "idle" });
+      } catch (error) {
+        setStatus(updateFailure("check", error));
+      }
+    })();
+    checkInFlightRef.current = pending;
     try {
-      const result = await copper.updates.checkForUpdate();
-      lastCheckRef.current = Date.now();
-      if (result.kind === "available") {
-        setStatus({ kind: "available", version: result.version });
-        return;
-      }
-      if (result.kind === "unavailable") {
-        setStatus({ kind: "up-to-date" });
-        return;
-      }
-      setStatus({ kind: "idle" });
-    } catch (error) {
-      setStatus(updateFailure("check", error));
+      await pending;
+    } finally {
+      checkInFlightRef.current = null;
     }
   }, []);
 
@@ -124,30 +141,42 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
     const current = statusRef.current;
     const version =
       current.kind === "ready" ||
-      (current.kind === "error" && current.phase === "restart")
+      (current.kind === "error" &&
+        (current.phase === "save" || current.phase === "install"))
         ? current.version
         : undefined;
-    if (!version || !copper.updates) {
+    if (!version || !copper.updates || installInFlightRef.current) {
       return;
     }
     if (!confirmRestart(version)) {
       return;
     }
+    installInFlightRef.current = true;
+    setStatus({ kind: "saving", version });
+    try {
+      await flushOpenDocuments();
+    } catch (error) {
+      setStatus(updateFailure("save", error, version));
+      installInFlightRef.current = false;
+      return;
+    }
     setStatus({ kind: "restarting", version });
     try {
-      await copper.updates.relaunchApp();
+      await copper.updates.installUpdate();
     } catch (error) {
-      setStatus(updateFailure("restart", error, version));
+      setStatus(updateFailure("install", error, version));
+    } finally {
+      installInFlightRef.current = false;
     }
   }, []);
 
   const startUpdate = useCallback(async () => {
     const current = statusRef.current;
-    if (current.kind === "ready") {
-      await requestRestart();
-      return;
-    }
-    if (current.kind !== "available" && current.kind !== "error") {
+    if (
+      (current.kind !== "available" &&
+        !(current.kind === "error" && current.phase === "download")) ||
+      downloadInFlightRef.current
+    ) {
       return;
     }
     const version =
@@ -157,6 +186,7 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
     if (!copper.updates) {
       return;
     }
+    downloadInFlightRef.current = true;
     setStatus({
       kind: "downloading",
       version,
@@ -170,30 +200,18 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       setStatus(updateFailure("download", error, version));
       return;
-    }
-    try {
-      await copper.updates.installUpdate();
-    } catch (error) {
-      setStatus(updateFailure("install", error, version));
-      return;
+    } finally {
+      downloadInFlightRef.current = false;
     }
     setStatus({ kind: "ready", version });
-    if (confirmRestart(version)) {
-      setStatus({ kind: "restarting", version });
-      try {
-        await copper.updates.relaunchApp();
-      } catch (error) {
-        setStatus(updateFailure("restart", error, version));
-      }
-    }
-  }, [requestRestart]);
+  }, []);
 
   const retryUpdate = useCallback(async () => {
     const current = statusRef.current;
     if (current.kind !== "error") return;
     if (current.phase === "check") {
       await checkNow();
-    } else if (current.phase === "restart") {
+    } else if (current.phase === "save" || current.phase === "install") {
       await requestRestart();
     } else {
       await startUpdate();

@@ -17,8 +17,11 @@ export function updateStatusLabel(
         : `Downloading update ${percent}%`;
     }
     case "ready":
-    case "restarting":
       return `Restart to finish ${status.version}`;
+    case "restarting":
+      return `Restarting to install ${status.version}…`;
+    case "saving":
+      return `Saving documents before restarting for ${status.version}`;
     case "error":
       return status.version
         ? `Update ${status.version} failed`
@@ -36,7 +39,10 @@ export function UpdateStatusControl() {
     return null;
   }
 
-  const busy = status.kind === "downloading" || status.kind === "restarting";
+  const busy =
+    status.kind === "downloading" ||
+    status.kind === "saving" ||
+    status.kind === "restarting";
   if (status.kind === "error") {
     return (
       <Dialog.Root open={failureOpen} onOpenChange={setFailureOpen}>

@@ -1,19 +1,26 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { validateInvocation } from "../../src/lib/copper/command-contract";
 import { safeExternalUrl } from "../../src/lib/safe-url";
+import { UPDATE_EVENT_CHANNEL } from "../../src/lib/updates/config";
+import { RELEASE_UPDATES } from "../../src/lib/updates/release-policy";
 
 export type CopperDesktopApi = {
   packaged: boolean;
+  updatesSupported: boolean;
   pathForFile: (file: File) => string;
   invoke: <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
   on: (channel: string, handler: (payload: unknown) => void) => () => void;
 };
 
-const allowedSubscribe = new Set(["vault://fs"]);
+const allowedSubscribe = new Set(["vault://fs", UPDATE_EVENT_CHANNEL]);
 
 const api: CopperDesktopApi = {
   pathForFile: (file) => webUtils.getPathForFile(file),
   packaged: !process.env.ELECTRON_RENDERER_URL,
+  updatesSupported:
+    !process.env.ELECTRON_RENDERER_URL &&
+    process.platform === "darwin" &&
+    RELEASE_UPDATES.automatic,
   invoke: async (command, args) => {
     const result = await ipcRenderer.invoke(
       "copper:invoke",

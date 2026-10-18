@@ -1,15 +1,7 @@
-import { hasDirtyDocuments } from "@/lib/copper/events";
-
-export function confirmRestart(
-  version: string,
-  dirty = hasDirtyDocuments(),
-): boolean {
-  if (dirty) {
-    return window.confirm(
-      `You have unsaved changes. Restart and update to ${version}? Unsaved edits will be lost.`,
-    );
-  }
-  return window.confirm(`Restart and update to ${version}?`);
+export function confirmRestart(version: string): boolean {
+  return window.confirm(
+    `Save open documents and restart Copper to update to ${version}?`,
+  );
 }
 
 export function updateProgressPercent(

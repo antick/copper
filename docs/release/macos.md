@@ -1,16 +1,21 @@
 # macOS release
 
-- Product: Copper
-- Bundle identifier: `app.copper.desktop`
-- Configuration: `apps/desktop/package.json`, `build`
-- Architectures: Apple Silicon (arm64) and Intel (x64), each built natively
-- Artifacts: DMG and ZIP
+Copper uses Developer ID distribution outside the Mac App Store. Each architecture has a DMG for
+installation and a ZIP for updates. Production identity remains `app.copper.desktop`.
 
-Version 0.1.0 follows Loadout’s ad-hoc signing approach (`identity: "-"`, hardened
-runtime disabled). It is not Apple-notarized. CI verifies the signature and DMG;
-installation warnings and manual updates are documented in [INSTALL.md](../INSTALL.md).
+The signed build helper requires a matching version tag, a Developer ID signing identity and
+Apple notarization credentials. CI imports the certificate into a temporary keychain; local builds
+can use an existing `CSC_NAME`/`CSC_KEYCHAIN` identity and either an Apple API key or a saved
+notarization keychain profile. The helper enables hardened runtime, notarization, mandatory code
+signing, and the compile-time update flag. Ordinary development does not enable that flag.
 
-`pnpm package` makes local artifacts under `apps/desktop/release/` and never
-publishes. See the [release workflow](github.md) for publishing a complete draft.
-Developer ID signing, notarization, and a verified signed update remain future
-work, not prerequisites for the explicitly approved ad-hoc release.
+Verification covers the bundle identifier and Apple Team ID, signature validity, hardened runtime,
+Gatekeeper assessment, stapled notarization ticket, disk-image integrity, packaged version/native
+SQLite, and update artifact hashes. An actual installation and update test is still required.
+
+See [the release process](github.md) for the protected CI workflow and credentials, and
+[installation instructions](../INSTALL.md) for upgrading from 0.1.0.
+
+Copper Dev uses `app.copper.desktop.dev` and its own app data. Keep the normal macOS home and
+Keychain during acceptance tests; isolate only Copper's app data with `COPPER_USER_DATA_DIR`.
+Never test against your everyday Vault.

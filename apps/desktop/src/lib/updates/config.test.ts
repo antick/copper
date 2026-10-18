@@ -3,7 +3,11 @@ import {
   UPDATE_CHECK_FOCUS_MIN_MS,
   UPDATE_CHECK_INTERVAL_MS,
   UPDATE_ENDPOINT,
+  UPDATE_EVENT_CHANNEL,
   UPDATE_GITHUB_REPOSITORY,
+  UPDATE_NOT_AVAILABLE_DOWNLOAD_MESSAGE,
+  UPDATE_NOT_DOWNLOADED_INSTALL_MESSAGE,
+  UPDATE_UNSUPPORTED_RUNTIME_MESSAGE,
 } from "@/lib/updates/config";
 
 describe("update config", () => {
@@ -14,5 +18,9 @@ describe("update config", () => {
     );
     expect(UPDATE_CHECK_INTERVAL_MS).toBe(120_000);
     expect(UPDATE_CHECK_FOCUS_MIN_MS).toBe(60_000);
+    expect(UPDATE_EVENT_CHANNEL).toBe("copper:update");
+    expect(UPDATE_UNSUPPORTED_RUNTIME_MESSAGE).toContain("macOS");
+    expect(UPDATE_NOT_AVAILABLE_DOWNLOAD_MESSAGE).toContain("download");
+    expect(UPDATE_NOT_DOWNLOADED_INSTALL_MESSAGE).toContain("downloading");
   });
 });

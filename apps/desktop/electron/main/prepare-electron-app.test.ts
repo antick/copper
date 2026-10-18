@@ -9,6 +9,7 @@ import {
   copyElectronDist,
   frameworkResourcesPath,
 } from "../../scripts/prepare-electron-app.mjs";
+import { APP_IDENTITIES } from "../app-identity.mjs";
 
 const temps: string[] = [];
 
@@ -69,6 +70,35 @@ describe("copyElectronDist", () => {
     );
   });
 
+  it("gives the development bundle a separate name and executable", () => {
+    const identity = APP_IDENTITIES.development;
+    const source = tempDir("copper-dev-electron-src-");
+    const dest = path.join(tempDir("copper-dev-electron-dst-"), "dist");
+    writeMiniElectronDist(source);
+    copyElectronDist(source, dest, identity);
+
+    const executable = path.join(
+      dest,
+      identity.bundleName,
+      "Contents",
+      "MacOS",
+      identity.executableName,
+    );
+    expect(fs.existsSync(path.join(dest, "Electron.app"))).toBe(false);
+    expect(fs.existsSync(executable)).toBe(true);
+    expect(frameworkResourcesPath(dest, identity)).toBe(
+      path.join(
+        dest,
+        identity.bundleName,
+        "Contents",
+        "Frameworks",
+        "Electron Framework.framework",
+        "Resources",
+      ),
+    );
+    expect(() => assertBrandedElectronBundle(dest, identity)).not.toThrow();
+  });
+
   it("rejects a copy whose Resources symlink points outside the bundle", () => {
     const dist = tempDir("copper-electron-abs-");
     writeMiniElectronDist(dist, "Copper.app");
@@ -95,10 +125,37 @@ describe("assertBrandedCopperIcon", () => {
     fs.writeFileSync(bundledIcon, "stale-icon");
 
     expect(() => assertBrandedCopperIcon(dist, sourceIcon)).toThrow(
-      /canonical Copper icon/,
+      /canonical icon/,
     );
     fs.copyFileSync(sourceIcon, bundledIcon);
     expect(() => assertBrandedCopperIcon(dist, sourceIcon)).not.toThrow();
+  });
+
+  it("checks the development bundle against its separate icon", () => {
+    const identity = APP_IDENTITIES.development;
+    const dist = tempDir("copper-dev-electron-icon-");
+    const sourceIcon = path.join(
+      tempDir("copper-dev-icon-source-"),
+      "dev.icns",
+    );
+    const bundledIcon = path.join(
+      dist,
+      identity.bundleName,
+      "Contents",
+      "Resources",
+      identity.icon.icnsBundle,
+    );
+    fs.mkdirSync(path.dirname(bundledIcon), { recursive: true });
+    fs.writeFileSync(sourceIcon, "canonical-development-icon");
+    fs.writeFileSync(bundledIcon, "stale-icon");
+
+    expect(() => assertBrandedCopperIcon(dist, sourceIcon, identity)).toThrow(
+      /canonical icon/,
+    );
+    fs.copyFileSync(sourceIcon, bundledIcon);
+    expect(() =>
+      assertBrandedCopperIcon(dist, sourceIcon, identity),
+    ).not.toThrow();
   });
 });
 
@@ -106,35 +163,45 @@ describe("assertBrandedCopperIcon", () => {
 describe.skipIf(process.platform !== "darwin")(
   "assertBrandedCopperIdentity",
   () => {
-    it("rejects stale names and missing executables in an otherwise valid cache", () => {
-      const dist = tempDir("copper-identity-");
-      const contents = path.join(dist, "Copper.app", "Contents");
-      const executable = path.join(contents, "MacOS", "Copper");
-      fs.mkdirSync(path.dirname(executable), { recursive: true });
-      fs.writeFileSync(executable, "fixture", { mode: 0o755 });
-      const metadata = {
-        CFBundleName: "Copper",
-        CFBundleDisplayName: "Copper",
-        CFBundleExecutable: "Copper",
-        CFBundleIconFile: "Copper.icns",
-        CFBundleIdentifier: "app.copper.desktop",
-      };
-      const writePlist = (values: typeof metadata) =>
-        fs.writeFileSync(
-          path.join(contents, "Info.plist"),
-          `<plist version="1.0"><dict>${Object.entries(values)
-            .map(([key, value]) => `<key>${key}</key><string>${value}</string>`)
-            .join("")}</dict></plist>`,
+    it("rejects stale names and missing executables for both app identities", () => {
+      for (const identity of Object.values(APP_IDENTITIES)) {
+        const dist = tempDir("copper-identity-");
+        const contents = path.join(dist, identity.bundleName, "Contents");
+        const executable = path.join(
+          contents,
+          "MacOS",
+          identity.executableName,
         );
-      writePlist(metadata);
-      expect(() => assertBrandedCopperIdentity(dist)).not.toThrow();
-      for (const key of Object.keys(metadata)) {
-        writePlist({ ...metadata, [key]: "Electron" });
-        expect(() => assertBrandedCopperIdentity(dist)).toThrow(key);
+        fs.mkdirSync(path.dirname(executable), { recursive: true });
+        fs.writeFileSync(executable, "fixture", { mode: 0o755 });
+        const metadata = {
+          CFBundleName: identity.appName,
+          CFBundleDisplayName: identity.appName,
+          CFBundleExecutable: identity.executableName,
+          CFBundleIconFile: identity.icon.icnsBundle,
+          CFBundleIdentifier: identity.appId,
+        };
+        const writePlist = (values: typeof metadata) =>
+          fs.writeFileSync(
+            path.join(contents, "Info.plist"),
+            `<plist version="1.0"><dict>${Object.entries(values)
+              .map(
+                ([key, value]) => `<key>${key}</key><string>${value}</string>`,
+              )
+              .join("")}</dict></plist>`,
+          );
+        writePlist(metadata);
+        expect(() => assertBrandedCopperIdentity(dist, identity)).not.toThrow();
+        for (const key of Object.keys(metadata)) {
+          writePlist({ ...metadata, [key]: "Electron" });
+          expect(() => assertBrandedCopperIdentity(dist, identity)).toThrow(
+            key,
+          );
+        }
+        writePlist(metadata);
+        fs.rmSync(executable);
+        expect(() => assertBrandedCopperIdentity(dist, identity)).toThrow();
       }
-      writePlist(metadata);
-      fs.rmSync(executable);
-      expect(() => assertBrandedCopperIdentity(dist)).toThrow();
     });
   },
 );

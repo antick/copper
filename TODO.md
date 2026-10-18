@@ -4,16 +4,26 @@ Track outstanding work and verification here. Completed implementation history l
 
 ## Public repository and releases
 
-The owner approved a fresh `0.1.0` release using Loadout’s installer approach: ad-hoc-signed macOS, unsigned Windows, and Linux packages. Versions and changelog are reset. Five native build jobs must produce all nine installers before a draft can be published; automatic updates are disabled until their signing and full flow are verified.
+The published baseline is [Copper 0.1.0](https://github.com/antick/copper/releases/tag/v0.1.0),
+which used ad-hoc macOS signing and manual updates. Version 0.2.0 adds Developer ID signed,
+Apple-notarized macOS installers and in-app updates, while Windows/Linux keep manual updates.
+Copper Dev has independent identity and app data; explicitly shared Vault folders are still shared.
 
-Release verification passed 380 tests, both type checks, Biome, production builds, the dependency audit, and secret scanning. All five native CI runners verified the packaged version and SQLite; both macOS jobs verified signatures and disk images. A local Apple Silicon GUI startup check passed with an isolated profile. All nine uploaded installer digests match `SHA256SUMS`. The `v0.1.0` tag points to `cc5a899`; the complete release is published at [Copper 0.1.0](https://github.com/antick/copper/releases/tag/v0.1.0). Full Windows/Linux interactive acceptance remains a follow-up; native packaging checks are not a complete UI test.
+- [x] Configure main protection, restricted release tags, and a reviewed tag-only `release` environment.
+- [x] Install verified existing Apple signing and notarization credentials as environment-scoped secrets.
+- [x] Implement isolated Copper Dev identity, icon, profile, and disabled automatic updates.
+- [x] Implement update progress, explicit restart, save-before-restart, and retry behavior.
+- [x] Finish local integrated verification and record the results below; CI/public gates remain below.
+- [x] Verify a real signed/notarized installer and signed-version-to-signed-version update on macOS.
+- [ ] Publish the complete 0.2.0 installer set and verify public downloads, updater metadata, and website.
+- [ ] Complete Windows/Linux interactive acceptance; native packaging checks are not a complete UI test.
+- [ ] Retire the legacy release repository separately; its private backup exists, but deletion was previously blocked by token permissions. Legacy clients need a manual installation from this repository.
 
-- [ ] Configure main/tag protections and a reviewed release environment. Secret scanning, push protection, vulnerability alerts, and private vulnerability reporting are enabled.
-- [ ] Publish a security update with Electron `44.4.5` to address [GHSA-qmv3-fv6v-rmhq](https://github.com/advisories/GHSA-qmv3-fv6v-rmhq); existing installers still contain the affected runtime. The source and lockfile also update vulnerable `undici`, `fast-uri`, and `brace-expansion` dependencies. Local verification passed 380 tests, type checks, Biome, production builds, a zero-vulnerability audit, and Electron/SQLite plus sandboxed preload/IPC startup checks. Verify the new installers on all release platforms before publishing.
-- [ ] Add environment-scoped signing credentials and verify a real Developer ID signed/notarized installer and a signed automatic update before enabling signed distribution and automatic updates.
-- [ ] Retire the legacy release repository: its history, metadata, and checksum-verified assets are backed up privately, but GitHub rejected deletion because the CLI token lacks `delete_repo` permission. Old clients will need a manual reinstall from this repository once a verified release is available.
-
-The initial source snapshot passed 246 frontend tests, 128 native tests, type checks, lint, web/Electron production builds, a dependency audit, and secret/privacy checks. Updates and release automation target this repository. The protected publishing job uses the automatic GitHub token. Selected demo images are retained in `docs/images`; temporary testing output is ignored.
+Release checks currently retain two reviewed build-tool audit exceptions (`braces` and `sprintf-js`)
+in `pnpm-workspace.yaml`; a successful audit with those exceptions is not a zero-advisory result.
+Do not mark release work complete on source tests alone. Keep published tags and artifacts immutable.
+Local verification and the remaining public-release gates are recorded in
+[the 0.2.0 verification record](docs/release/verification-0.2.0.md).
 
 ## Landing page and monorepo
 

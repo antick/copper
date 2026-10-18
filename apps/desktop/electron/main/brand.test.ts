@@ -9,10 +9,11 @@ function readIcon(relativePath: string) {
   return decodePng(fs.readFileSync(path.join(root, relativePath)));
 }
 
-function readIcnsPng(type: string) {
-  const source = fs.readFileSync(
-    path.join(root, "resources/icons/copper.icns"),
-  );
+function readIcnsPng(
+  type: string,
+  iconPath = path.join(root, "resources/icons/copper.icns"),
+) {
+  const source = fs.readFileSync(iconPath);
   expect(source.subarray(0, 4).toString("ascii")).toBe("icns");
   expect(source.readUInt32BE(4)).toBe(source.length);
   for (let offset = 8; offset < source.length; ) {
@@ -39,8 +40,9 @@ describe("brand icon files", () => {
         extraResources: Array<{ from: string; to: string }>;
         mac: { icon: string; extendInfo: { CFBundleIconFile: string } };
       };
+      version: string;
     };
-    expect(pkg.build.buildVersion).toBe("0.1.0");
+    expect(pkg.build.buildVersion).toBe(pkg.version);
     expect(pkg.build.mac.icon).toBe("resources/icons/copper.icns");
     expect(pkg.build.mac.extendInfo.CFBundleIconFile).toBe("Copper.icns");
     expect(pkg.build.extraResources).toContainEqual({
@@ -71,6 +73,27 @@ describe("brand icon files", () => {
       a: 253,
     });
     expectCopperArtwork(source);
+  });
+
+  it("gives Copper Dev a distinct badge in its PNG and macOS icons", () => {
+    const devPath = path.join(root, "dev-resources/icons/copper-dev.png");
+    const dev = decodePng(fs.readFileSync(devPath));
+    const production = readIcon("resources/icons/icon.png");
+    expect(dev.width).toBe(1024);
+    expect(dev.data.equals(production.data)).toBe(false);
+    expect(pixelAt(dev, 800, 810)).toEqual({ r: 55, g: 166, b: 255, a: 255 });
+    expect(
+      readIcnsPng(
+        "ic10",
+        path.join(root, "dev-resources/icons/copper-dev.icns"),
+      ).data.equals(dev.data),
+    ).toBe(true);
+    expect(
+      readIcnsPng(
+        "ic11",
+        path.join(root, "dev-resources/icons/copper-dev.icns"),
+      ).width,
+    ).toBe(32);
   });
 
   it("preserves the copper C, charcoal counter, and alpha in every PNG", () => {

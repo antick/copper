@@ -4,31 +4,13 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { APP_IDENTITIES } from "../electron/app-identity.mjs";
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const APP_NAME = "Copper";
-const APP_BUNDLE = `${APP_NAME}.app`;
-const DIST_DIR = path.join(root, ".copper-electron", "dist");
-const STAMP_FILE = path.join(root, ".copper-electron", "stamp");
-const ICON_ICNS = path.join(root, "resources", "icons", "copper.icns");
-const BUNDLE_ICON_NAME = "Copper.icns";
-const PREPARATION_VERSION = "v5";
-const BUNDLE_METADATA = {
-  CFBundleName: APP_NAME,
-  CFBundleDisplayName: APP_NAME,
-  CFBundleExecutable: APP_NAME,
-  CFBundleIconFile: BUNDLE_ICON_NAME,
-  CFBundleIdentifier: "app.copper.desktop",
-};
+const PRODUCTION_IDENTITY = APP_IDENTITIES.production;
+const PREPARATION_VERSION = "v6";
 const ICU_DAT = "icudtl.dat";
-const FRAMEWORK_RESOURCES_SEGMENTS = [
-  APP_BUNDLE,
-  "Contents",
-  "Frameworks",
-  "Electron Framework.framework",
-  "Resources",
-];
 
 function electronPackageDir() {
   return path.dirname(require.resolve("electron/package.json"));
@@ -45,30 +27,65 @@ function fileDigest(file) {
   return createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
-function stampValue() {
-  return `${PREPARATION_VERSION}:${electronVersion()}:${fileDigest(ICON_ICNS)}`;
+function appBundlePath(distDir, identity) {
+  return path.join(distDir, identity.bundleName);
 }
 
-export function frameworkResourcesPath(distDir) {
-  return path.join(distDir, ...FRAMEWORK_RESOURCES_SEGMENTS);
+function preparationPaths(identity) {
+  const directory = path.join(root, identity.preparationDirectory);
+  return {
+    dist: path.join(directory, "dist"),
+    stamp: path.join(directory, "stamp"),
+    icon: path.join(root, identity.icon.directory, identity.icon.icnsSource),
+  };
 }
 
-export function copyElectronDist(sourceDist, destDist) {
+function bundleMetadata(identity) {
+  return {
+    CFBundleName: identity.appName,
+    CFBundleDisplayName: identity.appName,
+    CFBundleExecutable: identity.executableName,
+    CFBundleIconFile: identity.icon.icnsBundle,
+    CFBundleIdentifier: identity.appId,
+  };
+}
+
+export function frameworkResourcesPath(
+  distDir,
+  identity = PRODUCTION_IDENTITY,
+) {
+  return path.join(
+    appBundlePath(distDir, identity),
+    "Contents",
+    "Frameworks",
+    "Electron Framework.framework",
+    "Resources",
+  );
+}
+
+export function copyElectronDist(
+  sourceDist,
+  destDist,
+  identity = PRODUCTION_IDENTITY,
+) {
   fs.mkdirSync(path.dirname(destDist), { recursive: true });
   fs.cpSync(fs.realpathSync(sourceDist), destDist, {
     recursive: true,
     verbatimSymlinks: true,
   });
-  const appPath = path.join(destDist, APP_BUNDLE);
+  const appPath = appBundlePath(destDist, identity);
   fs.renameSync(path.join(destDist, "Electron.app"), appPath);
   fs.renameSync(
     path.join(appPath, "Contents", "MacOS", "Electron"),
-    path.join(appPath, "Contents", "MacOS", APP_NAME),
+    path.join(appPath, "Contents", "MacOS", identity.executableName),
   );
 }
 
-export function assertBrandedElectronBundle(distDir) {
-  const resources = frameworkResourcesPath(distDir);
+export function assertBrandedElectronBundle(
+  distDir,
+  identity = PRODUCTION_IDENTITY,
+) {
+  const resources = frameworkResourcesPath(distDir, identity);
   let stats;
   try {
     stats = fs.lstatSync(resources);
@@ -88,53 +105,71 @@ export function assertBrandedElectronBundle(distDir) {
   }
   const icu = path.join(resources, ICU_DAT);
   if (!fs.existsSync(icu)) {
-    throw new Error(`Missing ${ICU_DAT} in branded ${APP_BUNDLE}`);
+    throw new Error(`Missing ${ICU_DAT} in branded ${identity.bundleName}`);
   }
 }
 
-export function assertBrandedCopperIcon(distDir, sourceIcon = ICON_ICNS) {
+export function assertBrandedCopperIcon(
+  distDir,
+  sourceIcon,
+  identity = PRODUCTION_IDENTITY,
+) {
+  const paths = preparationPaths(identity);
   const bundledIcon = path.join(
-    distDir,
-    APP_BUNDLE,
+    appBundlePath(distDir, identity),
     "Contents",
     "Resources",
-    BUNDLE_ICON_NAME,
+    identity.icon.icnsBundle,
   );
   if (
     !fs.existsSync(bundledIcon) ||
-    fileDigest(bundledIcon) !== fileDigest(sourceIcon)
+    fileDigest(bundledIcon) !== fileDigest(sourceIcon ?? paths.icon)
   ) {
     throw new Error(
-      "Branded Copper.app must contain the canonical Copper icon",
+      `Branded ${identity.bundleName} must contain its canonical icon`,
     );
   }
 }
 
-export function assertBrandedCopperIdentity(distDir) {
-  const contents = path.join(distDir, APP_BUNDLE, "Contents");
+export function assertBrandedCopperIdentity(
+  distDir,
+  identity = PRODUCTION_IDENTITY,
+) {
+  const contents = path.join(appBundlePath(distDir, identity), "Contents");
   const result = spawnSync(
     "plutil",
     ["-convert", "json", "-o", "-", path.join(contents, "Info.plist")],
     { encoding: "utf8" },
   );
   if (result.status !== 0) {
-    throw new Error("Cannot read Copper bundle identity");
+    throw new Error(`Cannot read ${identity.appName} bundle identity`);
   }
   const metadata = JSON.parse(result.stdout);
-  for (const [key, value] of Object.entries(BUNDLE_METADATA)) {
+  for (const [key, value] of Object.entries(bundleMetadata(identity))) {
     if (metadata[key] !== value) {
-      throw new Error(`Copper bundle ${key} must be ${value}`);
+      throw new Error(`${identity.appName} bundle ${key} must be ${value}`);
     }
   }
-  fs.accessSync(path.join(contents, "MacOS", APP_NAME), fs.constants.X_OK);
+  fs.accessSync(
+    path.join(contents, "MacOS", identity.executableName),
+    fs.constants.X_OK,
+  );
 }
 
-function alreadyPrepared() {
-  const appPath = path.join(DIST_DIR, APP_BUNDLE);
-  if (!fs.existsSync(appPath) || !fs.existsSync(STAMP_FILE)) {
+function stampValue(identity, iconPath) {
+  return `${PREPARATION_VERSION}:${electronVersion()}:${JSON.stringify(identity)}:${fileDigest(iconPath)}`;
+}
+
+function alreadyPrepared(identity, paths) {
+  if (
+    !fs.existsSync(appBundlePath(paths.dist, identity)) ||
+    !fs.existsSync(paths.stamp)
+  ) {
     return false;
   }
-  return fs.readFileSync(STAMP_FILE, "utf8") === stampValue();
+  return (
+    fs.readFileSync(paths.stamp, "utf8") === stampValue(identity, paths.icon)
+  );
 }
 
 function replacePlistString(plistPath, key, value) {
@@ -148,54 +183,72 @@ function replacePlistString(plistPath, key, value) {
   }
 }
 
-export function prepareElectronApp() {
+export function prepareElectronApp(identity = PRODUCTION_IDENTITY) {
   if (process.platform !== "darwin") {
     return undefined;
   }
-  if (!fs.existsSync(ICON_ICNS)) {
-    throw new Error(`Missing Copper icon at ${ICON_ICNS}`);
+  const paths = preparationPaths(identity);
+  if (!fs.existsSync(paths.icon)) {
+    throw new Error(`Missing ${identity.appName} icon at ${paths.icon}`);
   }
-  if (alreadyPrepared()) {
+  if (alreadyPrepared(identity, paths)) {
     try {
-      assertBrandedElectronBundle(DIST_DIR);
-      assertBrandedCopperIcon(DIST_DIR);
-      assertBrandedCopperIdentity(DIST_DIR);
-      return DIST_DIR;
+      assertBrandedElectronBundle(paths.dist, identity);
+      assertBrandedCopperIcon(paths.dist, undefined, identity);
+      assertBrandedCopperIdentity(paths.dist, identity);
+      return paths.dist;
     } catch {
       // Rebuild damaged or stale branding even when the stamp still matches.
     }
   }
 
   const sourceDist = path.join(electronPackageDir(), "dist");
-  fs.rmSync(path.join(root, ".copper-electron"), {
+  fs.rmSync(path.join(root, identity.preparationDirectory), {
     recursive: true,
     force: true,
   });
-  copyElectronDist(sourceDist, DIST_DIR);
-  assertBrandedElectronBundle(DIST_DIR);
+  copyElectronDist(sourceDist, paths.dist, identity);
+  assertBrandedElectronBundle(paths.dist, identity);
 
-  const plist = path.join(DIST_DIR, APP_BUNDLE, "Contents", "Info.plist");
-  for (const [key, value] of Object.entries(BUNDLE_METADATA)) {
+  const plist = path.join(
+    appBundlePath(paths.dist, identity),
+    "Contents",
+    "Info.plist",
+  );
+  for (const [key, value] of Object.entries(bundleMetadata(identity))) {
     replacePlistString(plist, key, value);
   }
   fs.copyFileSync(
-    ICON_ICNS,
-    path.join(DIST_DIR, APP_BUNDLE, "Contents", "Resources", BUNDLE_ICON_NAME),
+    paths.icon,
+    path.join(
+      appBundlePath(paths.dist, identity),
+      "Contents",
+      "Resources",
+      identity.icon.icnsBundle,
+    ),
   );
-  assertBrandedCopperIcon(DIST_DIR);
-  assertBrandedCopperIdentity(DIST_DIR);
-  fs.writeFileSync(STAMP_FILE, stampValue());
-  return DIST_DIR;
+  assertBrandedCopperIcon(paths.dist, undefined, identity);
+  assertBrandedCopperIdentity(paths.dist, identity);
+  fs.writeFileSync(paths.stamp, stampValue(identity, paths.icon));
+  return paths.dist;
 }
 
-export function brandedElectronExecPath() {
-  const dist = prepareElectronApp();
+export function brandedElectronExecPath(identity = PRODUCTION_IDENTITY) {
+  const dist = prepareElectronApp(identity);
   if (!dist) {
     return undefined;
   }
-  const execPath = path.join(dist, APP_BUNDLE, "Contents", "MacOS", APP_NAME);
+  const execPath = path.join(
+    dist,
+    identity.bundleName,
+    "Contents",
+    "MacOS",
+    identity.executableName,
+  );
   if (!fs.existsSync(execPath)) {
-    throw new Error(`Branded Electron binary missing at ${execPath}`);
+    throw new Error(
+      `${identity.appName} Electron binary missing at ${execPath}`,
+    );
   }
   return execPath;
 }

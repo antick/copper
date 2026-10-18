@@ -26,6 +26,8 @@ function aboutStatusCopy(
     }
     case "ready":
       return `Version ${status.version} is ready. Restart to finish the update.`;
+    case "saving":
+      return `Saving open documents before restarting to install ${status.version}…`;
     case "restarting":
       return `Restarting to install ${status.version}…`;
     case "error":
@@ -40,6 +42,7 @@ export function AboutUpdates() {
     useUpdates();
   const checking = status.kind === "checking";
   const downloading = status.kind === "downloading";
+  const restarting = status.kind === "saving" || status.kind === "restarting";
 
   if (!RELEASE_UPDATES.automatic) {
     return (
@@ -70,7 +73,7 @@ export function AboutUpdates() {
         label="Check now"
         control={
           <SettingsButton
-            disabled={checking || downloading}
+            disabled={checking || downloading || restarting}
             onClick={() => void checkNow()}
           >
             {checking ? "Checking…" : "Check for updates"}
@@ -79,13 +82,13 @@ export function AboutUpdates() {
       />
       {status.kind === "available" ? (
         <SettingsRow
-          label="Install update"
+          label="Download update"
           control={
             <SettingsButton
               disabled={downloading}
               onClick={() => void startUpdate()}
             >
-              {downloading ? "Downloading…" : "Download and install"}
+              {downloading ? "Downloading…" : "Download update"}
             </SettingsButton>
           }
         />

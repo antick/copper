@@ -8,16 +8,18 @@ import {
   WINDOW_WIDTH,
 } from "../native/constants";
 import { brandIconPath } from "./brand";
+import { APP_IDENTITY } from "./identity";
 import { resolvePreloadScript } from "./preload-path";
 import { isPackagedApp } from "./runtime";
 import { secureWindow } from "./security";
 import { rendererLocation } from "./security-policy";
+import { pinWindowTitle } from "./window-title";
 
 export function createMainWindow(): BrowserWindow {
   const isMac = process.platform === "darwin";
   const preload = resolvePreloadScript(__dirname);
   const window = new BrowserWindow({
-    title: "Copper",
+    title: APP_IDENTITY.appName,
     icon: brandIconPath(),
     width: WINDOW_WIDTH,
     height: WINDOW_HEIGHT,
@@ -35,6 +37,7 @@ export function createMainWindow(): BrowserWindow {
       devTools: !isPackagedApp(),
     },
   });
+  pinWindowTitle(window, APP_IDENTITY.appName);
   const developmentUrl = !isPackagedApp()
     ? process.env.ELECTRON_RENDERER_URL
     : undefined;

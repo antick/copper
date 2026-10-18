@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 — 2026-10-18
+
+- Developer ID signed and Apple-notarized macOS installers, with verified update metadata.
+- Separate Copper Dev identity, icon, and app data for everyday development.
+- macOS update downloads and explicit restart, with progress and retry handling.
+- Protected, repeatable release builds and complete installer checksums.
+- Electron and transitive dependency security fixes since 0.1.0.
+
 ## 0.1.0 — 2026-09-27
 
 First release from `antick/copper`. Version numbering starts fresh here; this

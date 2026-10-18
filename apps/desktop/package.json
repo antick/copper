@@ -2,7 +2,7 @@
   "name": "@copper/desktop",
   "productName": "Copper",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "AGPL-3.0-only",
   "type": "module",
   "main": "./out/main/index.js",
@@ -86,7 +86,7 @@
   },
   "build": {
     "appId": "app.copper.desktop",
-    "buildVersion": "0.1.0",
+    "buildVersion": "0.2.0",
     "productName": "Copper",
     "directories": {
       "output": "release"
@@ -121,9 +121,11 @@
         "CFBundleName": "Copper",
         "CFBundleDisplayName": "Copper"
       },
-      "identity": "-",
-      "hardenedRuntime": false,
-      "artifactName": "Copper-${version}-mac-${arch}.${ext}"
+      "hardenedRuntime": true,
+      "artifactName": "Copper-${version}-mac-${arch}.${ext}",
+      "notarize": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "publish": {
       "provider": "github",

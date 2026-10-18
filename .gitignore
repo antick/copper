@@ -10,8 +10,9 @@ bun-debug.log*
 node_modules
 dist
 out
-release/
+/apps/desktop/release/
 .copper-electron
+.copper-electron-dev
 dist-ssr
 *.local
 .chrome-screenshot-profile
@@ -44,6 +45,7 @@ dist-ssr
 *.pfx
 *.mobileprovision
 release-production-*
+.release-production-*
 release-verified
 *.p8
 

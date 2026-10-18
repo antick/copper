@@ -160,7 +160,6 @@ const commands: Record<string, Record<string, Rule>> = {
   check_for_update: {},
   download_update: {},
   install_update: {},
-  relaunch_app: {},
 };
 
 export const MAX_COMMAND_BYTES = 32 * 1024 * 1024;

@@ -1,7 +1,10 @@
-// v0.1.0 ships without publisher certificates. Use manual downloads until a
-// signed update flow has been verified; do not advertise an untested updater.
+declare const __COPPER_UPDATES_ENABLED__: boolean | undefined;
+
 export const RELEASE_UPDATES = {
-  automatic: false,
+  // The build enables this only for verified signed macOS public releases.
+  automatic:
+    typeof __COPPER_UPDATES_ENABLED__ !== "undefined" &&
+    __COPPER_UPDATES_ENABLED__,
   url: "https://github.com/antick/copper/releases/latest",
   message:
     "Download new versions from Copper releases and install them manually.",

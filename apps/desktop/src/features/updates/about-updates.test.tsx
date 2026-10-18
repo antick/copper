@@ -38,9 +38,7 @@ describe("About updates", () => {
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Check for updates" }));
     expect(mocks.checkNow).toHaveBeenCalledTimes(1);
-    await user.click(
-      screen.getByRole("button", { name: "Download and install" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Download update" }));
     expect(mocks.startUpdate).toHaveBeenCalledTimes(1);
   });
 

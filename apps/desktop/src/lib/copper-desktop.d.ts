@@ -3,6 +3,7 @@ declare global {
     copperDesktop?: {
       pathForFile?: (file: File) => string;
       packaged: boolean;
+      updatesSupported: boolean;
       invoke: <T>(
         command: string,
         args?: Record<string, unknown>,

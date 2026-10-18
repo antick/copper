@@ -475,6 +475,7 @@ function dispatch(cmd: string, args?: Record<string, unknown>) {
 
 window.copperDesktop = {
   packaged: false,
+  updatesSupported: false,
   invoke: async (command, args) => dispatch(command, args) as never,
   on: () => () => undefined,
 };

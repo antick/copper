@@ -20,10 +20,6 @@ export function markDocumentDirty(
   else dirtyDocuments.delete(key);
 }
 
-export function hasDirtyDocuments() {
-  return dirtyDocuments.size > 0;
-}
-
 export function markCopperSave(vaultId: string, path: string) {
   recentCopperSaves.set(documentKey(vaultId, path), Date.now());
 }

@@ -43,10 +43,11 @@ pnpm install
 pnpm dev
 ```
 
-That opens the native Copper window (Electron + Chromium). Vite serves the
+That opens the native Copper Dev window (Electron + Chromium). Vite serves the
 renderer on `http://localhost:1420`. On macOS, `pnpm dev` copies Electron into
-`apps/desktop/.copper-electron/` and stamps it with Copper’s name and icon so the Dock and
-menu bar are not the stock Electron atom. For the browser-only frontend, use
+`apps/desktop/.copper-electron/` and stamps it with Copper Dev’s name and distinct icon. Development uses its own
+app data and does not update or replace the installed Copper app. Use a separate
+test Vault: opening the same folder in both apps still edits the same files. For the browser-only frontend, use
 `pnpm dev:web`.
 
 Use **Open Vault** and pick any folder of Markdown files. A small demo vault
@@ -176,9 +177,9 @@ pnpm check
 
 Download installers from [GitHub Releases](https://github.com/antick/copper/releases/latest).
 See [the installation guide](docs/INSTALL.md) for macOS, Windows, and Linux.
-The app version is **0.1.0**, starting fresh in this repository. These early
-builds have no paid publisher certificates; macOS uses ad-hoc signing and
-updates are manual. The maintainer process is in [docs/release/github.md](docs/release/github.md).
+The app version is **0.2.0**. Public macOS installers are Developer ID signed
+and Apple-notarized, with in-app updates. Windows installers remain unsigned;
+Windows and Linux updates use the latest installer. The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh
 pnpm install

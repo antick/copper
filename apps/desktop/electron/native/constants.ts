@@ -1,6 +1,8 @@
-export const APP_NAME = "Copper";
-export const APP_ID = "app.copper.desktop";
-export const USER_DATA_DIR_NAME = "app.copper.desktop";
+import { APP_IDENTITIES } from "../app-identity.mjs";
+
+export const APP_NAME = APP_IDENTITIES.production.appName;
+export const APP_ID = APP_IDENTITIES.production.appId;
+export const USER_DATA_DIR_NAME = APP_IDENTITIES.production.userDataDirName;
 
 export const WINDOW_WIDTH = 1280;
 export const WINDOW_HEIGHT = 800;

@@ -1,15 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import { app } from "electron";
+import { APP_IDENTITY } from "./identity";
 import { isPackagedApp } from "./runtime";
-
-const PACKAGED_BRAND_ICON = "Copper.png";
 
 export function brandIconPath(): string {
   if (isPackagedApp()) {
-    return path.join(process.resourcesPath, PACKAGED_BRAND_ICON);
+    return path.join(process.resourcesPath, APP_IDENTITY.icon.dockResource);
   }
-  return path.join(app.getAppPath(), "resources", "icons", "icon.png");
+  return path.join(
+    app.getAppPath(),
+    APP_IDENTITY.icon.directory,
+    APP_IDENTITY.icon.dockSource,
+  );
 }
 
 export function applyNativeBrand(): void {

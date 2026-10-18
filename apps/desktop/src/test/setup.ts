@@ -9,6 +9,7 @@ afterEach(() => {
 if (typeof window !== "undefined" && !window.copperDesktop) {
   window.copperDesktop = {
     packaged: false,
+    updatesSupported: false,
     invoke: async () => {
       throw new Error("Copper desktop bridge is unavailable in tests");
     },

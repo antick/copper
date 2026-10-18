@@ -1,11 +1,11 @@
-import path from "node:path";
-import { app, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { validateInvocation } from "../../src/lib/copper/command-contract";
-import { APP_ID, APP_NAME, USER_DATA_DIR_NAME } from "../native/constants";
+import { UPDATE_EVENT_CHANNEL } from "../../src/lib/updates/config";
 import { toCopperError } from "../native/errors";
 import { VaultManager } from "../native/vaults";
 import { applyNativeBrand, brandIconPath } from "./brand";
 import { handleCommand } from "./handlers";
+import { APP_IDENTITY, userDataPath } from "./identity";
 import { installApplicationMenu } from "./menu";
 import { assertTrustedSender, openExternalLink } from "./security";
 import { appState } from "./state";
@@ -13,19 +13,18 @@ import {
   checkForUpdate,
   downloadUpdate,
   installUpdate,
-  startUpdateChecks,
+  onUpdateEvent,
 } from "./updater";
 import { setWatchWindow } from "./watch";
 import { createMainWindow } from "./window";
 
-app.setName(APP_NAME);
+app.setName(APP_IDENTITY.appName);
 app.setPath(
   "userData",
-  process.env.COPPER_USER_DATA_DIR ??
-    path.join(app.getPath("appData"), USER_DATA_DIR_NAME),
+  userDataPath(app.getPath("appData"), process.env.COPPER_USER_DATA_DIR),
 );
 if (process.platform === "win32") {
-  app.setAppUserModelId(APP_ID);
+  app.setAppUserModelId(APP_IDENTITY.appId);
 }
 
 function readyPaths(): void {
@@ -49,12 +48,7 @@ ipcMain.handle(
         return null;
       }
       if (command === "install_update") {
-        installUpdate();
-        return null;
-      }
-      if (command === "relaunch_app") {
-        app.relaunch();
-        app.exit(0);
+        await installUpdate();
         return null;
       }
       return await handleCommand(command, payload);
@@ -71,16 +65,22 @@ app.whenReady().then(() => {
   readyPaths();
   applyNativeBrand();
   app.setAboutPanelOptions({
-    applicationName: APP_NAME,
+    applicationName: APP_IDENTITY.appName,
     applicationVersion: app.getVersion(),
     version: "",
-    copyright: APP_NAME,
+    copyright: APP_IDENTITY.appName,
     iconPath: brandIconPath(),
   });
   installApplicationMenu();
   const window = createMainWindow();
   setWatchWindow(window);
-  startUpdateChecks();
+  onUpdateEvent((payload) => {
+    for (const target of BrowserWindow.getAllWindows()) {
+      if (!target.isDestroyed() && !target.webContents.isDestroyed()) {
+        target.webContents.send(UPDATE_EVENT_CHANNEL, payload);
+      }
+    }
+  });
   app.on("activate", () => {
     if (window.isDestroyed()) {
       const next = createMainWindow();

@@ -5,10 +5,8 @@ import { copper } from "@/lib/copper";
 import {
   flushOpenDocuments,
   handleVaultFileSystemEvent,
-  hasDirtyDocuments,
   invalidateVaultNoteQueries,
   isRecentVaultGitOperation,
-  markDocumentDirty,
   markVaultGitOperation,
 } from "@/lib/copper/events";
 
@@ -19,13 +17,6 @@ afterEach(() => {
 });
 
 describe("Vault filesystem invalidation", () => {
-  it("tracks dirty documents for restart warnings", () => {
-    markDocumentDirty("vault", "note.md", true);
-    expect(hasDirtyDocuments()).toBe(true);
-    markDocumentDirty("vault", "note.md", false);
-    expect(hasDirtyDocuments()).toBe(false);
-  });
-
   it("marks a recent Git operation window", () => {
     markVaultGitOperation(vaultId);
     expect(isRecentVaultGitOperation(vaultId)).toBe(true);

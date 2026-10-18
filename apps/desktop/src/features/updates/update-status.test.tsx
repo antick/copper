@@ -46,6 +46,12 @@ describe("update status bar control", () => {
     expect(updateStatusLabel({ kind: "ready", version: "0.1.1" })).toBe(
       "Restart to finish 0.1.1",
     );
+    expect(updateStatusLabel({ kind: "restarting", version: "0.1.1" })).toBe(
+      "Restarting to install 0.1.1…",
+    );
+    expect(updateStatusLabel({ kind: "saving", version: "0.1.1" })).toBe(
+      "Saving documents before restarting for 0.1.1",
+    );
     expect(
       updateStatusLabel({
         kind: "error",

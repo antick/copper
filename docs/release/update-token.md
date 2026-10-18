@@ -1,6 +1,11 @@
-# Users do not create a GitHub token
+# Update authentication
 
-Verified installers and automatic updates will use this public repository's [releases](https://github.com/antick/copper/releases). Electron's updater reads `latest-mac.yml` without a login. No approved installer has been published here yet.
+Copper's signed macOS releases read public update metadata and artifacts from
+[GitHub Releases](https://github.com/antick/copper/releases). Users do not need a GitHub account
+or token. Version 0.1.0 and legacy Tauri clients need one manual installation of the signed app.
 
-- **Users:** once a verified release is available, download the `.dmg`; no GitHub token is needed. See [github.md](github.md).
-- **Maintainers:** release CI uses the automatic `GITHUB_TOKEN`, with write access limited to the protected publishing job. No personal upload token is required or shipped in the app.
+Release CI uses GitHub's automatic token with write access only in the protected draft job.
+Maintainers publish the verified draft with their own authenticated `gh` session so the release
+publication event triggers the website deployment. No upload credential ships in the app.
+
+See [the release process](github.md).

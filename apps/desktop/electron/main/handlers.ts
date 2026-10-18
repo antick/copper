@@ -1,6 +1,5 @@
 import { app, dialog } from "electron";
 import { backlinksFor } from "../native/backlinks";
-import { APP_NAME } from "../native/constants";
 import { CopperError } from "../native/errors";
 import { importAttachment } from "../native/files/attachments";
 import {
@@ -70,6 +69,7 @@ import type {
   UpdateProjectInput,
   UpdateProjectWorkflowInput,
 } from "../native/tasks/types";
+import { APP_IDENTITY } from "./identity";
 import { appState } from "./state";
 import { stopVaultWatcher, watchVault } from "./watch";
 
@@ -99,7 +99,7 @@ export async function handleCommand(
   switch (command) {
     case "app_info":
       return {
-        name: APP_NAME,
+        name: APP_IDENTITY.appName,
         version: app.getVersion(),
         platform: platformName(),
       };
