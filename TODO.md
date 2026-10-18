@@ -4,25 +4,25 @@ Track outstanding work and verification here. Completed implementation history l
 
 ## Public repository and releases
 
-The published baseline is [Copper 0.1.0](https://github.com/antick/copper/releases/tag/v0.1.0),
-which used ad-hoc macOS signing and manual updates. Version 0.2.2 adds Developer ID signed,
-Apple-notarized macOS installers and in-app updates, while Windows/Linux keep manual updates.
+The current release is [Copper 0.2.2](https://github.com/antick/copper/releases/tag/v0.2.2),
+with Developer ID signed, Apple-notarized Apple Silicon macOS installers and verified in-app
+updates. Intel Macs are not supported; Windows/Linux keep manual installer updates.
 Copper Dev has independent identity and app data; explicitly shared Vault folders are still shared.
 
 - [x] Configure main protection, restricted release tags, and a reviewed tag-only `release` environment.
 - [x] Install verified existing Apple signing and notarization credentials as environment-scoped secrets.
 - [x] Implement isolated Copper Dev identity, icon, profile, and disabled automatic updates.
 - [x] Implement update progress, explicit restart, save-before-restart, and retry behavior.
-- [x] Finish local integrated verification and record the results below; CI/public gates remain below.
+- [x] Finish local verification and all four native CI release builds.
 - [x] Verify a real signed/notarized installer and signed-version-to-signed-version update on macOS.
-- [ ] Publish the Apple Silicon-only macOS and Windows/Linux 0.2.2 installer set and verify public downloads, updater metadata, and website.
+- [x] Publish 0.2.2 and verify public downloads, updater metadata, live website, and the installed 0.2.0 → 0.2.2 update.
 - [ ] Complete Windows/Linux interactive acceptance; native packaging checks are not a complete UI test.
 - [ ] Retire the legacy release repository separately; its private backup exists, but deletion was previously blocked by token permissions. Legacy clients need a manual installation from this repository.
 
 Release checks currently retain two reviewed build-tool audit exceptions (`braces` and `sprintf-js`)
 in `pnpm-workspace.yaml`; a successful audit with those exceptions is not a zero-advisory result.
 Do not mark release work complete on source tests alone. Keep published tags and artifacts immutable.
-Local verification and the remaining public-release gates are recorded in
+Local, CI, public-release, and installed-app verification are recorded in
 [the 0.2.0 verification record](docs/release/verification-0.2.0.md).
 
 ## Landing page and monorepo

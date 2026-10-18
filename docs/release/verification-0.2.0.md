@@ -1,7 +1,7 @@
 # Copper 0.2.0 verification
 
-This record separates source checks from actual installer and update acceptance. Pending items
-must be completed before the draft is published.
+This record covers the 0.2.0 candidates and the final published 0.2.2 release. It separates
+source checks from actual installer and update acceptance.
 
 ## Source and repository
 
@@ -57,7 +57,29 @@ The Apple Silicon-only change passed 153 native tests, both typechecks, Biome, d
 production builds, landing tests, secret scanning, and diff checks. The frontend suite also
 passed 251 tests before the release-only platform change.
 
-Pending: final 0.2.2 public artifact verification and public downloads.
+## Published 0.2.2
+
+- Release commit: `d3109f53bd2694df2a7af0833d1e56ef048f7844`.
+- [Exact-commit CI](https://github.com/antick/copper/actions/runs/39122027090) and
+  [release workflow](https://github.com/antick/copper/actions/runs/39122031041) passed.
+  The release has four platform jobs: Apple Silicon macOS, Windows x64, Linux x64, and Linux ARM64.
+- Downloaded the final CI Mac DMG/ZIP. Update hashes, DMG checksum/mount, Developer ID identity,
+  hardened runtime, Gatekeeper assessment, and app/DMG notarization tickets passed locally.
+- The maintainer publisher downloaded and verified all nine assets plus `SHA256SUMS` before
+  publishing [Copper 0.2.2](https://github.com/antick/copper/releases/tag/v0.2.2). There is no Intel
+  Mac installer. Anonymous downloads of the feed/checksums matched the verified artifacts.
+- The real `/Applications/Copper.app` found 0.2.2 through the public GitHub feed, downloaded it,
+  and completed the explicit restart from 0.2.0 to 0.2.2. It relaunched with the existing workspace
+  and preferences, and About reports 0.2.2 and “Copper is up to date.” The installed executable
+  is ARM64; its signature and Apple ticket passed again after updating.
+- The background app's displayed download state lagged behind the completed archive; it showed
+  ready after refocusing. A temporary diagnostic second process was closed before installation.
+  No installed bundle or updater cache was manually replaced to complete this public update.
+- [Release-triggered website deployment](https://github.com/antick/copper/actions/runs/39123186671)
+  passed. The live site shows Apple Silicon-only Mac support and correct release/install links.
+  The opened platform answer fits a 390px viewport with no horizontal overflow.
+- Dependency versions were unchanged in the release implementation; no latest-version age
+  exception was needed. Windows/Linux interactive acceptance remains outstanding below.
 
 Test builds use a local-only generic update feed and isolated `COPPER_USER_DATA_DIR`. They must
 never be published or left installed as the everyday app. Public artifacts use GitHub Releases.
@@ -66,7 +88,7 @@ never be published or left installed as the everyday app. Public artifacts use G
 
 The production-output preview renders the updated signing/update guidance at 390px without
 horizontal overflow. The download and installation links point to the public Copper repository.
-Live production deployment verification remains pending publication.
+The final live deployment was verified after 0.2.2 publication as recorded above.
 
 ## Hardware boundary
 
