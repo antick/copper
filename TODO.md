@@ -15,7 +15,7 @@ Copper Dev has independent identity and app data; explicitly shared Vault folder
 - [x] Implement update progress, explicit restart, save-before-restart, and retry behavior.
 - [x] Finish local integrated verification and record the results below; CI/public gates remain below.
 - [x] Verify a real signed/notarized installer and signed-version-to-signed-version update on macOS.
-- [ ] Publish the complete 0.2.0 installer set and verify public downloads, updater metadata, and website.
+- [ ] Resolve Intel CI notarization validation, publish the complete 0.2.1 installer set and verify public downloads, updater metadata, and website.
 - [ ] Complete Windows/Linux interactive acceptance; native packaging checks are not a complete UI test.
 - [ ] Retire the legacy release repository separately; its private backup exists, but deletion was previously blocked by token permissions. Legacy clients need a manual installation from this repository.
 

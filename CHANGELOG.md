@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 — 2026-10-18
+
+Adds bounded, credential-free diagnostics for macOS signature and notarization verification.
+The unpublished 0.2.0 tag is retained after its Intel verification failure.
+
 ## 0.2.0 — 2026-10-18
 
 - Developer ID signed and Apple-notarized macOS installers, with verified update metadata.

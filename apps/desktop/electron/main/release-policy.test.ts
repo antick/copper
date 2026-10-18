@@ -3,13 +3,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import YAML from "yaml";
 import {
   assertReleaseProtections,
   keychainSearchList,
   normalizeMacUpdateMetadata,
   requireReleaseCredentials,
+  runVerification,
   signingIdentity,
   validateUpdateMetadata,
   verifyAppleDeveloperIdIntermediate,
@@ -161,6 +162,77 @@ it("deduplicates the same identity across keychains and parses search lists", ()
   expect(() => signingIdentity(`1) AAAAAAAA "${name}"`, "WRONGTEAM1")).toThrow(
     /exactly one/,
   );
+});
+
+it("reports safe verification failures without exposing the underlying error message", () => {
+  const target = "/tmp/Copper.app";
+  const privateMessage = "notary credential must never appear in diagnostics";
+  const failure = Object.assign(new Error(privateMessage), {
+    status: 69,
+    stdout: Buffer.from("ticket not found\n"),
+    stderr: Buffer.alloc(0),
+  });
+  const execute = vi.fn(() => {
+    throw failure;
+  });
+
+  let reportedError: Error | undefined;
+  try {
+    runVerification(
+      "xcrun stapler validate",
+      "xcrun",
+      ["stapler", "validate", target],
+      target,
+      execute,
+    );
+  } catch (error) {
+    reportedError = error as Error;
+  }
+  expect(reportedError?.message).toBe(
+    `xcrun stapler validate failed for "${target}" (exit status 69); release stopped\nstdout:\nticket not found\nstderr:\n(empty)`,
+  );
+  expect(reportedError?.message).not.toContain(privateMessage);
+  expect(execute).toHaveBeenCalledWith(
+    "xcrun",
+    ["stapler", "validate", target],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+});
+
+it("bounds captured verification output and reports signal failures", () => {
+  const target = "/tmp/Copper.app";
+  const failure = Object.assign(new Error("ignored"), {
+    signal: "SIGKILL",
+    stdout: "y".repeat(5_000),
+    stderr: "x".repeat(5_000),
+  });
+
+  let reportedError: Error | undefined;
+  try {
+    runVerification(
+      "codesign --verify --deep --strict",
+      "codesign",
+      ["--verify", "--deep", "--strict", target],
+      target,
+      () => {
+        throw failure;
+      },
+    );
+  } catch (error) {
+    reportedError = error as Error;
+  }
+  expect(reportedError?.message).toContain(
+    `codesign --verify --deep --strict failed for "${target}" (signal SIGKILL); release stopped\nstdout:\n[truncated; showing final 4000 characters]\n`,
+  );
+  expect(reportedError?.message).toContain(
+    `\nstderr:\n[truncated; showing final 4000 characters]\n`,
+  );
+  expect(reportedError?.message).toContain("y".repeat(4_000));
+  expect(reportedError?.message.endsWith("x".repeat(4_000))).toBe(true);
+  expect(reportedError?.message.length).toBeLessThan(8_500);
 });
 
 it("imports only the pinned Apple Developer ID intermediate certificate", () => {

@@ -36,8 +36,21 @@ must be completed before the draft is published.
   window and app menu both show Copper Dev.
 - The acceptance run exposed delayed native installation errors being ignored. The final source
   now forwards them to the retry UI, with native and renderer regression tests.
+- Repeated the signed update with the final source, including its pending install IPC and
+  “Restarting to install” status. It completed and relaunched 0.2.1. A several-minute delay was
+  sampled inside native Squirrel/macOS `AuthorizationCreate`; the evidence does not establish
+  the cause. No system or app-code change was needed for completion.
+- Installed the exact successful Apple Silicon CI artifact in `/Applications/Copper.app` and
+  confirmed version 0.2.0, the public `antick/copper` GitHub feed, original preferences, and recent
+  Vault. Test updater caches and the task-created helper registration were removed from active use.
 
-Pending: final CI-built public artifact verification and public downloads.
+Main CI and Windows/Linux/Apple Silicon release builds passed. Intel release validation failed
+after notarization on two attempts; the old verifier hid the underlying command output.
+A locally signed Intel app passes ticket validation. The next immutable version is 0.2.1,
+with bounded signature/ticket diagnostics; no validation requirement has been removed.
+The diagnostics passed 152 native tests and desktop typechecks.
+
+Pending: Intel CI diagnosis, final public artifact verification, and public downloads.
 
 Test builds use a local-only generic update feed and isolated `COPPER_USER_DATA_DIR`. They must
 never be published or left installed as the everyday app. Public artifacts use GitHub Releases.

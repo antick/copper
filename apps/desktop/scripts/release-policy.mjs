@@ -28,6 +28,7 @@ const searchListFilename = "keychain-search-list.json";
 const keychainFilename = "release.keychain-db";
 const appleDeveloperIdIntermediateSha256 =
   "F16CD3C54C7F83CEA4BF1A3E6A0819C8AAA8E4A1528FD144715F350643D2DF3A";
+const verificationOutputLimit = 4_000;
 
 function run(command, args, options = {}) {
   try {
@@ -38,6 +39,45 @@ function run(command, args, options = {}) {
     });
   } catch {
     throw new Error(`${command} ${args[0] ?? ""} failed; release stopped`);
+  }
+}
+
+function diagnosticOutput(value) {
+  const normalized = (
+    Buffer.isBuffer(value)
+      ? value.toString("utf8")
+      : typeof value === "string"
+        ? value
+        : ""
+  ).trim();
+  if (!normalized) return "(empty)";
+  if (normalized.length <= verificationOutputLimit) return normalized;
+  return `[truncated; showing final ${verificationOutputLimit} characters]\n${normalized.slice(-verificationOutputLimit)}`;
+}
+
+export function verificationFailureMessage(command, target, error) {
+  const status = Number.isInteger(error?.status)
+    ? `exit status ${error.status}`
+    : error?.signal
+      ? `signal ${error.signal}`
+      : "unknown status";
+  return `${command} failed for ${JSON.stringify(target)} (${status}); release stopped\nstdout:\n${diagnosticOutput(error?.stdout)}\nstderr:\n${diagnosticOutput(error?.stderr)}`;
+}
+
+export function runVerification(
+  command,
+  executable,
+  args,
+  target,
+  execute = execFileSync,
+) {
+  try {
+    return execute(executable, args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    throw new Error(verificationFailureMessage(command, target, error));
   }
 }
 
@@ -324,13 +364,18 @@ export function cleanupReleaseSigning(env = process.env) {
 }
 
 export function verifySignedApp(appPath, appId, teamId) {
-  run("codesign", ["--verify", "--deep", "--strict", appPath]);
-  const identity = run("/bin/sh", [
-    "-c",
-    'exec codesign -dv --verbose=4 "$1" 2>&1',
-    "verify",
+  runVerification(
+    "codesign --verify --deep --strict",
+    "codesign",
+    ["--verify", "--deep", "--strict", appPath],
     appPath,
-  ]);
+  );
+  const identity = runVerification(
+    "codesign --display --verbose=4",
+    "/bin/sh",
+    ["-c", 'exec codesign -dv --verbose=4 "$1" 2>&1', "verify", appPath],
+    appPath,
+  );
   if (
     !identity.includes(`Identifier=${appId}\n`) ||
     !identity.includes(`TeamIdentifier=${teamId}\n`) ||
@@ -338,6 +383,16 @@ export function verifySignedApp(appPath, appId, teamId) {
     !identity.includes("runtime")
   )
     throw new Error("Release signing identity or hardened runtime is invalid");
-  run("spctl", ["--assess", "--type", "exec", appPath]);
-  run("xcrun", ["stapler", "validate", appPath]);
+  runVerification(
+    "spctl --assess --type exec",
+    "spctl",
+    ["--assess", "--type", "exec", appPath],
+    appPath,
+  );
+  runVerification(
+    "xcrun stapler validate",
+    "xcrun",
+    ["stapler", "validate", appPath],
+    appPath,
+  );
 }
