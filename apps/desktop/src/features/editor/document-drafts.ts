@@ -8,11 +8,14 @@ export interface DocumentDraft {
   baseHash: string;
 }
 const drafts = new Map<string, DocumentDraft>();
+// Renderer-lifetime tombstones hide persisted drafts after a failed removal.
+const clearedStorageDrafts = new Set<string>();
 export const documentDraftKey = (vaultId: string, path: string) =>
   `${DOCUMENT_DRAFT_PREFIX}${JSON.stringify([vaultId, path])}`;
 
 export function readDocumentDraft(key: string): DocumentDraft | undefined {
   if (drafts.has(key)) return drafts.get(key);
+  if (clearedStorageDrafts.has(key)) return undefined;
   try {
     const raw = localStorage.getItem(key);
     const draft = raw ? JSON.parse(raw) : undefined;
@@ -35,6 +38,7 @@ export function keepDocumentDraft(key: string, draft: DocumentDraft) {
   if (added) window.dispatchEvent(new Event(DOCUMENT_SAVE_STATE_EVENT));
   try {
     localStorage.setItem(key, JSON.stringify(draft));
+    clearedStorageDrafts.delete(key);
     return true;
   } catch {
     return false;
@@ -48,7 +52,17 @@ export function clearDocumentDraft(key: string, savedContents?: string) {
   )
     return;
   drafts.delete(key);
-  localStorage.removeItem(key);
+  try {
+    localStorage.removeItem(key);
+    clearedStorageDrafts.delete(key);
+  } catch {
+    clearedStorageDrafts.add(key);
+    try {
+      localStorage.setItem(key, JSON.stringify(null));
+    } catch {
+      // The session marker still hides stale bytes when all storage is blocked.
+    }
+  }
   window.dispatchEvent(new Event(DOCUMENT_SAVE_STATE_EVENT));
 }
 

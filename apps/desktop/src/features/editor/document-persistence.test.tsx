@@ -23,6 +23,7 @@ import { documentSaveQueue } from "./document-save-queue";
 const mocks = vi.hoisted(() => ({
   disk: "Original",
   fail: false,
+  saveBarrier: undefined as Promise<void> | undefined,
   save: vi.fn(),
   importAttachment: vi.fn(),
   listeners: new Set<(event: unknown) => void>(),
@@ -50,6 +51,7 @@ vi.mock("@/lib/copper", () => ({
         expectedHash?: string,
       ) => {
         mocks.save(contents);
+        if (mocks.saveBarrier) await mocks.saveBarrier;
         if (mocks.fail) throw new Error("Disk is full");
         if (mocks.disk !== expectedHash)
           throw Object.assign(new Error("This file changed on disk"), {
@@ -67,6 +69,7 @@ const key = documentDraftKey("v", "Note.md");
 beforeEach(() => {
   mocks.disk = "Original";
   mocks.fail = false;
+  mocks.saveBarrier = undefined;
   mocks.save.mockClear();
   mocks.importAttachment.mockReset();
   mocks.settings = { wrapping: true, attachmentFolder: "Attachments" };
@@ -84,6 +87,7 @@ afterEach(async () => {
     key,
     async () => undefined,
     DOCUMENT_SAVE_DELAY_MS,
+    "v",
   );
   queue.cancel();
   await queue.settle();
@@ -164,6 +168,69 @@ it("keeps a failed draft across tab unmount and restores it for retry", async ()
   expect(readDocumentDraft(key)).toBeUndefined();
   restored.unmount();
 });
+it("finishes a successful save when draft storage cleanup fails", async () => {
+  mount();
+  await edit("Saved to disk");
+  const removeItem = vi
+    .spyOn(Object.getPrototypeOf(localStorage), "removeItem")
+    .mockImplementation(() => {
+      throw new Error("Storage unavailable");
+    });
+  try {
+    let failure: unknown;
+    await act(async () => {
+      try {
+        await flushOpenDocuments();
+      } catch (cause) {
+        failure = cause;
+      }
+    });
+    expect(failure).toBeUndefined();
+    expect(mocks.disk).toBe("Saved to disk");
+    expect(readDocumentDraft(key)).toBeUndefined();
+    expect(screen.queryByRole("alert")).toBeNull();
+  } finally {
+    removeItem.mockRestore();
+  }
+});
+it("keeps a newer edit while an earlier save completes", async () => {
+  mount();
+  await edit("Earlier edit");
+  let finishEarlier!: () => void;
+  mocks.saveBarrier = new Promise<void>((resolve) => {
+    finishEarlier = resolve;
+  });
+  const removeItem = vi
+    .spyOn(Object.getPrototypeOf(localStorage), "removeItem")
+    .mockImplementation(() => {
+      throw new Error("Storage unavailable");
+    });
+  try {
+    const saving = flushOpenDocuments();
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith("Earlier edit"),
+    );
+    await edit("Newer edit");
+    let finishNewer!: () => void;
+    mocks.saveBarrier = new Promise<void>((resolve) => {
+      finishNewer = resolve;
+    });
+    await act(async () => {
+      finishEarlier();
+      await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
+    });
+    expect(readDocumentDraft(key)?.contents).toBe("Newer edit");
+    await act(async () => {
+      finishNewer();
+      await saving;
+    });
+    expect(mocks.disk).toBe("Newer edit");
+    expect(readDocumentDraft(key)).toBeUndefined();
+    expect(removeItem).toHaveBeenCalledOnce();
+  } finally {
+    removeItem.mockRestore();
+  }
+});
 it("does not overwrite an external edit before choosing Reload Disk Version", async () => {
   mount();
   await edit("My draft");
@@ -182,12 +249,24 @@ it("does not overwrite an external edit before choosing Reload Disk Version", as
   await act(async () => {
     await expect(flushOpenDocuments()).rejects.toThrow(/changed on disk/i);
   });
-  fireEvent.click(screen.getByRole("button", { name: "Reload Disk Version" }));
-  await waitFor(() =>
-    expect(screen.queryByRole("button", { name: "Keep Mine" })).toBeNull(),
-  );
-  expect((await view()).state.doc.toString()).toBe("External work");
-  expect(readDocumentDraft(key)).toBeUndefined();
+  const removeItem = vi
+    .spyOn(Object.getPrototypeOf(localStorage), "removeItem")
+    .mockImplementation(() => {
+      throw new Error("Storage unavailable");
+    });
+  try {
+    fireEvent.click(
+      screen.getByRole("button", { name: "Reload Disk Version" }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Keep Mine" })).toBeNull(),
+    );
+    expect((await view()).state.doc.toString()).toBe("External work");
+    expect(readDocumentDraft(key)).toBeUndefined();
+    expect(screen.queryByRole("alert")).toBeNull();
+  } finally {
+    removeItem.mockRestore();
+  }
 });
 it("checks the disk version even if a watcher event is delayed, then saves only after Keep Mine", async () => {
   mount();
