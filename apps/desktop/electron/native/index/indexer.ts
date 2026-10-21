@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type Database from "better-sqlite3";
 import {
-  COPPER_DIR,
+  isHiddenTaskContent,
   isTaskSourcePath,
   isTaskStorageDirectory,
 } from "../../../shared/task-paths";
@@ -271,8 +271,7 @@ function indexDir(
       ? isTaskStorageDirectory(relative)
       : isTaskSourcePath(relative);
     if (
-      ((relative.startsWith(`${COPPER_DIR}/`) || name.startsWith(".")) &&
-        !managed) ||
+      ((isHiddenTaskContent(relative) || name.startsWith(".")) && !managed) ||
       name === "node_modules" ||
       name === "target"
     ) {

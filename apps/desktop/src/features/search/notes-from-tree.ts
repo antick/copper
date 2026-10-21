@@ -1,6 +1,9 @@
 import type { FileTreeNode } from "@/features/file-tree/types";
 import type { SearchHit } from "@/lib/copper/search";
-import { isHiddenTaskContent } from "../../../shared/task-paths";
+import {
+  isArchivedPath,
+  isHiddenTaskContent,
+} from "../../../shared/task-paths";
 
 export function collectMarkdownNotes(root?: FileTreeNode): SearchHit[] {
   const notes: SearchHit[] = [];
@@ -53,9 +56,7 @@ export function normalizeScope(scope?: string | null): string {
   return !normalized || normalized.toLowerCase() === "all" ? "all" : normalized;
 }
 
-export function isArchivedPath(path: string): boolean {
-  return path === "Archive" || path.startsWith("Archive/");
-}
+export { isArchivedPath };
 
 export function notesInScope(
   notes: SearchHit[],

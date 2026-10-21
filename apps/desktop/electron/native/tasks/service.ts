@@ -7,7 +7,6 @@ import {
   insertionRank,
   issueInsertionIndex,
 } from "../../../shared/task-order";
-import { TASK_ARCHIVE_DIR } from "../../../shared/task-paths";
 import { CopperError } from "../errors";
 import { createFile, createFolder, readFile, saveFile } from "../files/service";
 import { openIndex } from "../index/db";
@@ -18,6 +17,10 @@ import {
   writeFrontmatter,
 } from "../markdown/frontmatter";
 import { toPosix } from "../path";
+import {
+  activeTaskArchivePatterns,
+  isArchivedTaskSourcePath,
+} from "./archive-service";
 import {
   DEFAULT_ISSUE_PRIORITY,
   DEFAULT_ISSUE_STATUS,
@@ -123,19 +126,26 @@ function labelsFor(
     .map((row) => (row as { label: string }).label);
 }
 
-export function listIssues(dbPath: string): TaskIssue[] {
+export function listIssues(
+  dbPath: string,
+  options: { includeArchived?: boolean } = {},
+): TaskIssue[] {
   const db = openIndex(dbPath);
   try {
-    const rows = db
-      .prepare(
-        `SELECT path, id, status, priority, project_id, due, rank, title, created, updated
+    const archivePatterns = activeTaskArchivePatterns();
+    const sql = options.includeArchived
+      ? `SELECT path, id, status, priority, project_id, due, rank, title, created, updated
+         FROM tasks WHERE kind = ? ORDER BY rank ASC, id ASC`
+      : `SELECT path, id, status, priority, project_id, due, rank, title, created, updated
          FROM tasks
-         WHERE kind = ?
-           AND path NOT LIKE 'Archive/%'
-           AND path NOT LIKE ?
-         ORDER BY rank ASC, id ASC`,
-      )
-      .all(TYPE_ISSUE, `${TASK_ARCHIVE_DIR}/%`) as Array<{
+         WHERE kind = ? AND path NOT LIKE ? AND path NOT LIKE ?
+         ORDER BY rank ASC, id ASC`;
+    const query = db.prepare(sql);
+    const rows = (
+      options.includeArchived
+        ? query.all(TYPE_ISSUE)
+        : query.all(TYPE_ISSUE, ...archivePatterns)
+    ) as Array<{
       path: string;
       id: string;
       status: string;
@@ -147,19 +157,23 @@ export function listIssues(dbPath: string): TaskIssue[] {
       created: string | null;
       updated: string | null;
     }>;
-    return rows.map((row) => ({
-      path: row.path,
-      id: row.id,
-      title: row.title,
-      status: asIssueStatus(row.status),
-      priority: asIssuePriority(row.priority),
-      project: row.project_id,
-      labels: labelsFor(db, row.path),
-      due: row.due,
-      rank: row.rank,
-      created: row.created ?? "",
-      updated: row.updated ?? "",
-    }));
+    return rows
+      .filter(
+        (row) => options.includeArchived || !isArchivedTaskSourcePath(row.path),
+      )
+      .map((row) => ({
+        path: row.path,
+        id: row.id,
+        title: row.title,
+        status: asIssueStatus(row.status),
+        priority: asIssuePriority(row.priority),
+        project: row.project_id,
+        labels: labelsFor(db, row.path),
+        due: row.due,
+        rank: row.rank,
+        created: row.created ?? "",
+        updated: row.updated ?? "",
+      }));
   } finally {
     db.close();
   }

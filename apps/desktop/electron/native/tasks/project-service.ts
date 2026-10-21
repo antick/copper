@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   ARCHIVED_PROJECTS_DIR,
+  ISSUES_DIR,
   isArchivedTaskPath,
 } from "../../../shared/task-paths";
 import { ARCHIVE_DIR } from "../constants";
@@ -21,14 +22,17 @@ import {
   writeFrontmatter,
 } from "../markdown/frontmatter";
 import { resolveInVault, toPosix } from "../path";
+import { activeTaskArchivePatterns } from "./archive-service";
 import {
   DEFAULT_PROJECT_STATUS,
   FRONTMATTER_KEYS,
+  ISSUE_STATUSES,
   PROJECTS_DIR,
   TYPE_ISSUE,
   TYPE_PROJECT,
 } from "./constants";
 import {
+  asIssueStatus,
   asOptionalString,
   asProjectStatus,
   asStringList,
@@ -54,14 +58,34 @@ import {
 } from "./workflow";
 
 function emptyCounts(): TaskProjectCounts {
-  return {
-    backlog: 0,
-    todo: 0,
-    in_progress: 0,
-    in_review: 0,
-    done: 0,
-    canceled: 0,
-  };
+  return Object.fromEntries(
+    ISSUE_STATUSES.map((status) => [status, 0]),
+  ) as TaskProjectCounts;
+}
+
+function countsForProjectFiles(root: string, projectId: string) {
+  const counts = emptyCounts();
+  const directory = path.join(root, ISSUES_DIR);
+  if (!fs.existsSync(directory)) return counts;
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.isFile() || !/\.(md|markdown)$/i.test(entry.name)) continue;
+    try {
+      const relative = `${ISSUES_DIR}/${entry.name}`;
+      const [source] = readFile(root, relative);
+      const parsed = parseFrontmatter(source);
+      if (
+        parsed.values[FRONTMATTER_KEYS.type] !== TYPE_ISSUE ||
+        parsed.values[FRONTMATTER_KEYS.project] !== projectId
+      ) {
+        continue;
+      }
+      const status = asIssueStatus(parsed.values[FRONTMATTER_KEYS.status]);
+      counts[status] = (counts[status] ?? 0) + 1;
+    } catch {
+      // Ignore unreadable or malformed task sources.
+    }
+  }
+  return counts;
 }
 
 function projectFromParsed(
@@ -119,13 +143,14 @@ function labelsFor(db: ReturnType<typeof openIndex>, filePath: string) {
 
 function countsByProject(db: ReturnType<typeof openIndex>) {
   const map = new Map<string | null, TaskProjectCounts>();
+  const archivePatterns = activeTaskArchivePatterns();
   const rows = db
     .prepare(
       `SELECT project_id, status, count(*) as n FROM tasks
-       WHERE kind = ? AND path NOT LIKE 'Archive/%'
+       WHERE kind = ? AND path NOT LIKE ? AND path NOT LIKE ?
        GROUP BY project_id, status`,
     )
-    .all(TYPE_ISSUE) as Array<{
+    .all(TYPE_ISSUE, ...archivePatterns) as Array<{
     project_id: string | null;
     status: string;
     n: number;
@@ -208,7 +233,11 @@ function findProjectPath(root: string, id: string): string {
 export function getProject(root: string, id: string): TaskProject {
   const relative = findProjectPath(root, id);
   const [source] = readFile(root, relative);
-  return projectFromParsed(relative, parseFrontmatter(source), emptyCounts());
+  return projectFromParsed(
+    relative,
+    parseFrontmatter(source),
+    countsForProjectFiles(root, id),
+  );
 }
 
 function uniqueProjectPath(root: string, stem: string) {

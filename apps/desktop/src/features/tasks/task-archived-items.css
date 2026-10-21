@@ -1,0 +1,43 @@
+.copper-task-archived-items {
+  display: grid;
+  gap: 18px;
+}
+
+.copper-task-archived-items section {
+  display: grid;
+  gap: 7px;
+}
+
+.copper-task-archived-items h3 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.copper-task-archived-items ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.copper-task-archived-items li {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.copper-task-archived-items li > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

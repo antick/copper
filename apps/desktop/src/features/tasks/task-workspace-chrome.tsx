@@ -88,6 +88,7 @@ export function TaskWorkspaceFrame({
   tabsState,
   onTabsAction,
   onToggleLeft,
+  onShowArchived,
   onSelectDestination,
   onSelectProject,
   onNewProject,
@@ -108,6 +109,7 @@ export function TaskWorkspaceFrame({
   tabsState: TaskTabsState;
   onTabsAction: Dispatch<TaskTabsAction>;
   onToggleLeft: () => void;
+  onShowArchived: () => void;
   onSelectDestination: (destination: TasksDestination) => void;
   onSelectProject: (project: string) => void;
   onNewProject: () => void;
@@ -170,6 +172,7 @@ export function TaskWorkspaceFrame({
           projects={projects}
           leftCollapsed={leftCollapsed}
           onRestoreSidebar={onToggleLeft}
+          onShowArchived={onShowArchived}
         />
         {children}
       </div>

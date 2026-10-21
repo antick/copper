@@ -1,3 +1,4 @@
+export const ARCHIVE_DIR = "Archive";
 export const COPPER_DIR = ".copper";
 export const TASKS_DIR = `${COPPER_DIR}/tasks`;
 export const ISSUES_DIR = `${TASKS_DIR}/issues`;
@@ -6,7 +7,7 @@ export const TASK_ARCHIVE_DIR = `${TASKS_DIR}/archive`;
 export const ARCHIVED_ISSUES_DIR = `${TASK_ARCHIVE_DIR}/issues`;
 export const ARCHIVED_PROJECTS_DIR = `${TASK_ARCHIVE_DIR}/projects`;
 export const LEGACY_TASKS_DIR = "Tasks";
-export const LEGACY_TASK_ARCHIVE_DIR = `Archive/${LEGACY_TASKS_DIR}`;
+export const LEGACY_TASK_ARCHIVE_DIR = `${ARCHIVE_DIR}/${LEGACY_TASKS_DIR}`;
 export const LEGACY_TASK_DIRECTORIES = [
   { from: `${LEGACY_TASKS_DIR}/Issues`, to: ISSUES_DIR, kind: "issue" },
   { from: `${LEGACY_TASKS_DIR}/Projects`, to: PROJECTS_DIR, kind: "project" },
@@ -29,6 +30,8 @@ const SOURCE_DIRECTORIES = [
 ];
 
 export function isTaskSourcePath(value: string) {
+  if (value.startsWith(`${ARCHIVE_DIR}/`))
+    value = value.slice(ARCHIVE_DIR.length + 1);
   return SOURCE_DIRECTORIES.some(
     (dir) =>
       value.startsWith(`${dir}/`) &&
@@ -37,6 +40,8 @@ export function isTaskSourcePath(value: string) {
 }
 
 export function isTaskStorageDirectory(value: string) {
+  if (value.startsWith(`${ARCHIVE_DIR}/`))
+    value = value.slice(ARCHIVE_DIR.length + 1);
   return [
     COPPER_DIR,
     TASKS_DIR,
@@ -50,5 +55,18 @@ export function isArchivedTaskPath(value: string) {
 }
 
 export function isHiddenTaskContent(value: string) {
-  return value === COPPER_DIR || value.startsWith(`${COPPER_DIR}/`);
+  return (
+    value === COPPER_DIR ||
+    value.startsWith(`${COPPER_DIR}/`) ||
+    value === `${ARCHIVE_DIR}/${COPPER_DIR}` ||
+    value.startsWith(`${ARCHIVE_DIR}/${COPPER_DIR}/`)
+  );
+}
+
+export function isArchivedPath(value: string) {
+  return (
+    value === ARCHIVE_DIR ||
+    value.startsWith(`${ARCHIVE_DIR}/`) ||
+    isArchivedTaskPath(value)
+  );
 }

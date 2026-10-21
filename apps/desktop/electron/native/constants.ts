@@ -16,7 +16,7 @@ export const TRAFFIC_LIGHT_Y = Math.round(
 );
 
 export const MAX_SUPPORTED_FILE_SIZE = 25 * 1024 * 1024;
-export const ARCHIVE_DIR = "Archive";
+export { ARCHIVE_DIR } from "../../shared/task-paths";
 export const RECENT_VAULT_LIMIT = 12;
 export const WATCHER_COALESCE_MS = 45;
 

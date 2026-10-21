@@ -5,6 +5,10 @@ import type {
   IssueSort,
 } from "@/features/tasks/filter-issues";
 import {
+  type OpenTaskLabels,
+  taskIssueFocusTarget,
+} from "@/features/tasks/task-label-dialog";
+import {
   TASK_VISIBLE_PROPERTIES,
   type TaskVisibleProperty,
 } from "@/features/tasks/task-selectors";
@@ -12,7 +16,8 @@ import type { TaskIssue, UpdateIssueInput } from "@/lib/copper/tasks";
 
 export function useTaskIssueControls(
   issues: TaskIssue[],
-  updateIssues: (ids: string[], input: UpdateIssueInput) => Promise<unknown>,
+  updateIssues: (ids: string[], input: UpdateIssueInput) => Promise<string[]>,
+  openLabels: OpenTaskLabels,
 ) {
   const [filter, setFilter] = useState<IssueFilter>("all");
   const [groupBy, setGroupBy] = useState<IssueGroupBy>("none");
@@ -32,19 +37,20 @@ export function useTaskIssueControls(
   const editLabels = useCallback(
     (ids: string[]) => {
       const current = issues.find((issue) => issue.id === ids[0]);
-      const value = window.prompt(
-        "Labels (comma separated)",
+      openLabels(
         current?.labels.join(", ") ?? "",
+        async (labels) => {
+          const failed = await updateIssues(ids, { labels });
+          if (failed.length) {
+            throw new Error(
+              `${failed.length} issue${failed.length === 1 ? "" : "s"} could not be updated.`,
+            );
+          }
+        },
+        current ? () => taskIssueFocusTarget(current.id) : undefined,
       );
-      if (value === null) return;
-      void updateIssues(ids, {
-        labels: value
-          .split(",")
-          .map((label) => label.trim())
-          .filter(Boolean),
-      });
     },
-    [issues, updateIssues],
+    [issues, openLabels, updateIssues],
   );
 
   return {

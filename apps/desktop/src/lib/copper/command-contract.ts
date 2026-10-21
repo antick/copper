@@ -124,7 +124,7 @@ const commands: Record<string, Record<string, Rule>> = {
   save_settings: { settings },
   load_session: vault,
   save_session: { ...vault, session },
-  list_issues: vault,
+  list_issues: { ...vault, includeArchived: optional(boolean) },
   get_issue: entity,
   create_issue: {
     ...vault,

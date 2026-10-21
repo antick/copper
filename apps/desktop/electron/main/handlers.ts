@@ -251,7 +251,9 @@ export async function handleCommand(
       return null;
     case "list_issues":
       vaultRoot(str("vaultId"));
-      return listIssues(dbPath(str("vaultId")));
+      return listIssues(dbPath(str("vaultId")), {
+        includeArchived: args.includeArchived === true,
+      });
     case "get_issue":
       return getIssue(vaultRoot(str("vaultId")), str("id"));
     case "create_issue":
