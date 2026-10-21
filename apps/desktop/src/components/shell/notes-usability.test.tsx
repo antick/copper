@@ -7,6 +7,7 @@ import {
   renderShell,
   resetAppShellMocks,
 } from "@/components/shell/app-shell-test-harness";
+import { flushOpenDocuments } from "@/lib/copper/events";
 
 const mocks = getAppShellMocks();
 beforeEach(resetAppShellMocks);
@@ -120,51 +121,68 @@ it("creates nested folders through the same file-tree dialog", async () => {
   );
 });
 
-it("keeps a failed title rename and unsaved body available for retry", async () => {
-  mocks.saveFile.mockRejectedValueOnce(new Error("Disk is full"));
-  const user = userEvent.setup();
-  renderShell({ realEditor: true });
-  await user.click(await screen.findByText("Copper MVP"));
-  const editor = await screen.findByRole("textbox", {
-    name: "Markdown editor",
-  });
-  const view = EditorView.findFromDOM(editor);
-  act(() =>
-    view?.dispatch({
-      changes: {
-        from: 0,
-        to: view.state.doc.length,
-        insert: "My unsaved body",
-      },
-    }),
-  );
-  await user.click(screen.getByRole("button", { name: "Rename note" }));
-  const title = screen.getByRole("textbox", { name: "Note title" });
-  await user.clear(title);
-  await user.type(title, "Research.v1{Enter}");
-  expect(
-    await screen.findByText("Disk is full", {
-      selector: ".copper-title-error",
-    }),
-  ).toHaveAttribute("role", "alert");
-  expect(title).toHaveValue("Research.v1");
-  expect(editor).toHaveTextContent("My unsaved body");
-  expect(mocks.renameFile).not.toHaveBeenCalled();
-  await user.type(title, "{Enter}");
-  await waitFor(() =>
-    expect(mocks.renameFile).toHaveBeenCalledWith(
-      "demo",
-      "Inbox/copper.md",
-      "Inbox/Research.v1.md",
-    ),
-  );
-  expect(mocks.saveFile).toHaveBeenCalledWith(
-    "demo",
-    "Inbox/copper.md",
-    "My unsaved body",
-    "revision",
-  );
-});
+it.each([false, true])(
+  "keeps a failed title rename and unsaved body for retry (autosave first: %s)",
+  async (autosaveFirst) => {
+    const saveFile = mocks.saveFile.getMockImplementation();
+    if (!saveFile) throw new Error("Missing save fixture");
+    mocks.saveFile.mockRejectedValue(new Error("Disk is full"));
+    try {
+      const user = userEvent.setup();
+      renderShell({ realEditor: true });
+      await user.click(await screen.findByText("Copper MVP"));
+      const editor = await screen.findByRole("textbox", {
+        name: "Markdown editor",
+      });
+      const view = EditorView.findFromDOM(editor);
+      act(() =>
+        view?.dispatch({
+          changes: {
+            from: 0,
+            to: view.state.doc.length,
+            insert: "My unsaved body",
+          },
+        }),
+      );
+      if (autosaveFirst) {
+        await act(async () => {
+          await expect(flushOpenDocuments("demo")).rejects.toThrow(
+            "Disk is full",
+          );
+        });
+      }
+      await user.click(screen.getByRole("button", { name: "Rename note" }));
+      const title = screen.getByRole("textbox", { name: "Note title" });
+      await user.clear(title);
+      await user.type(title, "Research.v1{Enter}");
+      expect(
+        await screen.findByText("Disk is full", {
+          selector: ".copper-title-error",
+        }),
+      ).toHaveAttribute("role", "alert");
+      expect(title).toHaveValue("Research.v1");
+      expect(editor).toHaveTextContent("My unsaved body");
+      expect(mocks.renameFile).not.toHaveBeenCalled();
+      mocks.saveFile.mockImplementation(saveFile);
+      await user.type(title, "{Enter}");
+      await waitFor(() =>
+        expect(mocks.renameFile).toHaveBeenCalledWith(
+          "demo",
+          "Inbox/copper.md",
+          "Inbox/Research.v1.md",
+        ),
+      );
+      expect(mocks.saveFile).toHaveBeenCalledWith(
+        "demo",
+        "Inbox/copper.md",
+        "My unsaved body",
+        "revision",
+      );
+    } finally {
+      mocks.saveFile.mockImplementation(saveFile);
+    }
+  },
+);
 
 it("cancels a title edit without renaming the file", async () => {
   const user = userEvent.setup();
