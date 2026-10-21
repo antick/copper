@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { validateAttachmentFolder } from "../../../src/lib/copper/attachment-folder";
 import { CopperError } from "../errors";
-import { normalizeRelative, resolveInVault, toPosix } from "../path";
+import { resolveInVault, toPosix } from "../path";
 
 export function importAttachment(
   root: string,
@@ -11,7 +12,11 @@ export function importAttachment(
   if (!fs.existsSync(source) || !fs.statSync(source).isFile()) {
     throw CopperError.invalid("Dropped path is not a file");
   }
-  const folder = normalizeRelative(attachmentFolder);
+  const validation = validateAttachmentFolder(attachmentFolder);
+  if (!validation.valid) {
+    throw CopperError.invalid(validation.message);
+  }
+  const folder = validation.folder;
   const destDir = resolveInVault(root, folder);
   fs.mkdirSync(destDir, { recursive: true });
   const parsed = path.parse(path.basename(source) || "attachment");

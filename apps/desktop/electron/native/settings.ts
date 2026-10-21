@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  DEFAULT_ATTACHMENT_FOLDER,
+  normalizeAttachmentFolder,
+  validateAttachmentFolder,
+} from "../../src/lib/copper/attachment-folder";
+import {
   DEFAULT_EDITOR_TYPOGRAPHY,
   type EditorTypography,
   normalizeEditorTypography,
@@ -13,6 +18,7 @@ import {
   normalizeOrderedIds,
 } from "../../src/lib/copper/task-settings";
 import { DARK_THEME_IDS, LIGHT_THEME_IDS } from "../../src/lib/copper/themes";
+import { CopperError } from "./errors";
 
 const LIGHT_THEMES = new Set<string>(LIGHT_THEME_IDS);
 const DARK_THEMES = new Set<string>(DARK_THEME_IDS);
@@ -69,7 +75,7 @@ export const defaultSettings: CopperSettings = {
   ...DEFAULT_EDITOR_TYPOGRAPHY,
   tabSize: 2,
   wrapping: true,
-  attachmentFolder: "attachments",
+  attachmentFolder: DEFAULT_ATTACHMENT_FOLDER,
   navigationLayout: "note-list",
   issueIdPrefix: DEFAULT_ISSUE_ID_PREFIX,
 };
@@ -83,6 +89,7 @@ export function normalizeSettings(
   return {
     ...merged,
     ...normalizeEditorTypography(merged),
+    attachmentFolder: normalizeAttachmentFolder(merged.attachmentFolder),
     lightTheme: LIGHT_THEMES.has(merged.lightTheme)
       ? merged.lightTheme
       : defaultSettings.lightTheme,
@@ -214,6 +221,14 @@ export function saveSettings(
   configDir: string,
   settings: Partial<CopperSettings>,
 ): void {
+  if (settings.attachmentFolder !== undefined) {
+    const attachmentFolder = validateAttachmentFolder(
+      settings.attachmentFolder,
+    );
+    if (!attachmentFolder.valid) {
+      throw CopperError.invalid(attachmentFolder.message);
+    }
+  }
   fs.mkdirSync(configDir, { recursive: true });
   fs.writeFileSync(
     settingsPath(configDir),

@@ -55,3 +55,27 @@ it("keeps existing attachment bytes and rejects an escaping directory", () => {
   expect(() => importAttachment(vault, "escape", source)).toThrow();
   expect(fs.readdirSync(outside)).toEqual([]);
 });
+
+it("rejects absolute and traversal attachment folders and allows nested names with spaces", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "copper-attachment-folder-validation-"),
+  );
+  roots.push(root);
+  const vault = path.join(root, "vault");
+  fs.mkdirSync(vault);
+  const source = path.join(root, "sample.txt");
+  fs.writeFileSync(source, "attachment");
+
+  expect(() => importAttachment(vault, "/images", source)).toThrow();
+  expect(() => importAttachment(vault, "images/../outside", source)).toThrow();
+  expect(fs.readdirSync(vault)).toEqual([]);
+  expect(importAttachment(vault, "Notes and Images/Raw Uploads", source)).toBe(
+    "Notes and Images/Raw Uploads/sample.txt",
+  );
+  expect(
+    fs.readFileSync(
+      path.join(vault, "Notes and Images/Raw Uploads/sample.txt"),
+      "utf8",
+    ),
+  ).toBe("attachment");
+});
