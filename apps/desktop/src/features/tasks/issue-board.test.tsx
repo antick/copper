@@ -330,13 +330,14 @@ describe("IssueBoard", () => {
 
   it("shows an overlay and announces keyboard drag and cancel", async () => {
     const user = userEvent.setup();
+    const onOpen = vi.fn();
     render(
       <IssueBoard
         issues={issues}
         project={null}
         projects={[]}
         selectedIds={new Set()}
-        onOpen={vi.fn()}
+        onOpen={onOpen}
         onFocus={vi.fn()}
         onToggle={vi.fn()}
         onRange={vi.fn()}
@@ -354,6 +355,7 @@ describe("IssueBoard", () => {
       expect(liveRegion).toHaveTextContent("Issue is over COPP-1."),
     );
     expect(source).toHaveAttribute("data-dragging", "true");
+    expect(onOpen).not.toHaveBeenCalled();
     expect(document.querySelector(".copper-task-card-overlay")).not.toBeNull();
     expect(document.querySelector(".copper-task-drop-slot")).toBeNull();
 

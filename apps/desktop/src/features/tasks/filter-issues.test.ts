@@ -49,6 +49,17 @@ describe("filterIssues", () => {
 });
 
 describe("sortIssues", () => {
+  it("keeps mixed-case ranks in the same order as persisted keys", () => {
+    const issues = [
+      issue({ id: "B-1", title: "Lowercase", rank: "a" }),
+      issue({ id: "B-2", title: "Uppercase", rank: "Z" }),
+    ];
+    expect(sortIssues(issues, "rank").map((item) => item.id)).toEqual([
+      "B-2",
+      "B-1",
+    ]);
+  });
+
   it("sorts by rank then id", () => {
     const issues = [
       issue({ id: "B-2", title: "Two", rank: "B" }),

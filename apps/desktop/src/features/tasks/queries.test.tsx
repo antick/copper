@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
+import { sortIssues } from "@/features/tasks/filter-issues";
 import { taskKeys, useMoveIssue } from "@/features/tasks/queries";
 import type { TaskIssue } from "@/lib/copper/tasks";
 
@@ -17,6 +18,31 @@ vi.mock("@/lib/copper", () => ({
     },
   },
 }));
+
+it("keeps a pending drop in place when the board sorts by rank", async () => {
+  const client = new QueryClient();
+  const original = ["1", "2", "3"].map((id) => ({
+    ...issue(`COPP-${id}`, "todo"),
+    rank: id,
+  }));
+  client.setQueryData(taskKeys.issues("demo"), original);
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+  const { result } = renderHook(() => useMoveIssue("demo"), { wrapper });
+  act(() =>
+    result.current.mutate({ id: "COPP-3", input: { beforeId: "COPP-1" } }),
+  );
+  await waitFor(() => {
+    const rows =
+      client.getQueryData<TaskIssue[]>(taskKeys.issues("demo")) ?? [];
+    expect(sortIssues(rows, "rank").map(({ id }) => id)).toEqual([
+      "COPP-3",
+      "COPP-1",
+      "COPP-2",
+    ]);
+  });
+});
 
 it("previews a move and restores the complete prior issue order on failure", async () => {
   const client = new QueryClient({
@@ -38,9 +64,11 @@ it("previews a move and restores the complete prior issue order on failure", asy
   await waitFor(() =>
     expect(client.getQueryData<TaskIssue[]>(taskKeys.issues("demo"))).toEqual([
       original[1],
-      { ...original[0], status: "in_progress" },
+      { ...original[0], status: "in_progress", rank: expect.any(String) },
     ]),
   );
+  const pending = client.getQueryData<TaskIssue[]>(taskKeys.issues("demo"));
+  expect((pending?.[1].rank ?? "") > original[1].rank).toBe(true);
 
   act(() => rejectMove?.(new Error("Disk is busy")));
   await waitFor(() =>
@@ -59,7 +87,7 @@ function issue(id: string, status: TaskIssue["status"]): TaskIssue {
     project: null,
     labels: [],
     due: null,
-    rank: id,
+    rank: id.slice(-1),
     created: "",
     updated: "",
     body: "",

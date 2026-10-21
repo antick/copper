@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  compareTaskOrder,
+  firstRank,
+  insertionRank,
+  issueInsertionIndex,
+} from "../../../shared/task-order";
 import { CopperError } from "../errors";
 import { createFile, createFolder, readFile, saveFile } from "../files/service";
 import { openIndex } from "../index/db";
@@ -31,7 +37,6 @@ import {
   replaceHeading,
 } from "./fields";
 import { allocateIssueId, slugifyTitle } from "./ids";
-import { firstRank, rankBetween } from "./rank";
 import type {
   CreateIssueInput,
   MoveIssueInput,
@@ -200,32 +205,42 @@ export function createIssue(
     ? column.find((issue) => issue.id === input.afterId)
     : undefined;
   const after = named ?? column.at(-1);
-  const next = after ? column[column.indexOf(after) + 1] : undefined;
-  const rank = after ? rankBetween(after.rank, next?.rank) : firstRank();
-  const relative = uniquePath(root, ISSUES_DIR, `${id}-${slugifyTitle(title)}`);
-  const extra = input.body?.trim();
-  const body = extra ? `# ${title}\n\n${extra}\n` : `# ${title}\n`;
-  const parsed: Frontmatter = {
-    raw: "",
-    body,
-    values: writeIssueValues(
-      {},
-      {
-        id,
-        status,
-        priority: input.priority ?? DEFAULT_ISSUE_PRIORITY,
-        project: input.project ?? null,
-        labels: input.labels ?? [],
-        due: input.due ?? null,
-        rank,
-        created,
-        updated: created,
-      },
-    ),
-  };
-  createFile(root, relative, writeFrontmatter(parsed, ""));
-  indexFilePath(dbPath, root, relative);
-  return getIssue(root, id);
+  return writeAtPosition(
+    root,
+    dbPath,
+    column,
+    after ? column.indexOf(after) + 1 : 0,
+    (rank) => {
+      const relative = uniquePath(
+        root,
+        ISSUES_DIR,
+        `${id}-${slugifyTitle(title)}`,
+      );
+      const extra = input.body?.trim();
+      const body = extra ? `# ${title}\n\n${extra}\n` : `# ${title}\n`;
+      const parsed: Frontmatter = {
+        raw: "",
+        body,
+        values: writeIssueValues(
+          {},
+          {
+            id,
+            status,
+            priority: input.priority ?? DEFAULT_ISSUE_PRIORITY,
+            project: input.project ?? null,
+            labels: input.labels ?? [],
+            due: input.due ?? null,
+            rank,
+            created,
+            updated: created,
+          },
+        ),
+      };
+      createFile(root, relative, writeFrontmatter(parsed, ""));
+      indexFilePath(dbPath, root, relative);
+      return getIssue(root, id);
+    },
+  );
 }
 
 export function updateIssue(
@@ -367,13 +382,40 @@ export function moveIssue(
   const status = input.status ?? current.status;
   const column = issues
     .filter((issue) => issue.status === status && issue.id !== id)
-    .sort((a, b) => a.rank.localeCompare(b.rank) || a.id.localeCompare(b.id));
-  const after = input.afterId
-    ? column.find((issue) => issue.id === input.afterId)
-    : undefined;
-  const before = input.beforeId
-    ? column.find((issue) => issue.id === input.beforeId)
-    : undefined;
-  const rank = rankBetween(after?.rank, before?.rank);
-  return updateIssue(root, dbPath, id, { status, rank });
+    .sort(compareTaskOrder);
+  return writeAtPosition(
+    root,
+    dbPath,
+    column,
+    issueInsertionIndex(column, input),
+    (rank) => updateIssue(root, dbPath, id, { status, rank }),
+  );
+}
+
+function writeAtPosition(
+  root: string,
+  dbPath: string,
+  column: TaskIssue[],
+  index: number,
+  write: (rank: string) => TaskIssue,
+): TaskIssue {
+  const { rank, repairs } = insertionRank(column, index);
+  const originals = repairs.length
+    ? column.map((issue) => ({
+        path: issue.path,
+        source: readFile(root, issue.path)[0],
+      }))
+    : [];
+  try {
+    for (const repair of repairs) {
+      updateIssue(root, dbPath, repair.id, { rank: repair.rank });
+    }
+    return write(rank);
+  } catch (error) {
+    for (const original of originals) {
+      saveFile(root, original.path, original.source);
+      indexFilePath(dbPath, root, original.path);
+    }
+    throw error;
+  }
 }

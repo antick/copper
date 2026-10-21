@@ -6,6 +6,7 @@ import type {
   TaskIssue,
   TaskProject,
 } from "@/lib/copper/tasks";
+import { compareTaskOrder } from "../../../shared/task-order";
 
 export type IssueFilter = "all" | "active" | "backlog" | "done";
 export type IssueGroupBy = "none" | "status" | "priority" | "project" | "label";
@@ -61,7 +62,7 @@ export function matchesIssueSearch(issue: TaskIssue, query: string) {
 export function sortIssues(issues: TaskIssue[], sort: IssueSort): TaskIssue[] {
   return [...issues].sort((a, b) => {
     if (sort === "rank") {
-      return a.rank.localeCompare(b.rank) || a.id.localeCompare(b.id);
+      return compareTaskOrder(a, b);
     }
     if (sort === "updated") {
       return b.updated.localeCompare(a.updated) || a.id.localeCompare(b.id);

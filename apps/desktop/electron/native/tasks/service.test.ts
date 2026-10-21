@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { compareTaskOrder } from "../../../shared/task-order";
 import { archiveFile, trashPath } from "../files/service";
 import { indexFilePath } from "../index/indexer";
 import { parseFrontmatter, writeFrontmatter } from "../markdown/frontmatter";
@@ -20,6 +21,7 @@ import {
 const temps: string[] = [];
 
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const dir of temps.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -242,6 +244,146 @@ describe("tasks service", () => {
     expect(listIssues(db).find((item) => item.id === second.id)?.status).toBe(
       "todo",
     );
+  });
+
+  it("inserts after a card without colliding with its next neighbor", () => {
+    const { root, db } = vault();
+    const cards = ["A", "B", "C", "D"].map((title) =>
+      createIssue(root, db, { title }),
+    );
+    moveIssue(root, db, cards[3].id, { afterId: cards[1].id });
+    expect(listIssues(db).map((issue) => issue.id)).toEqual([
+      cards[0].id,
+      cards[1].id,
+      cards[3].id,
+      cards[2].id,
+    ]);
+    expect(new Set(listIssues(db).map((issue) => issue.rank)).size).toBe(4);
+  });
+
+  it("inserts before a card using its previous neighbor", () => {
+    const { root, db } = vault();
+    const cards = ["A", "B", "C", "D"].map((title) =>
+      createIssue(root, db, { title }),
+    );
+    moveIssue(root, db, cards[0].id, { beforeId: cards[3].id });
+    expect(listIssues(db).map((issue) => issue.id)).toEqual([
+      cards[1].id,
+      cards[2].id,
+      cards[0].id,
+      cards[3].id,
+    ]);
+  });
+
+  it("appends a card when moving to a populated column without anchors", () => {
+    const { root, db } = vault();
+    const first = createIssue(root, db, { title: "A" });
+    const second = createIssue(root, db, { title: "B" });
+    const moved = createIssue(root, db, { title: "Moved", status: "done" });
+    moveIssue(root, db, moved.id, { status: "todo" });
+    expect(listIssues(db).map((issue) => issue.id)).toEqual([
+      first.id,
+      second.id,
+      moved.id,
+    ]);
+  });
+
+  it.each(["0", "A"])(
+    "repairs existing ranks when inserting before %s",
+    (rank) => {
+      const { root, db } = vault();
+      const first = createIssue(root, db, { title: "A", body: "Keep me" });
+      const second = createIssue(root, db, { title: "B" });
+      const moved = createIssue(root, db, { title: "Moved" });
+      updateIssue(root, db, first.id, { rank });
+      updateIssue(root, db, second.id, { rank: "A" });
+      moveIssue(root, db, moved.id, {
+        afterId: rank === "A" ? first.id : null,
+        beforeId: rank === "A" ? second.id : first.id,
+      });
+      expect(listIssues(db).map((issue) => issue.id)).toEqual(
+        rank === "A"
+          ? [first.id, moved.id, second.id]
+          : [moved.id, first.id, second.id],
+      );
+      expect(getIssue(root, first.id).body).toContain("Keep me");
+      expect(getIssue(root, moved.id).rank).toBe(
+        listIssues(db).find((issue) => issue.id === moved.id)?.rank,
+      );
+    },
+  );
+
+  it("retains the requested order through repeated moves to the top", () => {
+    const { root, db } = vault();
+    let cards = ["A", "B", "C", "D"].map((title) =>
+      createIssue(root, db, { title }),
+    );
+    for (let move = 0; move < 40; move += 1) {
+      const last = cards[cards.length - 1];
+      moveIssue(root, db, last.id, { beforeId: cards[0].id });
+      cards = [last, ...cards.slice(0, -1)];
+      expect(listIssues(db).map((issue) => issue.id)).toEqual(
+        cards.map((issue) => issue.id),
+      );
+    }
+  });
+
+  it("persists board drop positions across repeated mixed-case moves", () => {
+    const { root, db } = vault();
+    const cards = ["A", "B", "C", "D"].map((title) =>
+      createIssue(root, db, { title }),
+    );
+    let expected = cards.map(({ id }) => id);
+    for (let move = 0; move < 30; move += 1) {
+      const from = move % expected.length;
+      const to = (from + 2) % expected.length;
+      const id = expected[from];
+      const over = expected[to];
+      const rows = listIssues(db).sort(compareTaskOrder);
+      expect(rows.map((issue) => issue.id)).toEqual(expected);
+      moveIssue(
+        root,
+        db,
+        id,
+        from < to ? { afterId: over } : { beforeId: over },
+      );
+      expected = expected.filter((item) => item !== id);
+      expected.splice(to, 0, id);
+      expect(listIssues(db).map((issue) => issue.id)).toEqual(expected);
+      expect(new Set(listIssues(db).map((issue) => issue.rank)).size).toBe(4);
+      for (const issue of listIssues(db)) {
+        expect(getIssue(root, issue.id).rank).toBe(issue.rank);
+      }
+    }
+  });
+
+  it("restores repaired files when saving the dropped card fails", () => {
+    const { root, db } = vault();
+    const first = createIssue(root, db, { title: "A" });
+    const moved = createIssue(root, db, { title: "Moved" });
+    updateIssue(root, db, first.id, { rank: "0" });
+    const originals = listIssues(db).map((issue) => ({
+      ...issue,
+      source: fs.readFileSync(path.join(root, issue.path), "utf8"),
+    }));
+    const rename = fs.renameSync;
+    vi.spyOn(fs, "renameSync").mockImplementation((from, to) => {
+      if (path.basename(String(to)) === path.basename(moved.path)) {
+        throw new Error("Disk is busy");
+      }
+      rename(from, to);
+    });
+    expect(() => moveIssue(root, db, moved.id, { beforeId: first.id })).toThrow(
+      "Disk is busy",
+    );
+    for (const original of originals) {
+      expect(fs.readFileSync(path.join(root, original.path), "utf8")).toBe(
+        original.source,
+      );
+      expect(listIssues(db).find(({ id }) => id === original.id)?.rank).toBe(
+        original.rank,
+      );
+    }
   });
 
   it("reverts a failed status write", () => {

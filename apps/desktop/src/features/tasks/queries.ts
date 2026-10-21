@@ -10,6 +10,11 @@ import type {
   UpdateProjectInput,
   UpdateProjectWorkflowInput,
 } from "@/lib/copper/tasks";
+import {
+  compareTaskOrder,
+  insertionRank,
+  issueInsertionIndex,
+} from "../../../shared/task-order";
 
 export const taskKeys = {
   issues: (vaultId: string) => ["vault", vaultId, "tasks", "issues"] as const,
@@ -137,25 +142,21 @@ export function useMoveIssue(vaultId: string | undefined) {
           if (!moved) return rows;
           const next = rows.filter((issue) => issue.id !== id);
           const updated = { ...moved, status: input.status ?? moved.status };
-          const beforeIndex = input.beforeId
-            ? next.findIndex((issue) => issue.id === input.beforeId)
-            : -1;
-          const afterIndex = input.afterId
-            ? next.findIndex((issue) => issue.id === input.afterId)
-            : -1;
-          const statusEnd = next.reduce(
-            (last, issue, index) =>
-              issue.status === updated.status ? index + 1 : last,
-            0,
+          const column = next
+            .filter((issue) => issue.status === updated.status)
+            .sort(compareTaskOrder);
+          const position = issueInsertionIndex(column, input);
+          const { rank, repairs } = insertionRank(column, position);
+          updated.rank = rank;
+          const repairedRanks = new Map(
+            repairs.map((repair) => [repair.id, repair.rank]),
           );
-          const insertAt =
-            beforeIndex >= 0
-              ? beforeIndex
-              : afterIndex >= 0
-                ? afterIndex + 1
-                : statusEnd;
-          next.splice(insertAt, 0, updated);
-          return next;
+          return [...next, updated]
+            .map((issue) => {
+              const repaired = repairedRanks.get(issue.id);
+              return repaired ? { ...issue, rank: repaired } : issue;
+            })
+            .sort(compareTaskOrder);
         },
       );
       return { previous };
