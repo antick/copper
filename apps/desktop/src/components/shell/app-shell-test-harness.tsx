@@ -152,7 +152,7 @@ vi.mock("@/lib/copper", () => ({
             mtimeNs: 1,
           },
           {
-            path: "Tasks/Issues/COPP-1-board.md",
+            path: ".copper/tasks/issues/COPP-1-board.md",
             title: "Fast board",
             snippet: "Ship the kanban board.",
             tags: ["ui"],
@@ -207,7 +207,7 @@ vi.mock("@/lib/copper", () => ({
     tasks: {
       listIssues: async () => [
         {
-          path: "Tasks/Issues/COPP-1-board.md",
+          path: ".copper/tasks/issues/COPP-1-board.md",
           id: "COPP-1",
           title: "Fast board",
           status: "todo",
@@ -222,7 +222,7 @@ vi.mock("@/lib/copper", () => ({
       ],
       listProjects: async () => [
         {
-          path: "Tasks/Projects/copper.md",
+          path: ".copper/tasks/projects/copper.md",
           id: "copper",
           title: "Copper",
           status: "started",
@@ -239,7 +239,7 @@ vi.mock("@/lib/copper", () => ({
         },
       ],
       getIssue: async () => ({
-        path: "Tasks/Issues/COPP-1-board.md",
+        path: ".copper/tasks/issues/COPP-1-board.md",
         id: "COPP-1",
         title: "Fast board",
         status: "todo",
@@ -253,7 +253,7 @@ vi.mock("@/lib/copper", () => ({
         body: "# Fast board\n",
       }),
       getProject: async () => ({
-        path: "Tasks/Projects/copper.md",
+        path: ".copper/tasks/projects/copper.md",
         id: "copper",
         title: "Copper",
         status: "started",

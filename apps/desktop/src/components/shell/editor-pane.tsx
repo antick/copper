@@ -23,6 +23,7 @@ import { EditorTypographyControls } from "@/features/settings/editor-typography-
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import type { EditorTab } from "@/features/tabs/types";
 import { fileStem } from "@/lib/paths";
+import { isTaskSourcePath } from "../../../shared/task-paths";
 
 const SAVE_CHROME = {
   dirty: { label: "Unsaved changes", icon: Circle, className: "is-dirty" },
@@ -136,7 +137,7 @@ export function EditorPane({
                 </IconButton>
               </Tooltip>
             ) : null}
-            {markdown ? (
+            {markdown && !(path && isTaskSourcePath(path)) ? (
               <Tooltip content={favorited ? "Unfavorite" : "Favorite"}>
                 <IconButton
                   label="Favorite note"

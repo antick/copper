@@ -46,7 +46,7 @@ export function watchVault(root: string): FSWatcher {
   const watcher = chokidar.watch(root, {
     ignoreInitial: true,
     ignored: (watchPath) =>
-      watchPath.split(/[/\\]/).some((part) => part.startsWith(".")),
+      watchPath !== root && !normalizeWatchPath(root, watchPath, "modified"),
   });
   const emit =
     (type: "created" | "modified" | "removed") => (filePath: string) => {

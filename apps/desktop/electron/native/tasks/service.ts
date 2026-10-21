@@ -7,6 +7,7 @@ import {
   insertionRank,
   issueInsertionIndex,
 } from "../../../shared/task-order";
+import { TASK_ARCHIVE_DIR } from "../../../shared/task-paths";
 import { CopperError } from "../errors";
 import { createFile, createFolder, readFile, saveFile } from "../files/service";
 import { openIndex } from "../index/db";
@@ -37,6 +38,7 @@ import {
   replaceHeading,
 } from "./fields";
 import { allocateIssueId, slugifyTitle } from "./ids";
+import { migrateTaskStorage } from "./storage";
 import type {
   CreateIssueInput,
   MoveIssueInput,
@@ -50,6 +52,7 @@ function nowIso(): string {
 }
 
 export function ensureTaskFolders(root: string): void {
+  migrateTaskStorage(root);
   createFolder(root, TASKS_DIR);
   createFolder(root, ISSUES_DIR);
   createFolder(root, PROJECTS_DIR);
@@ -129,9 +132,10 @@ export function listIssues(dbPath: string): TaskIssue[] {
          FROM tasks
          WHERE kind = ?
            AND path NOT LIKE 'Archive/%'
+           AND path NOT LIKE ?
          ORDER BY rank ASC, id ASC`,
       )
-      .all(TYPE_ISSUE) as Array<{
+      .all(TYPE_ISSUE, `${TASK_ARCHIVE_DIR}/%`) as Array<{
       path: string;
       id: string;
       status: string;

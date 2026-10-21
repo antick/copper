@@ -142,7 +142,7 @@ describe("board card drag motion", () => {
 
 function issue(id: string, status: TaskIssue["status"]): TaskIssue {
   return {
-    path: `Tasks/Issues/${id}.md`,
+    path: `.copper/tasks/issues/${id}.md`,
     id,
     title: id,
     status,

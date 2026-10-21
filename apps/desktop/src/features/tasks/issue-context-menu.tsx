@@ -16,6 +16,7 @@ import {
   PRIORITY_LABELS,
   STATUS_LABELS,
 } from "@/features/tasks/constants";
+import { TaskSourceMenuItem } from "@/features/tasks/task-source";
 import {
   activeProjects,
   validStatusForProject,
@@ -150,6 +151,7 @@ export function IssueContextMenu({
           <MenuItem onSelect={onOpenInNewTab}>
             <ExternalLink size={14} strokeWidth={1.75} /> Open in new tab
           </MenuItem>
+          <TaskSourceMenuItem path={issue.path} />
           {onDuplicate ? (
             <MenuItem onSelect={() => onDuplicate(issue)}>
               <CopyPlus size={14} strokeWidth={1.75} /> Duplicate

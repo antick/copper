@@ -86,7 +86,7 @@ const previewFiles = new Map<string, string>([
   ["README", "Copper demo Vault\n"],
   ["Archive/Projects/retired.md", "# Retired\n\nAn archived note.\n"],
   [
-    "Tasks/Projects/copper.md",
+    ".copper/tasks/projects/copper.md",
     `---
 type: project
 id: copper
@@ -101,7 +101,7 @@ Local-first workspace.
 `,
   ],
   [
-    "Tasks/Issues/DEMO-1-fast-board.md",
+    ".copper/tasks/issues/DEMO-1-fast-board.md",
     `---
 type: issue
 id: DEMO-1
@@ -121,7 +121,7 @@ Ship the kanban board.
 `,
   ],
   [
-    "Tasks/Issues/DEMO-2-projects.md",
+    ".copper/tasks/issues/DEMO-2-projects.md",
     `---
 type: issue
 id: DEMO-2
@@ -227,21 +227,21 @@ let NOTES = [
     mtimeNs: Date.now() * 1_000_000 - 30 * hour,
   },
   {
-    path: "Tasks/Projects/copper.md",
+    path: ".copper/tasks/projects/copper.md",
     title: "Copper",
     snippet: "Local-first workspace.",
     tags: ["app"],
     mtimeNs: Date.now() * 1_000_000 - 1 * hour,
   },
   {
-    path: "Tasks/Issues/DEMO-1-fast-board.md",
+    path: ".copper/tasks/issues/DEMO-1-fast-board.md",
     title: "Fast board",
     snippet: "Ship the kanban board.",
     tags: ["ui"],
     mtimeNs: Date.now() * 1_000_000 - 3 * hour,
   },
   {
-    path: "Tasks/Issues/DEMO-2-projects.md",
+    path: ".copper/tasks/issues/DEMO-2-projects.md",
     title: "Project list",
     snippet: "Scope issues by project.",
     tags: ["ui"],

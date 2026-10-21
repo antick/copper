@@ -1,6 +1,8 @@
-export const TASKS_DIR = "Tasks";
-export const ISSUES_DIR = "Tasks/Issues";
-export const PROJECTS_DIR = "Tasks/Projects";
+export {
+  ISSUES_DIR,
+  PROJECTS_DIR,
+  TASKS_DIR,
+} from "../../../shared/task-paths";
 
 export const ISSUE_STATUSES = [
   "backlog",

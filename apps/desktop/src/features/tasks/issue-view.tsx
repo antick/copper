@@ -9,6 +9,7 @@ import {
 import { ProjectIcon } from "@/features/tasks/project-icons";
 import { TaskDescriptionEditor } from "@/features/tasks/task-description-editor";
 import { taskBody, taskDescription } from "@/features/tasks/task-selectors";
+import { TaskSourceButton } from "@/features/tasks/task-source";
 import {
   TASK_PRIORITY_OPTIONS,
   TaskDatePopover,
@@ -90,6 +91,7 @@ export function IssueView({
           <strong>{issue.id}</strong>
         </div>
         <div className="copper-header-actions">
+          <TaskSourceButton path={issue.path} />
           {onOpenInNewTab ? (
             <Tooltip content="Open in new tab">
               <IconButton label="Open in new tab" onClick={onOpenInNewTab}>

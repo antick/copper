@@ -26,6 +26,7 @@ import {
   useSettings,
 } from "@/features/settings/settings-provider";
 import { emptySession, sessionReducer } from "@/features/tabs/session-reducer";
+import { TaskSourceProvider } from "@/features/tasks/task-source";
 import {
   initialTaskTabsState,
   legacyTaskFields,
@@ -38,6 +39,7 @@ import { copper } from "@/lib/copper";
 import { guessPlatform } from "@/lib/copper/platform";
 import type { WorkspaceMode } from "@/lib/copper/settings";
 import type { IssueColumnId } from "@/lib/copper/task-settings";
+import { isTaskSourcePath } from "../../../shared/task-paths";
 
 export { uniqueNotePath } from "@/components/shell/use-note-workspace-actions";
 
@@ -156,6 +158,8 @@ export function AppShell({
       }
       sessionDirty.current = true;
       const activePath = saved.activePath ?? undefined;
+      if (activePath && isTaskSourcePath(activePath))
+        setLivePreviewEnabled(false);
       validateRestoredSession.current = true;
       setWorkspaceMode(saved.workspaceMode ?? "notes");
       dispatchTaskTabs({
@@ -205,7 +209,7 @@ export function AppShell({
       ...(archiveNotes.data ?? []).map((note) => note.path),
     ]);
     for (const tab of session.tabs) {
-      if (!existing.has(tab.path)) {
+      if (!existing.has(tab.path) && !isTaskSourcePath(tab.path)) {
         sessionDirty.current = true;
         dispatch({ type: "remove", path: tab.path });
       }
@@ -313,21 +317,30 @@ export function AppShell({
         {settingsOpen ? (
           <SettingsOverlay open onClose={() => setSettingsOpen(false)} />
         ) : workspaceMode === "tasks" && vaultId ? (
-          <TasksWorkspace
+          <TaskSourceProvider
             vaultId={vaultId}
-            vaultName={vaultName}
-            platform={appInfo.data?.platform ?? guessPlatform()}
-            leftCollapsed={session.leftCollapsed}
-            onToggleLeft={() => updateSession({ type: "toggle-left" })}
-            tabsState={taskTabs}
-            onTabsAction={dispatchTaskTabs}
-            projectOrder={taskProjectOrder}
-            pinnedProjects={taskPinnedProjects}
-            listColumnWidths={taskListColumnWidths}
-            onProjectOrderChange={setTaskProjectOrder}
-            onPinnedProjectsChange={setTaskPinnedProjects}
-            onListColumnWidthsChange={setTaskListColumnWidths}
-          />
+            onOpen={(path) => {
+              setLivePreviewEnabled(false);
+              noteActions.openPinned(path);
+              setWorkspaceMode("notes");
+            }}
+          >
+            <TasksWorkspace
+              vaultId={vaultId}
+              vaultName={vaultName}
+              platform={appInfo.data?.platform ?? guessPlatform()}
+              leftCollapsed={session.leftCollapsed}
+              onToggleLeft={() => updateSession({ type: "toggle-left" })}
+              tabsState={taskTabs}
+              onTabsAction={dispatchTaskTabs}
+              projectOrder={taskProjectOrder}
+              pinnedProjects={taskPinnedProjects}
+              listColumnWidths={taskListColumnWidths}
+              onProjectOrderChange={setTaskProjectOrder}
+              onPinnedProjectsChange={setTaskPinnedProjects}
+              onListColumnWidthsChange={setTaskListColumnWidths}
+            />
+          </TaskSourceProvider>
         ) : (
           <NotesWorkspace
             vaultId={vaultId}
@@ -369,7 +382,7 @@ export function AppShell({
               })
             }
             onOpenInTasks={
-              activeIsMarkdown && selectedPath?.startsWith("Tasks/")
+              activeIsMarkdown && selectedPath && isTaskSourcePath(selectedPath)
                 ? () => {
                     if (!vaultId || !selectedPath) {
                       return;

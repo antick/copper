@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { ReactElement } from "react";
+import { TaskSourceMenuItem } from "@/features/tasks/task-source";
 import type { TaskProject } from "@/lib/copper/tasks";
 
 export type ProjectAction = "rename" | "icon" | "archive" | "delete";
@@ -53,6 +54,7 @@ export function ProjectContextMenu({
           >
             <ExternalLink size={14} aria-hidden /> Open in new tab
           </ContextMenu.Item>
+          <TaskSourceMenuItem path={project.path} />
           <ContextMenu.Separator className="copper-menu-separator" />
           {onPinnedChange ? (
             <ContextMenu.Item

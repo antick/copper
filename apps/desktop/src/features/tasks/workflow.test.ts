@@ -9,7 +9,7 @@ import {
 import type { TaskIssue, TaskProject } from "@/lib/copper/tasks";
 
 const project = (id: string, label: string): TaskProject => ({
-  path: `Tasks/Projects/${id}.md`,
+  path: `.copper/tasks/projects/${id}.md`,
   id,
   title: id,
   status: "started",
@@ -34,7 +34,7 @@ const project = (id: string, label: string): TaskProject => ({
 });
 
 const issue = (projectId: string, status: string): TaskIssue => ({
-  path: "Tasks/Issues/ONE.md",
+  path: ".copper/tasks/issues/ONE.md",
   id: "ONE",
   title: "One",
   status,

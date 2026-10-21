@@ -34,11 +34,11 @@ describe("preview task workflow compatibility", () => {
   it("allocates independent issue prefix sequences", () => {
     const files = new Map([
       [
-        "Tasks/Issues/NOTE-8-legacy.md",
+        ".copper/tasks/issues/NOTE-8-legacy.md",
         "---\ntype: issue\nid: NOTE-8\nstatus: todo\nrank: A\n---\n# Legacy\n",
       ],
       [
-        "Tasks/Issues/ISSUE-2-current.md",
+        ".copper/tasks/issues/ISSUE-2-current.md",
         "---\ntype: issue\nid: ISSUE-2\nstatus: todo\nrank: B\n---\n# Current\n",
       ],
     ]);
@@ -53,11 +53,11 @@ describe("preview task workflow compatibility", () => {
   it("keeps preview allocation in sync for one-character and hash prefixes", () => {
     const files = new Map([
       [
-        "Tasks/Issues/I-8-existing.md",
+        ".copper/tasks/issues/I-8-existing.md",
         "---\ntype: issue\nid: I-8\n---\n# Existing\n",
       ],
       [
-        "Tasks/Issues/#3-existing.md",
+        ".copper/tasks/issues/#3-existing.md",
         "---\ntype: issue\nid: #3\n---\n# Existing hash\n",
       ],
     ]);

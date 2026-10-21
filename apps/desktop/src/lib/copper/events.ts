@@ -119,6 +119,9 @@ export async function handleVaultFileSystemEvent(
   }
 
   await invalidateVaultNoteQueries(vaultId);
+  await queryClient.invalidateQueries({
+    queryKey: ["vault", vaultId, "tasks"],
+  });
 }
 
 export function subscribeToVaultFs(

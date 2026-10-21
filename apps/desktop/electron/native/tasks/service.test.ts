@@ -36,14 +36,14 @@ function vault(): { root: string; db: string } {
 }
 
 describe("tasks service", () => {
-  it("creates an issue file with defaults and no .copper directory", () => {
+  it("creates an issue in lowercase hidden task storage", () => {
     const { root, db } = vault();
     const issue = createIssue(root, db, { title: "Fast board" });
     expect(issue.id).toBe("ISSUE-1");
     expect(issue.status).toBe("todo");
     expect(issue.priority).toBe("none");
-    expect(issue.path.startsWith("Tasks/Issues/")).toBe(true);
-    expect(fs.existsSync(path.join(root, ".copper"))).toBe(false);
+    expect(issue.path.startsWith(".copper/tasks/issues/")).toBe(true);
+    expect(fs.existsSync(path.join(root, ".copper/tasks"))).toBe(true);
     expect(listIssues(db).map((item) => item.id)).toEqual(["ISSUE-1"]);
   });
 
@@ -389,7 +389,7 @@ describe("tasks service", () => {
   it("reverts a failed status write", () => {
     const { root, db } = vault();
     const issue = createIssue(root, db, { title: "Locked" });
-    const issuesDir = path.join(root, "Tasks", "Issues");
+    const issuesDir = path.join(root, ".copper", "tasks", "issues");
     fs.chmodSync(issuesDir, 0o555);
     expect(() => updateIssue(root, db, issue.id, { status: "done" })).toThrow();
     fs.chmodSync(issuesDir, 0o755);
@@ -421,6 +421,6 @@ describe("tasks service", () => {
     expect(project.id).toBe("copper");
     expect(project.status).toBe("planned");
     expect(listProjects(db)[0]?.counts.todo).toBe(0);
-    expect(fs.existsSync(path.join(root, ".copper"))).toBe(false);
+    expect(fs.existsSync(path.join(root, ".copper/tasks"))).toBe(true);
   });
 });

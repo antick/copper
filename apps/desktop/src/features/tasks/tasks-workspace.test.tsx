@@ -20,7 +20,7 @@ import type {
 
 const mocks = vi.hoisted(() => {
   const issue = {
-    path: "Tasks/Issues/COPP-1-board.md",
+    path: ".copper/tasks/issues/COPP-1-board.md",
     id: "COPP-1",
     title: "Fast board",
     status: "todo" as const,
@@ -34,7 +34,7 @@ const mocks = vi.hoisted(() => {
     body: "# Fast board\n",
   };
   const createdProject = {
-    path: "Tasks/Projects/inbox.md",
+    path: ".copper/tasks/projects/inbox.md",
     id: "inbox",
     title: "Inbox",
     status: "planned" as const,
@@ -50,7 +50,7 @@ const mocks = vi.hoisted(() => {
     },
   };
   const project = {
-    path: "Tasks/Projects/copper.md",
+    path: ".copper/tasks/projects/copper.md",
     id: "copper",
     title: "Copper",
     status: "started" as const,

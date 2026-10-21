@@ -1,5 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  ARCHIVED_PROJECTS_DIR,
+  isArchivedTaskPath,
+} from "../../../shared/task-paths";
 import { ARCHIVE_DIR } from "../constants";
 import { CopperError } from "../errors";
 import {
@@ -79,7 +83,8 @@ function projectFromParsed(
     target: asOptionalString(parsed.values[FRONTMATTER_KEYS.target]),
     icon: projectIcon(parsed.values[FRONTMATTER_KEYS.icon]),
     workflow: parseWorkflow(id, parsed.values[FRONTMATTER_KEYS.workflow]),
-    archived: relative.startsWith(`${ARCHIVE_DIR}/`),
+    archived:
+      isArchivedTaskPath(relative) || relative.startsWith(`${ARCHIVE_DIR}/`),
     counts,
     body: parsed.body,
   };
@@ -169,7 +174,9 @@ export function listProjects(dbPath: string): TaskProject[] {
         target: asOptionalString(values.target),
         icon: projectIcon(values.icon),
         workflow: parseWorkflow(row.id, values.workflow),
-        archived: row.path.startsWith(`${ARCHIVE_DIR}/`),
+        archived:
+          isArchivedTaskPath(row.path) ||
+          row.path.startsWith(`${ARCHIVE_DIR}/`),
         counts: counts.get(row.id) ?? emptyCounts(),
       };
     });
@@ -179,7 +186,7 @@ export function listProjects(dbPath: string): TaskProject[] {
 }
 
 function findProjectPath(root: string, id: string): string {
-  for (const directory of [PROJECTS_DIR, `${ARCHIVE_DIR}/${PROJECTS_DIR}`]) {
+  for (const directory of [PROJECTS_DIR, ARCHIVED_PROJECTS_DIR]) {
     const absolute = path.join(root, directory);
     if (!fs.existsSync(absolute)) continue;
     for (const name of fs.readdirSync(absolute)) {

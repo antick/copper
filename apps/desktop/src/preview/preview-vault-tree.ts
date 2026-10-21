@@ -100,40 +100,5 @@ export const PREVIEW_VAULT_TREE = {
       fileKind: "text",
       typeLabel: "TXT",
     },
-    {
-      name: "Tasks",
-      path: "Tasks",
-      kind: "directory",
-      children: [
-        {
-          name: "Issues",
-          path: "Tasks/Issues",
-          kind: "directory",
-          children: ["DEMO-1-fast-board.md", "DEMO-2-projects.md"].map(
-            (name) => ({
-              name,
-              path: `Tasks/Issues/${name}`,
-              kind: "file",
-              fileKind: "markdown",
-              typeLabel: "MD",
-            }),
-          ),
-        },
-        {
-          name: "Projects",
-          path: "Tasks/Projects",
-          kind: "directory",
-          children: [
-            {
-              name: "copper.md",
-              path: "Tasks/Projects/copper.md",
-              kind: "file",
-              fileKind: "markdown",
-              typeLabel: "MD",
-            },
-          ],
-        },
-      ],
-    },
   ],
 };

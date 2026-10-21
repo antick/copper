@@ -1,5 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  isArchivedTaskPath,
+  isTaskSourcePath,
+  TASK_ARCHIVE_DIR,
+  TASKS_DIR,
+} from "../../../shared/task-paths";
 import { atomicWrite } from "../atomic-write";
 import { ARCHIVE_DIR, MAX_SUPPORTED_FILE_SIZE } from "../constants";
 import { CopperError } from "../errors";
@@ -23,7 +29,11 @@ function isArchiveRoot(relative: string): boolean {
 }
 
 function isArchived(relative: string): boolean {
-  return relative === ARCHIVE_DIR || relative.startsWith(`${ARCHIVE_DIR}/`);
+  return (
+    relative === ARCHIVE_DIR ||
+    relative.startsWith(`${ARCHIVE_DIR}/`) ||
+    isArchivedTaskPath(relative)
+  );
 }
 
 function rejectReservedArchiveCreation(relative: string): void {
@@ -197,7 +207,10 @@ export function archiveFile(root: string, relativeInput: string): string {
   if (isArchived(relative)) {
     throw CopperError.invalid("Note is already archived");
   }
-  return moveWithoutOverwrite(root, absolute, `${ARCHIVE_DIR}/${relative}`);
+  const destination = isTaskSourcePath(relative)
+    ? relative.replace(`${TASKS_DIR}/`, `${TASK_ARCHIVE_DIR}/`)
+    : `${ARCHIVE_DIR}/${relative}`;
+  return moveWithoutOverwrite(root, absolute, destination);
 }
 
 export function restoreFile(root: string, relativeInput: string): string {
@@ -211,7 +224,9 @@ export function restoreFile(root: string, relativeInput: string): string {
   if (!isArchived(relative)) {
     throw CopperError.invalid("Note is not in Archive");
   }
-  const destination = relative.slice(ARCHIVE_DIR.length).replace(/^\/+/, "");
+  const destination = isArchivedTaskPath(relative)
+    ? relative.replace(`${TASK_ARCHIVE_DIR}/`, `${TASKS_DIR}/`)
+    : relative.slice(ARCHIVE_DIR.length).replace(/^\/+/, "");
   if (!destination) {
     throw CopperError.invalid("Invalid Archive path");
   }

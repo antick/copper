@@ -8,6 +8,7 @@ import {
   parsePreviewFrontmatter,
   writePreviewMarkdown,
 } from "@/preview/preview-markdown";
+import { ISSUES_DIR, PROJECTS_DIR } from "../../shared/task-paths";
 
 export const PREVIEW_TASK_UNHANDLED = Symbol("preview-task-unhandled");
 
@@ -135,7 +136,7 @@ export function dispatchPreviewTask(
       }, 0);
       const id = formatIssueId(prefix, sequence + 1);
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const path = `Tasks/Issues/${id}-${slug || "issue"}.md`;
+      const path = `${ISSUES_DIR}/${id}-${slug || "issue"}.md`;
       const after = payload.afterId
         ? issues(files).find((item) => item.id === payload.afterId)
         : undefined;
@@ -216,7 +217,7 @@ export function dispatchPreviewTask(
     case "create_project": {
       const name = String(payload.name ?? "Untitled");
       const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "project";
-      const path = `Tasks/Projects/${id}.md`;
+      const path = `${PROJECTS_DIR}/${id}.md`;
       writePreviewMarkdown(
         files,
         path,

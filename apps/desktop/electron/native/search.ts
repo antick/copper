@@ -1,4 +1,8 @@
+import { COPPER_DIR } from "../../shared/task-paths";
 import { openIndex } from "./index/db";
+
+const visibleNotes = (column = "path") =>
+  `${column} NOT GLOB '${COPPER_DIR}/*'`;
 
 export interface SearchHit {
   path: string;
@@ -51,6 +55,7 @@ export function searchNotes(
            FROM fts_notes
            WHERE fts_notes MATCH ?
              AND ${archiveFilter}
+             AND ${visibleNotes()}
            ORDER BY rank
            LIMIT 200`,
         )
@@ -69,10 +74,10 @@ export function searchNotes(
     const extra = db
       .prepare(
         `SELECT path, title FROM files
-         WHERE (path LIKE ? OR title LIKE ?) AND ${fileFilter}
+         WHERE (path LIKE ? OR title LIKE ?) AND ${fileFilter} AND ${visibleNotes()}
          UNION
          SELECT file_path, file_path FROM tags
-         WHERE tag LIKE ? AND ${tagFilter}
+         WHERE tag LIKE ? AND ${tagFilter} AND ${visibleNotes("file_path")}
          LIMIT 200`,
       )
       .all(like, like, like) as Array<{ path: string; title: string }>;
@@ -118,7 +123,7 @@ export function notesInFolder(dbPath: string, folder: string): SearchHit[] {
         `SELECT f.path, f.title, COALESCE(substr(n.body, 1, 140), '') as snippet, f.mtime_ns
          FROM files f
          LEFT JOIN fts_notes n ON n.path = f.path
-         WHERE ${sql}
+         WHERE ${sql} AND ${visibleNotes("f.path")}
          ORDER BY f.mtime_ns DESC
          LIMIT 500`,
       )

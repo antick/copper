@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { ARCHIVED_ISSUES_DIR } from "../../../shared/task-paths";
 import {
   DEFAULT_ISSUE_ID_PREFIX,
   formatIssueId,
@@ -40,31 +41,31 @@ export function nextIssueId(prefix: string, ids: Iterable<string>): string {
 
 /** Scan Vault files only. A stale SQLite index must not be consulted. */
 export function scanIssueIds(vaultRoot: string): string[] {
-  const dir = path.join(vaultRoot, ISSUES_DIR);
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
   const ids = new Set<string>();
-  for (const name of fs.readdirSync(dir)) {
-    if (!/\.(md|markdown)$/i.test(name)) {
-      continue;
-    }
-    const fromName = parseIssueId(name);
-    if (fromName) {
-      ids.add(fromName);
-    }
-    try {
-      const source = fs.readFileSync(path.join(dir, name), "utf8");
-      const parsed = parseFrontmatter(source);
-      const raw = parsed.values[FRONTMATTER_KEYS.id];
-      if (typeof raw === "string") {
-        const fromFrontmatter = parseIssueId(raw) ?? raw.trim();
-        if (fromFrontmatter.length > 0) {
-          ids.add(fromFrontmatter);
-        }
+  for (const directory of [ISSUES_DIR, ARCHIVED_ISSUES_DIR]) {
+    const dir = path.join(vaultRoot, directory);
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (!/\.(md|markdown)$/i.test(name)) {
+        continue;
       }
-    } catch {
-      // Malformed files still occupy their filename id.
+      const fromName = parseIssueId(name);
+      if (fromName) {
+        ids.add(fromName);
+      }
+      try {
+        const source = fs.readFileSync(path.join(dir, name), "utf8");
+        const parsed = parseFrontmatter(source);
+        const raw = parsed.values[FRONTMATTER_KEYS.id];
+        if (typeof raw === "string") {
+          const fromFrontmatter = parseIssueId(raw) ?? raw.trim();
+          if (fromFrontmatter.length > 0) {
+            ids.add(fromFrontmatter);
+          }
+        }
+      } catch {
+        // Malformed files still occupy their filename id.
+      }
     }
   }
   return [...ids];

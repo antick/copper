@@ -2,9 +2,15 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type Database from "better-sqlite3";
+import {
+  COPPER_DIR,
+  isTaskSourcePath,
+  isTaskStorageDirectory,
+} from "../../../shared/task-paths";
 import { parseFrontmatter } from "../markdown/frontmatter";
 import { parseWikiLink } from "../markdown/links";
-import { toPosix } from "../path";
+import { resolveInVault, toPosix } from "../path";
+import { migrateTaskStorage } from "../tasks/storage";
 import { openIndex } from "./db";
 
 function openRecovering(dbPath: string): Database.Database {
@@ -260,7 +266,16 @@ function indexDir(
   let indexed = 0;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const name = entry.name;
-    if (name.startsWith(".") || name === "node_modules" || name === "target") {
+    const relative = toPosix(path.relative(root, path.join(dir, name)));
+    const managed = entry.isDirectory()
+      ? isTaskStorageDirectory(relative)
+      : isTaskSourcePath(relative);
+    if (
+      ((relative.startsWith(`${COPPER_DIR}/`) || name.startsWith(".")) &&
+        !managed) ||
+      name === "node_modules" ||
+      name === "target"
+    ) {
       continue;
     }
     const absolute = path.join(dir, name);
@@ -268,10 +283,9 @@ function indexDir(
       indexed += indexDir(db, root, absolute, existing, seen);
       continue;
     }
-    if (!isMarkdownPath(absolute)) {
+    if (!entry.isFile() || !isMarkdownPath(absolute)) {
       continue;
     }
-    const relative = toPosix(path.relative(root, absolute));
     seen.add(relative);
     const meta = fs.statSync(absolute);
     const prior = existing.get(relative);
@@ -289,6 +303,7 @@ function indexDir(
 }
 
 export function indexVault(dbPath: string, vaultRoot: string): number {
+  migrateTaskStorage(vaultRoot);
   const db = openRecovering(dbPath);
   try {
     const run = db.transaction(() => {
@@ -333,7 +348,7 @@ export function indexFilePath(
   const db = openRecovering(dbPath);
   try {
     db.transaction(() => {
-      const absolute = path.join(vaultRoot, relative);
+      const absolute = resolveInVault(vaultRoot, relative);
       if (
         fs.existsSync(absolute) &&
         fs.statSync(absolute).isFile() &&

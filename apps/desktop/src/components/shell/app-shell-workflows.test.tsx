@@ -12,6 +12,46 @@ const mocks = getAppShellMocks();
 beforeEach(resetAppShellMocks);
 
 describe("AppShell workspace workflows", () => {
+  it("restores a hidden source tab without adding it to the Notes tree", async () => {
+    const source = ".copper/tasks/issues/COPP-1-board.md";
+    mocks.loadSession.mockResolvedValueOnce({
+      tabs: [{ path: source, preview: false }],
+      activePath: source,
+      workspaceMode: "notes",
+    });
+    renderShell({ realEditor: true });
+    expect(
+      await screen.findByRole("textbox", { name: "Markdown editor" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Open in Tasks" })).toBeVisible();
+    expect(document.querySelector(".cm-lineNumbers")).not.toBeNull();
+    expect(screen.queryByRole("treeitem", { name: /COPP-1/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Favorite note" })).toBeNull();
+  });
+
+  it("opens a hidden issue source from its action menu", async () => {
+    const user = userEvent.setup();
+    renderShell({ realEditor: true });
+    await user.click(await screen.findByRole("button", { name: "Tasks" }));
+    const row = await screen.findByRole("button", { name: /COPP-1/ });
+    await user.pointer({ keys: "[MouseRight]", target: row });
+    await user.click(
+      await screen.findByRole("menuitem", { name: "Edit source" }),
+    );
+    expect(
+      await screen.findByRole("textbox", { name: "Markdown editor" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Open in Tasks" })).toBeVisible();
+    expect(document.querySelector(".cm-lineNumbers")).not.toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Favorite note" }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open in Tasks" }));
+    expect(await screen.findByLabelText("Issue title")).toHaveValue(
+      "Fast board",
+    );
+  });
+
   it("persists note-list visibility and removes a collapsed sidebar from the pane grid", async () => {
     const user = userEvent.setup();
     renderShell();
@@ -250,27 +290,6 @@ describe("AppShell workspace workflows", () => {
     expect(
       screen.getByRole("button", { name: /Filter: Any status/ }),
     ).toBeInTheDocument();
-  });
-
-  it("opens a Tasks file as a note and switches only from Open in Tasks", async () => {
-    const user = userEvent.setup();
-    renderShell();
-    await screen.findByText("Notes", { selector: ".copper-vault-name" });
-    await user.click(screen.getByText("Fast board"));
-    expect(screen.getByRole("button", { name: "Notes" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(
-      screen.getByRole("button", { name: "Open in Tasks" }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Open in Tasks" }));
-    expect(
-      screen.getByRole("button", { name: "Tasks", hidden: true }),
-    ).toHaveAttribute("aria-pressed", "true");
-    expect(await screen.findByLabelText("Issue title")).toHaveValue(
-      "Fast board",
-    );
   });
 
   it("does not show fake Git, AI, or Contribute chrome without Vault-root Git", async () => {

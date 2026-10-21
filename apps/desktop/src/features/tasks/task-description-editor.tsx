@@ -23,6 +23,7 @@ import {
   type MarkdownFormat,
 } from "@/features/editor/markdown-format";
 import { useDocumentSave } from "@/features/editor/use-document-save";
+import type { FlushDocumentsDetail } from "@/lib/copper/events";
 
 const FORMAT_ACTIONS: Array<{
   format: MarkdownFormat;
@@ -94,6 +95,16 @@ export const TaskDescriptionEditor = forwardRef<
     }),
     [scheduleSave.flush],
   );
+
+  useEffect(() => {
+    if (!persisted) return;
+    const flush = (event: Event) =>
+      (event as CustomEvent<FlushDocumentsDetail>).detail.enqueue(
+        scheduleSave.flush(),
+      );
+    window.addEventListener("copper:flush-documents", flush);
+    return () => window.removeEventListener("copper:flush-documents", flush);
+  }, [persisted, scheduleSave]);
 
   useEffect(() => {
     const host = hostRef.current;

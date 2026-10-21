@@ -53,7 +53,7 @@ describe("allocateIssueId", () => {
   it("refuses to reuse an on-disk id when the index is stale", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-ids-"));
     temps.push(dir);
-    const issues = path.join(dir, "Tasks", "Issues");
+    const issues = path.join(dir, ".copper", "tasks", "issues");
     fs.mkdirSync(issues, { recursive: true });
     fs.writeFileSync(
       path.join(issues, "COPP-1-one.md"),
@@ -69,7 +69,7 @@ describe("allocateIssueId", () => {
   it("counts a frontmatter id when the filename has no prefix", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-ids-fm-"));
     temps.push(dir);
-    const issues = path.join(dir, "Tasks", "Issues");
+    const issues = path.join(dir, ".copper", "tasks", "issues");
     fs.mkdirSync(issues, { recursive: true });
     fs.writeFileSync(
       path.join(issues, "meeting.md"),
@@ -81,7 +81,7 @@ describe("allocateIssueId", () => {
   it("keeps independent sequences when the configured prefix changes", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-ids-prefix-"));
     temps.push(dir);
-    const issues = path.join(dir, "Tasks", "Issues");
+    const issues = path.join(dir, ".copper", "tasks", "issues");
     fs.mkdirSync(issues, { recursive: true });
     fs.writeFileSync(
       path.join(issues, "COPP-7-legacy.md"),
@@ -99,7 +99,7 @@ describe("allocateIssueId", () => {
   it("scans compact hash filenames and avoids collisions across prefixes", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-ids-compact-"));
     temps.push(dir);
-    const issues = path.join(dir, "Tasks", "Issues");
+    const issues = path.join(dir, ".copper", "tasks", "issues");
     fs.mkdirSync(issues, { recursive: true });
     fs.writeFileSync(
       path.join(issues, "I-1-one.md"),

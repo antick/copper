@@ -37,7 +37,7 @@ describe("task project navigation", () => {
 function project(id: string): TaskProject {
   return {
     id,
-    path: `Tasks/Projects/${id}.md`,
+    path: `.copper/tasks/projects/${id}.md`,
     title: id,
     status: "planned",
     labels: [],

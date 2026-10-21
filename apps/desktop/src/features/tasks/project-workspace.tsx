@@ -13,6 +13,7 @@ import {
   taskBody,
   taskDescription,
 } from "@/features/tasks/task-selectors";
+import { TaskSourceButton } from "@/features/tasks/task-source";
 import {
   TaskDatePopover,
   TaskMutationError,
@@ -95,6 +96,7 @@ export function ProjectWorkspace({
         ) : (
           <span className="copper-task-header-middle" />
         )}
+        <TaskSourceButton path={project.path} />
         <Tooltip content="New issue">
           <IconButton label="New issue" onClick={onNewIssue}>
             <Plus size={16} aria-hidden />

@@ -151,11 +151,20 @@ moves a Markdown note to `Archive/<original-relative-path>` in the same Vault;
 existing destination. Archived Markdown is omitted from All Notes, favorites,
 quick open, and ordinary search, and is available through the Archive view.
 
-`Tasks/` at the Vault root is a normal folder in the Notes tree. Copper treats a
-file as an issue or project only when its YAML frontmatter has `type: issue` or
-`type: project`. Those files live under `Tasks/Issues/` and `Tasks/Projects/`.
-Unmarked Markdown in `Tasks/` stays an ordinary note. Copper does not create a
-`.copper/` directory in the Vault; the SQLite index stays in app data.
+Tasks use lowercase `.copper/tasks/issues/` and `.copper/tasks/projects/` inside
+the Vault. Their Markdown source stays in Git, while Copper hides it from the
+Notes folder tree, All Notes, favorites, and ordinary note search. Choose
+**Edit source** from an issue or project’s right-click menu, or its detail header,
+to open the full Markdown in an editor tab. **Open in Tasks** returns to its task
+view. Source edits update Tasks through the same file watcher and index.
+
+Copper moves recognized legacy files from `Tasks/Issues/`, `Tasks/Projects/`,
+and their archived equivalents when opening a Vault. IDs, metadata, and note
+references are preserved; ordinary notes in those folders stay where they are.
+Conflicting files are never overwritten. Task archives use
+`.copper/tasks/archive/issues/` and `.copper/tasks/archive/projects/`. The hidden
+folder holds portable task sources; the SQLite index and app preferences stay
+in app data. Copper does not add `.copper` to `.gitignore`.
 
 Tasks mode uses a compact task navigation pane and one full-width issue canvas.
 It includes All issues, user-managed Pinned and Projects navigation, project

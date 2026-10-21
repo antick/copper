@@ -185,7 +185,7 @@ describe("IssueBoard", () => {
 
   it("renders project custom columns and the add-column affordance", () => {
     const project: TaskProject = {
-      path: "Tasks/Projects/copper.md",
+      path: ".copper/tasks/projects/copper.md",
       id: "copper",
       title: "Copper",
       status: "started",
@@ -264,7 +264,7 @@ describe("IssueBoard", () => {
   it("hides populated columns and restores them without exposing a drop lane", async () => {
     const user = userEvent.setup();
     const project: TaskProject = {
-      path: "Tasks/Projects/copper.md",
+      path: ".copper/tasks/projects/copper.md",
       id: "copper",
       title: "Copper",
       status: "started",
@@ -400,7 +400,7 @@ function issue(
   rank: string,
 ): TaskIssue {
   return {
-    path: `Tasks/Issues/${id}.md`,
+    path: `.copper/tasks/issues/${id}.md`,
     id,
     title: `Issue ${id}`,
     status,

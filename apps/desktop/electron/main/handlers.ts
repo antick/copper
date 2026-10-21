@@ -61,6 +61,8 @@ import {
   updateIssue,
   updateIssueComment,
 } from "../native/tasks/service";
+import { migrateTaskStorage } from "../native/tasks/storage";
+import { migrateTaskSession } from "../native/tasks/storage-session";
 import type {
   CreateIssueInput,
   CreateProjectInput,
@@ -110,6 +112,11 @@ export async function handleCommand(
         throw CopperError.io("Vault manager is not ready");
       }
       const info = appState.vaults.openVault(str("path"));
+      migrateTaskSession(
+        appState.dataDir,
+        info.id,
+        migrateTaskStorage(info.path),
+      );
       watchVault(info.path);
       return info;
     }

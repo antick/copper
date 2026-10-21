@@ -10,7 +10,7 @@ function issue(
   partial: Partial<TaskIssue> & Pick<TaskIssue, "id" | "title">,
 ): TaskIssue {
   return {
-    path: `Tasks/Issues/${partial.id}.md`,
+    path: `.copper/tasks/issues/${partial.id}.md`,
     status: "todo",
     priority: "none",
     project: null,

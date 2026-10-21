@@ -38,6 +38,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
+- [ ] Verify hidden task storage, legacy migration, and Edit source in the next signed macOS build. Local tests cover migration, preserved links, rollback, real filesystem events, hidden Notes content, and Git publish/edit/delete against disposable Vaults. Browser checks against native persistence verified issue/project source menus, saved descriptions, source edits, restored tabs, and menus at 880 and 1280 pixels.
 - [ ] Verify note typography and the removed editor focus border in the next signed macOS build. Shared menu/settings controls, native preference persistence, invalid input, and failed saves have local regression coverage. Browser checks against disposable app data verified all fonts, saved preferences, preserved text/undo, keyboard focus, and layouts at 320, 390, and 1280 pixels.
 - [ ] Verify optional Vault commit messages in the next signed macOS build. Custom and blank messages, command-menu review, failed-push drafts, and Vault isolation have local regression coverage. Browser checks against disposable local Git remotes verified custom/default commits and the review dialog at 320, 390, and 1280 pixels.
 - [ ] Verify repeated Tasks board reordering in the next signed macOS build. Local regression tests cover dense ordering keys, existing-key repair, neighboring-card placement, pending moves, and saved-file recovery. Browser checks against native persistence cover cross-column preview spacing, different card heights, long columns, canceling, dropping, and reloads in a disposable Vault.
@@ -52,7 +53,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 - [ ] Add the index schema/data for task links and checkboxes in ordinary notes.
 - [ ] Add parent/dependency links with cycle rejection, milestones, and shared Properties/backlink controls.
-- [ ] Add explicit saved views in `Tasks/views.md`; changing a filter must not silently overwrite a saved view.
+- [ ] Add explicit saved views in `.copper/tasks/views.md`; changing a filter must not silently overwrite a saved view.
 - [ ] Add a note-task inbox, exact-line checkbox toggling, and conversion to an issue. Keep note tasks out of board cards.
 - [ ] Verify the complete flows, accessibility, persistence, and documentation before shipping.
 

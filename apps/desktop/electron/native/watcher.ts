@@ -1,4 +1,8 @@
 import path from "node:path";
+import {
+  isTaskSourcePath,
+  isTaskStorageDirectory,
+} from "../../shared/task-paths";
 import { toPosix } from "./path";
 
 export type FileSystemEvent =
@@ -12,7 +16,11 @@ function relativize(root: string, filePath: string): string | undefined {
   if (!relative || relative.startsWith("..")) {
     return undefined;
   }
-  if (relative.split("/").some((part) => part.startsWith("."))) {
+  if (
+    relative.split("/").some((part) => part.startsWith(".")) &&
+    !isTaskSourcePath(relative) &&
+    !isTaskStorageDirectory(relative)
+  ) {
     return undefined;
   }
   return relative;

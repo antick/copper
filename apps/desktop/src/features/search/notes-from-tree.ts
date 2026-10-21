@@ -1,5 +1,6 @@
 import type { FileTreeNode } from "@/features/file-tree/types";
 import type { SearchHit } from "@/lib/copper/search";
+import { isHiddenTaskContent } from "../../../shared/task-paths";
 
 export function collectMarkdownNotes(root?: FileTreeNode): SearchHit[] {
   const notes: SearchHit[] = [];
@@ -7,6 +8,7 @@ export function collectMarkdownNotes(root?: FileTreeNode): SearchHit[] {
     return notes;
   }
   function walk(node: FileTreeNode) {
+    if (isHiddenTaskContent(node.path)) return;
     if (
       node.kind === "file" &&
       (node.fileKind === "markdown" ||
@@ -59,6 +61,7 @@ export function notesInScope(
   notes: SearchHit[],
   scope?: string | null,
 ): SearchHit[] {
+  notes = notes.filter((note) => !isHiddenTaskContent(note.path));
   const normalizedScope = normalizeScope(scope);
   if (normalizedScope === "all") {
     return notes.filter((note) => !isArchivedPath(note.path));
@@ -80,9 +83,13 @@ export function mergeIndexedNotes(
   scope?: string | null,
 ): SearchHit[] {
   const scopedTree =
-    scope === undefined ? fromTree : notesInScope(fromTree, scope);
+    scope === undefined
+      ? fromTree.filter((note) => !isHiddenTaskContent(note.path))
+      : notesInScope(fromTree, scope);
   const scopedIndexed =
-    scope === undefined ? (indexed ?? []) : notesInScope(indexed ?? [], scope);
+    scope === undefined
+      ? (indexed ?? []).filter((note) => !isHiddenTaskContent(note.path))
+      : notesInScope(indexed ?? [], scope);
   if (!scopedIndexed.length) {
     return scopedTree;
   }
@@ -98,7 +105,7 @@ export function mergeIndexedNotes(
 export function favoriteHits(paths: string[], notes: SearchHit[]): SearchHit[] {
   const byPath = new Map(notes.map((note) => [note.path, note]));
   return paths
-    .filter((path) => !isArchivedPath(path))
+    .filter((path) => !isArchivedPath(path) && !isHiddenTaskContent(path))
     .map((path) => {
       const hit = byPath.get(path);
       if (hit) {
