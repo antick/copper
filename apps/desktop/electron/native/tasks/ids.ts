@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ARCHIVED_ISSUES_DIR } from "../../../shared/task-paths";
+import {
+  ARCHIVE_DIR,
+  ARCHIVED_ISSUES_DIR,
+  isTaskSourcePath,
+  LEGACY_TASK_DIRECTORIES,
+} from "../../../shared/task-paths";
 import {
   DEFAULT_ISSUE_ID_PREFIX,
   formatIssueId,
@@ -11,6 +16,15 @@ import { parseFrontmatter } from "../markdown/frontmatter";
 import { FRONTMATTER_KEYS, ISSUES_DIR, SLUG_MAX_LENGTH } from "./constants";
 
 const ISSUE_ID_PATTERN = /^(#\d+|[A-Z][A-Z0-9]{0,7}-\d+)(?=$|[-_.])/i;
+const ISSUE_SCAN_DIRECTORIES = [
+  ISSUES_DIR,
+  ARCHIVED_ISSUES_DIR,
+  ...LEGACY_TASK_DIRECTORIES.filter(
+    (directory) => directory.kind === "issue",
+  ).map((directory) => directory.from),
+  `${ARCHIVE_DIR}/${ISSUES_DIR}`,
+  `${ARCHIVE_DIR}/${ARCHIVED_ISSUES_DIR}`,
+];
 
 export function slugifyTitle(title: string): string {
   const slug = title
@@ -42,13 +56,21 @@ export function nextIssueId(prefix: string, ids: Iterable<string>): string {
 /** Scan Vault files only. A stale SQLite index must not be consulted. */
 export function scanIssueIds(vaultRoot: string): string[] {
   const ids = new Set<string>();
-  for (const directory of [ISSUES_DIR, ARCHIVED_ISSUES_DIR]) {
+  for (const directory of new Set(ISSUE_SCAN_DIRECTORIES)) {
     const dir = path.join(vaultRoot, directory);
     if (!fs.existsSync(dir)) continue;
     for (const name of fs.readdirSync(dir)) {
       if (!/\.(md|markdown)$/i.test(name)) {
         continue;
       }
+      const relative = `${directory}/${name}`;
+      const isLegacyIssuePath = LEGACY_TASK_DIRECTORIES.some(
+        (legacy) =>
+          legacy.kind === "issue" &&
+          relative.startsWith(`${legacy.from}/`) &&
+          /^[^/.][^/]*\.(md|markdown)$/i.test(name),
+      );
+      if (!isTaskSourcePath(relative) && !isLegacyIssuePath) continue;
       const fromName = parseIssueId(name);
       if (fromName) {
         ids.add(fromName);

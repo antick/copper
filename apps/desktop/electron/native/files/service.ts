@@ -14,6 +14,7 @@ import { atomicWrite } from "../atomic-write";
 import { ARCHIVE_DIR, MAX_SUPPORTED_FILE_SIZE } from "../constants";
 import { CopperError } from "../errors";
 import { normalizeRelative, resolveInVault, toPosix } from "../path";
+import { assertNoActiveTaskIdentityCollision } from "../tasks/restore-identity";
 import {
   classifyFile,
   type FileClassification,
@@ -247,6 +248,7 @@ export function restoreFile(root: string, relativeInput: string): string {
   if (!destination) {
     throw CopperError.invalid("Invalid Archive path");
   }
+  assertNoActiveTaskIdentityCollision(root, relative, absolute, destination);
   return moveWithoutOverwrite(root, absolute, destination);
 }
 

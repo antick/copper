@@ -42,6 +42,21 @@ function restoreArchivedTaskSource(
   return restored;
 }
 
+function writeTaskFile(root: string, relative: string, source: string) {
+  const absolute = path.join(root, relative);
+  fs.mkdirSync(path.dirname(absolute), { recursive: true });
+  fs.writeFileSync(absolute, source);
+  return absolute;
+}
+
+function issueSource(id: string) {
+  return `---\ntype: issue\nid: ${id}\nstatus: todo\n---\n# ${id}\n`;
+}
+
+function projectSource(id: string) {
+  return `---\ntype: project\nid: ${id}\nstatus: planned\n---\n# ${id}\n`;
+}
+
 describe("task archive service", () => {
   it("discovers archived issue and project sources and restores an issue", () => {
     const { root, db } = vault();
@@ -109,5 +124,81 @@ describe("task archive service", () => {
     expect(listArchivedTaskSources(db)).toEqual([
       expect.objectContaining({ path: archivePath, kind: "issue" }),
     ]);
+  });
+
+  it("rejects an archived issue when a differently named active issue has its ID", () => {
+    const { root, db } = vault();
+    const archivePath = "Archive/.copper/tasks/issues/ISSUE-1-old.md";
+    const activePath = ".copper/tasks/issues/ISSUE-1-new.md";
+    const archivedSource = issueSource("ISSUE-1");
+    const activeSource = issueSource("ISSUE-1");
+    writeTaskFile(root, archivePath, archivedSource);
+    indexFilePath(db, root, archivePath);
+    writeTaskFile(root, activePath, activeSource);
+
+    expect(listIssues(db)).toEqual([]);
+    expect(
+      listIssues(db, { includeArchived: true }).map((item) => item.path),
+    ).toEqual([archivePath]);
+    expect(() => restoreFile(root, archivePath)).toThrow(
+      "Cannot restore issue ISSUE-1 because it is already active",
+    );
+    expect(fs.readFileSync(path.join(root, archivePath), "utf8")).toBe(
+      archivedSource,
+    );
+    expect(fs.readFileSync(path.join(root, activePath), "utf8")).toBe(
+      activeSource,
+    );
+    expect(
+      listIssues(db, { includeArchived: true }).map((item) => item.path),
+    ).toEqual([archivePath]);
+  });
+
+  it("rejects an archived project when a differently named active project has its ID", () => {
+    const { root } = vault();
+    const archivePath = ".copper/tasks/archive/projects/archived-name.md";
+    const activePath = ".copper/tasks/projects/active-name.md";
+    writeTaskFile(root, archivePath, projectSource("shared-project"));
+    writeTaskFile(root, activePath, projectSource("shared-project"));
+
+    expect(() => restoreFile(root, archivePath)).toThrow(
+      "Cannot restore project shared-project because it is already active",
+    );
+    expect(fs.existsSync(path.join(root, archivePath))).toBe(true);
+    expect(fs.existsSync(path.join(root, activePath))).toBe(true);
+  });
+
+  it("uses an issue filename to protect against a collision when archived metadata is malformed", () => {
+    const { root } = vault();
+    const archivePath = "Archive/.copper/tasks/issues/ISSUE-4-old.md";
+    const activePath = ".copper/tasks/issues/ISSUE-4-new.md";
+    const malformedSource =
+      "---\ntype: issue\nid: ISSUE-4\n: invalid\n---\n# Old\n";
+    writeTaskFile(root, archivePath, malformedSource);
+    writeTaskFile(root, activePath, issueSource("ISSUE-4"));
+
+    expect(() => restoreFile(root, archivePath)).toThrow(
+      "Cannot restore issue ISSUE-4 because it is already active",
+    );
+    expect(fs.readFileSync(path.join(root, archivePath), "utf8")).toBe(
+      malformedSource,
+    );
+  });
+
+  it("restores a generic archived issue when its ID is not active", () => {
+    const { root } = vault();
+    const archivePath = "Archive/.copper/tasks/issues/ISSUE-9-old.md";
+    const source = issueSource("ISSUE-9");
+    writeTaskFile(root, archivePath, source);
+
+    expect(restoreFile(root, archivePath)).toBe(
+      ".copper/tasks/issues/ISSUE-9-old.md",
+    );
+    expect(
+      fs.readFileSync(
+        path.join(root, ".copper/tasks/issues/ISSUE-9-old.md"),
+        "utf8",
+      ),
+    ).toBe(source);
   });
 });
