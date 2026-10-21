@@ -39,7 +39,11 @@ import {
   replaceHeading,
 } from "./fields";
 import { slugifyTitle } from "./ids";
-import { ensureTaskFolders, listIssues, updateIssue } from "./service";
+import {
+  ensureTaskFolders,
+  listIssues,
+  updateIssueForTransaction,
+} from "./service";
 import type {
   CreateProjectInput,
   TaskProject,
@@ -54,6 +58,8 @@ import {
   parseWorkflow,
   projectIcon,
 } from "./workflow";
+import type { TaskWriteSnapshot } from "./write-rollback";
+import { rollbackTaskWrites } from "./write-rollback";
 
 function emptyCounts(): TaskProjectCounts {
   return Object.fromEntries(
@@ -270,14 +276,15 @@ export function createProject(
   return getProject(root, dbPath, id);
 }
 
-export function updateProject(
+function updateProjectInternal(
   root: string,
   dbPath: string,
   id: string,
   input: UpdateProjectInput,
+  onWrite?: (snapshot: TaskWriteSnapshot) => void,
 ): TaskProject {
   const relative = findProjectPath(root, id);
-  const [source] = readFile(root, relative);
+  const [source, revision] = readFile(root, relative);
   const parsed = parseFrontmatter(source);
   const current = projectFromParsed(relative, parsed, emptyCounts());
   const title = input.title?.trim() || current.title;
@@ -308,24 +315,31 @@ export function updateProject(
     workflow,
   });
   const next = writeFrontmatter({ ...parsed, values, body }, source);
-  if (next !== source) saveFile(root, relative, next);
+  if (next !== source) {
+    const written = saveFile(root, relative, next, revision.hash);
+    onWrite?.({ path: relative, source, writtenHash: written.hash });
+  }
   indexFilePath(dbPath, root, relative);
   return getProject(root, dbPath, id);
 }
 
-function restoreSources(
+export function updateProject(
   root: string,
   dbPath: string,
-  snapshots: Array<{ path: string; source: string }>,
-) {
-  for (const snapshot of snapshots) {
-    if (fs.existsSync(resolveInVault(root, snapshot.path))) {
-      saveFile(root, snapshot.path, snapshot.source);
-    } else {
-      createFile(root, snapshot.path, snapshot.source);
-    }
-    indexFilePath(dbPath, root, snapshot.path);
-  }
+  id: string,
+  input: UpdateProjectInput,
+): TaskProject {
+  return updateProjectInternal(root, dbPath, id, input);
+}
+
+function updateProjectForTransaction(
+  root: string,
+  dbPath: string,
+  id: string,
+  input: UpdateProjectInput,
+  onWrite: (snapshot: TaskWriteSnapshot) => void,
+): TaskProject {
+  return updateProjectInternal(root, dbPath, id, input, onWrite);
 }
 
 export function updateProjectWorkflow(
@@ -334,7 +348,7 @@ export function updateProjectWorkflow(
   id: string,
   input: UpdateProjectWorkflowInput,
 ): TaskProject {
-  const project = getProject(root, dbPath, id);
+  getProject(root, dbPath, id);
   const workflow = parseWorkflow(id, input.workflow);
   if (JSON.stringify(workflow) !== JSON.stringify(input.workflow)) {
     throw CopperError.invalid("Project workflow is invalid");
@@ -351,17 +365,27 @@ export function updateProjectWorkflow(
   ) {
     throw CopperError.invalid("Choose a valid fallback column");
   }
-  const snapshots = [project, ...affected].map((item) => ({
-    path: item.path,
-    source: readFile(root, item.path)[0],
-  }));
+  const writes: TaskWriteSnapshot[] = [];
+  const trackWrite = (snapshot: TaskWriteSnapshot) => writes.push(snapshot);
   try {
     for (const issue of affected) {
-      updateIssue(root, dbPath, issue.id, { status: input.fallbackStatusId });
+      updateIssueForTransaction(
+        root,
+        dbPath,
+        issue.id,
+        { status: input.fallbackStatusId },
+        trackWrite,
+      );
     }
-    return updateProject(root, dbPath, id, { workflow });
+    return updateProjectForTransaction(
+      root,
+      dbPath,
+      id,
+      { workflow },
+      trackWrite,
+    );
   } catch (error) {
-    restoreSources(root, dbPath, snapshots);
+    rollbackTaskWrites(root, dbPath, writes);
     throw error;
   }
 }
@@ -383,21 +407,53 @@ export async function deleteProject(
 ) {
   const project = getProject(root, dbPath, id);
   const affected = listIssues(dbPath).filter((issue) => issue.project === id);
-  const snapshots = [project, ...affected].map((item) => ({
-    path: item.path,
-    source: readFile(root, item.path)[0],
-  }));
+  const writes: TaskWriteSnapshot[] = [];
+  const trackWrite = (snapshot: TaskWriteSnapshot) => writes.push(snapshot);
+  let projectSourceForTrash: string | undefined;
+  let trashBackendStarted = false;
   try {
     for (const issue of affected) {
-      updateIssue(root, dbPath, issue.id, {
-        project: null,
-        status: isCustomStatus(issue.status) ? "todo" : issue.status,
-      });
+      updateIssueForTransaction(
+        root,
+        dbPath,
+        issue.id,
+        {
+          project: null,
+          status: isCustomStatus(issue.status) ? "todo" : issue.status,
+        },
+        trackWrite,
+      );
     }
     removeIndexedPath(dbPath, project.path);
-    await trashPath(root, project.path, trashBackend);
+    projectSourceForTrash = readFile(root, project.path)[0];
+    await trashPath(root, project.path, async (absolute) => {
+      trashBackendStarted = true;
+      return trashBackend(absolute);
+    });
   } catch (error) {
-    restoreSources(root, dbPath, snapshots);
+    rollbackTaskWrites(root, dbPath, writes);
+    try {
+      const projectAbsolute = resolveInVault(root, project.path);
+      if (
+        trashBackendStarted &&
+        projectSourceForTrash !== undefined &&
+        !fs.existsSync(projectAbsolute)
+      ) {
+        createFile(root, project.path, projectSourceForTrash);
+      }
+    } catch {
+      // Failed trash compensation must not replace the original failure.
+    }
+    try {
+      const projectAbsolute = resolveInVault(root, project.path);
+      if (fs.existsSync(projectAbsolute)) {
+        indexFilePath(dbPath, root, project.path);
+      } else {
+        removeIndexedPath(dbPath, project.path);
+      }
+    } catch {
+      // Index repair must not replace the original failure.
+    }
     throw error;
   }
 }

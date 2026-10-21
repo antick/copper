@@ -49,6 +49,8 @@ import type {
   TaskIssue,
   UpdateIssueInput,
 } from "./types";
+import type { TaskWriteSnapshot } from "./write-rollback";
+import { rollbackTaskWrites } from "./write-rollback";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -261,14 +263,15 @@ export function createIssue(
   );
 }
 
-export function updateIssue(
+function updateIssueInternal(
   root: string,
   dbPath: string,
   id: string,
   input: UpdateIssueInput,
+  onWrite?: (snapshot: TaskWriteSnapshot) => void,
 ): TaskIssue {
   const relative = findIssuePath(root, id);
-  const [source] = readFile(root, relative);
+  const [source, revision] = readFile(root, relative);
   const parsed = parseFrontmatter(source);
   const current = issueFromParsed(relative, parsed);
   const title = input.title?.trim() ?? current.title;
@@ -296,10 +299,30 @@ export function updateIssue(
     source,
   );
   if (next !== source) {
-    saveFile(root, relative, next);
+    const written = saveFile(root, relative, next, revision.hash);
+    onWrite?.({ path: relative, source, writtenHash: written.hash });
   }
   indexFilePath(dbPath, root, relative);
   return getIssue(root, id);
+}
+
+export function updateIssue(
+  root: string,
+  dbPath: string,
+  id: string,
+  input: UpdateIssueInput,
+): TaskIssue {
+  return updateIssueInternal(root, dbPath, id, input);
+}
+
+export function updateIssueForTransaction(
+  root: string,
+  dbPath: string,
+  id: string,
+  input: UpdateIssueInput,
+  onWrite: (snapshot: TaskWriteSnapshot) => void,
+): TaskIssue {
+  return updateIssueInternal(root, dbPath, id, input, onWrite);
 }
 
 function commentBody(value: string): string {
@@ -315,7 +338,7 @@ function mutateIssueComments(
   mutate: (comments: TaskComment[], updated: string) => TaskComment[],
 ): TaskIssue {
   const relative = findIssuePath(root, id);
-  const [source] = readFile(root, relative);
+  const [source, revision] = readFile(root, relative);
   const parsed = parseFrontmatter(source);
   const updated = nowIso();
   const comments = mutate(
@@ -328,7 +351,7 @@ function mutateIssueComments(
     [FRONTMATTER_KEYS.updated]: updated,
   };
   const next = writeFrontmatter({ ...parsed, values }, source);
-  if (next !== source) saveFile(root, relative, next);
+  if (next !== source) saveFile(root, relative, next, revision.hash);
   indexFilePath(dbPath, root, relative);
   return getIssue(root, id);
 }
@@ -406,7 +429,8 @@ export function moveIssue(
     dbPath,
     column,
     issueInsertionIndex(column, input),
-    (rank) => updateIssue(root, dbPath, id, { status, rank }),
+    (rank, onWrite) =>
+      updateIssueInternal(root, dbPath, id, { status, rank }, onWrite),
   );
 }
 
@@ -415,25 +439,27 @@ function writeAtPosition(
   dbPath: string,
   column: TaskIssue[],
   index: number,
-  write: (rank: string) => TaskIssue,
+  write: (
+    rank: string,
+    onWrite?: (snapshot: TaskWriteSnapshot) => void,
+  ) => TaskIssue,
 ): TaskIssue {
   const { rank, repairs } = insertionRank(column, index);
-  const originals = repairs.length
-    ? column.map((issue) => ({
-        path: issue.path,
-        source: readFile(root, issue.path)[0],
-      }))
-    : [];
+  const writes: TaskWriteSnapshot[] = [];
+  const trackWrite = (snapshot: TaskWriteSnapshot) => writes.push(snapshot);
   try {
     for (const repair of repairs) {
-      updateIssue(root, dbPath, repair.id, { rank: repair.rank });
+      updateIssueInternal(
+        root,
+        dbPath,
+        repair.id,
+        { rank: repair.rank },
+        trackWrite,
+      );
     }
-    return write(rank);
+    return write(rank, trackWrite);
   } catch (error) {
-    for (const original of originals) {
-      saveFile(root, original.path, original.source);
-      indexFilePath(dbPath, root, original.path);
-    }
+    rollbackTaskWrites(root, dbPath, writes);
     throw error;
   }
 }
