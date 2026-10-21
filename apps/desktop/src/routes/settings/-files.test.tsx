@@ -60,6 +60,7 @@ describe("FilesSettings", () => {
       expect.objectContaining({
         attachmentFolder: "Notes and Images/Raw Uploads",
       }),
+      expect.objectContaining({ onError: expect.any(Function) }),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -94,6 +95,7 @@ describe("FilesSettings", () => {
       expect.objectContaining({
         attachmentFolder: "Notes and Images/Raw Uploads",
       }),
+      expect.objectContaining({ onError: expect.any(Function) }),
     );
     expect(
       screen.getByText(/tasks and projects.*hidden workspace area/i),

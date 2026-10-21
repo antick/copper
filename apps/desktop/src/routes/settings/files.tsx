@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   SettingsPage,
   SettingsRow,
@@ -23,8 +23,19 @@ export function FilesSettings() {
   const errorId = useId();
   const [draft, setDraft] = useState(settings.attachmentFolder);
   const [error, setError] = useState<string | null>(null);
+  const message =
+    error ??
+    (save.isError
+      ? "Couldn’t save the attachment folder. The previous folder is still in use. Please try again."
+      : null);
+
+  useEffect(
+    () => setDraft(settings.attachmentFolder),
+    [settings.attachmentFolder],
+  );
 
   function commitAttachmentFolder() {
+    if (save.isPending) return;
     const result = validateAttachmentFolder(draft);
     if (!result.valid) {
       setError(result.message);
@@ -34,7 +45,10 @@ export function FilesSettings() {
     setError(null);
     setDraft(result.folder);
     if (result.folder !== settings.attachmentFolder) {
-      save.mutate({ ...settings, attachmentFolder: result.folder });
+      save.mutate(
+        { ...settings, attachmentFolder: result.folder },
+        { onError: () => setDraft(settings.attachmentFolder) },
+      );
     }
   }
 
@@ -51,8 +65,9 @@ export function FilesSettings() {
             <div className="copper-settings-inline-control">
               <SettingsTextField
                 aria-label="Attachment folder"
-                aria-describedby={error ? errorId : undefined}
-                aria-invalid={error ? true : undefined}
+                aria-describedby={message ? errorId : undefined}
+                aria-invalid={message ? true : undefined}
+                disabled={save.isPending}
                 spellCheck={false}
                 value={draft}
                 onChange={(event) => {
@@ -67,9 +82,9 @@ export function FilesSettings() {
                   }
                 }}
               />
-              {error ? (
+              {message ? (
                 <SettingsStatus id={errorId} tone="error">
-                  {error}
+                  {message}
                 </SettingsStatus>
               ) : null}
             </div>
