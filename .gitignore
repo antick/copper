@@ -15,6 +15,7 @@ out
 .copper-electron-dev
 dist-ssr
 *.local
+mise.local.toml
 .chrome-screenshot-profile
 .agent-browser-tmp
 .tanstack/

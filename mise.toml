@@ -1,0 +1,28 @@
+[tools]
+node = "24.22.0"
+pnpm = "12.14.0"
+
+# Keep package.json as the source of application commands.
+[tasks]
+setup = { description = "Install workspace dependencies", run = "pnpm install --frozen-lockfile" }
+dev = { description = "Open the native Copper Dev app", alias = "dev:desktop", run = "pnpm run dev" }
+"dev:web" = { description = "Start the desktop browser preview", run = "pnpm run dev:web" }
+"dev:landing" = { description = "Start the landing site", run = "pnpm run dev:landing" }
+"dev:all" = { description = "Start desktop and landing development", run = "pnpm run dev:all" }
+build = { description = "Build both apps", run = "pnpm run build" }
+"build:desktop" = { description = "Build the Electron app", run = "pnpm run build:desktop" }
+"build:landing" = { description = "Build the landing site", run = "pnpm run build:landing" }
+"build:web" = { description = "Build the desktop browser preview", run = "pnpm run build:web" }
+test = { description = "Run all tests", run = "pnpm run test" }
+"test:watch" = { description = "Watch desktop tests", run = "pnpm run test:watch" }
+typecheck = { description = "Check types in both apps", run = "pnpm run typecheck" }
+lint = { description = "Check formatting and code style", run = "pnpm run lint" }
+format = { description = "Apply formatting and code style fixes", run = "pnpm run format" }
+check = { description = "Run tests, type checks, and lint", run = "pnpm run check" }
+package = { description = "Build local desktop installers", run = "pnpm run package" }
+preview = { description = "Preview the built landing site", run = "pnpm run preview" }
+"security:scan" = { description = "Scan the repository for secrets", run = "pnpm run security:scan" }
+"fixtures:perf" = { description = "Generate local performance fixtures", run = "pnpm run fixtures:perf" }
+"icons:generate" = { description = "Generate desktop icons", run = "pnpm run icons:generate" }
+"release:build" = { description = "Build release installers", run = "pnpm run release:build" }
+"release:publish" = { description = "Run the existing release publishing workflow", run = "pnpm run release:publish" }

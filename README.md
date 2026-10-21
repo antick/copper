@@ -26,29 +26,43 @@ folder. There is no account and no cloud. The SQLite search index lives in app d
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 22.14 or newer (current LTS)
-- [pnpm](https://pnpm.io/) 11.22 or newer
+- [mise](https://mise.jdx.dev/getting-started.html), which selects the project’s
+  pinned Node.js 24.22.0 and pnpm 12.14.0 versions automatically.
 - Platform tooling for Electron:
   - **macOS:** Xcode Command Line Tools (`xcode-select --install`)
   - **Linux:** see [docs/release/linux.md](docs/release/linux.md)
   - **Windows:** see [docs/release/windows.md](docs/release/windows.md)
 
-Native module `better-sqlite3` is rebuilt for Electron during `pnpm install`
+Native module `better-sqlite3` is rebuilt for Electron during `mise run setup`
 (`electron-builder install-app-deps`).
 
 ## Run locally
 
+One-time setup from the repository root:
+
 ```sh
-pnpm install
-pnpm dev
+mise trust
+mise install
+mise run setup
 ```
 
-That opens the native Copper Dev window (Electron + Chromium). Vite serves the
-renderer on `http://localhost:1420`. On macOS, `pnpm dev` copies Electron into
+Then start development:
+
+```sh
+mise run dev
+```
+
+`mise.toml` pins the tool versions and exposes the existing package scripts as
+tasks. `mise run` selects those tools without requiring shell activation or a
+manual Node/pnpm switch. Run `mise tasks` to see the available commands. CI uses
+the same pinned versions. Both tool releases are more than two days old.
+
+`mise run dev` opens the native Copper Dev window (Electron + Chromium). Vite serves the
+renderer on `http://localhost:1420`. On macOS, `mise run dev` copies Electron into
 `apps/desktop/.copper-electron/` and stamps it with Copper Dev’s name and distinct icon. Development uses its own
 app data and does not update or replace the installed Copper app. Use a separate
 test Vault: opening the same folder in both apps still edits the same files. For the browser-only frontend, use
-`pnpm dev:web`.
+`mise run dev:web`.
 
 Use **Open Vault** and pick any folder of Markdown files. A small demo vault
 lives at `apps/desktop/tests/fixtures/demo-vault` if you want sample notes.
@@ -62,14 +76,14 @@ This is a pnpm + Turborepo monorepo:
 - `docs` and `scripts`: shared documentation, screenshots, and repository security checks.
 
 ```sh
-pnpm dev:landing  # http://127.0.0.1:4321
-pnpm dev:desktop  # native Copper app (also pnpm dev)
-pnpm dev:all      # both apps
+mise run dev:landing  # http://127.0.0.1:4321
+mise run dev:desktop  # native Copper app (also mise run dev)
+mise run dev:all      # both apps
 ```
 
-`pnpm build` builds both apps without packaging or publishing.
-`pnpm build:landing` builds only the static site into `apps/landing/dist`;
-`pnpm preview` serves that build locally. `pnpm build:web` still builds the
+`mise run build` builds both apps without packaging or publishing.
+`mise run build:landing` builds only the static site into `apps/landing/dist`;
+`mise run preview` serves that build locally. `mise run build:web` still builds the
 browser version of the desktop renderer.
 
 The landing page is hosted on Vercel at [copper.potion.sh](https://copper.potion.sh).
@@ -81,7 +95,7 @@ the desktop app. Cloudflare manages the DNS-only CNAME for `copper`.
 
 The landing page and README share the current Notes, Tasks list, project board,
 and Appearance screenshots in `docs/images`. They show the real renderer with
-demo data. To refresh them, start `pnpm dev:web --host 127.0.0.1 --port 1422`,
+demo data. To refresh them, start `mise run dev:web --host 127.0.0.1 --port 1422`,
 then run `bash scripts/capture-readme-screenshots.sh` (requires `agent-browser`).
 Edit copy and links in `apps/landing/src/lib/site.ts`. The reusable shadcn Button
 is rendered as static HTML through Astro’s React integration; FAQ disclosure
@@ -166,17 +180,17 @@ operating system.
 These are the same three steps GitHub Actions runs:
 
 ```sh
-pnpm test
-pnpm typecheck
-pnpm lint
+mise run test
+mise run typecheck
+mise run lint
 ```
 
-`pnpm lint` and `pnpm format` use [Biome](https://biomejs.dev/). Use `pnpm test` (Vitest), not a separate test runner.
+`mise run lint` and `mise run format` use [Biome](https://biomejs.dev/). Use `mise run test` (Vitest), not a separate test runner.
 
 Or run them together:
 
 ```sh
-pnpm check
+mise run check
 ```
 
 ## Production build
@@ -188,8 +202,8 @@ and Apple-notarized, with in-app updates. Windows installers remain unsigned;
 Windows and Linux updates use the latest installer. The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh
-pnpm install
-pnpm package
+mise run setup
+mise run package
 ```
 
 This produces local test artifacts under `apps/desktop/release/` and never publishes them.
