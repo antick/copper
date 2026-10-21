@@ -38,7 +38,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
-- [ ] Verify repeated Tasks board reordering in the next signed macOS build. Local regression tests cover dense ordering keys, existing-key repair, neighboring-card placement, pending moves, and saved-file recovery; browser drags against native persistence are verified in a disposable Vault.
+- [ ] Verify repeated Tasks board reordering in the next signed macOS build. Local regression tests cover dense ordering keys, existing-key repair, neighboring-card placement, pending moves, and saved-file recovery. Browser checks against native persistence cover cross-column preview spacing, different card heights, long columns, canceling, dropping, and reloads in a disposable Vault.
 - [ ] Complete interactive installation and primary UI flows on Windows and Linux; native CI packaging and SQLite checks passed.
 
 - [ ] Complete attachment-import confirmation, external-link handoff, clipboard, and native development startup/hot-reload checks after the security changes. Packaged opening/editing, Git denial/grant/diff review, and remote-image consent have been verified.

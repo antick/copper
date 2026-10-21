@@ -19,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { GripVertical, Plus } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   BOARD_KEYBOARD_SCROLL_STEP,
   BOARD_VIRTUALIZE_AFTER,
@@ -62,6 +62,7 @@ function BoardColumn({
   actions,
   dropSlot,
   active,
+  incoming,
   onNewIssue,
   onRename,
   onMove,
@@ -74,6 +75,7 @@ function BoardColumn({
   actions: IssueBoardActions;
   dropSlot: ReturnType<typeof boardDropSlot>;
   active: boolean;
+  incoming: boolean;
   onNewIssue: () => void;
   onRename?: () => void;
   onMove?: (direction: -1 | 1) => void;
@@ -90,11 +92,19 @@ function BoardColumn({
     data: { type: "workflow-column", status: column.id },
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [cardGap, setCardGap] = useState(0);
+  useLayoutEffect(() => {
+    const track = scrollRef.current?.firstElementChild;
+    if (track)
+      setCardGap(Number.parseFloat(getComputedStyle(track).rowGap) || 0);
+  }, []);
   const virtualize = issues.length > BOARD_VIRTUALIZE_AFTER;
   const virtualizer = useVirtualizer({
     count: issues.length,
+    getItemKey: (index) => issues[index]?.id ?? index,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 112,
+    gap: cardGap,
     enabled: virtualize,
   });
   const cards = virtualize ? virtualizer.getVirtualItems() : [];
@@ -178,6 +188,8 @@ function BoardColumn({
               return "index" in item ? (
                 <div
                   key={issue.id}
+                  ref={virtualizer.measureElement}
+                  data-index={item.index}
                   className="copper-task-virtual-card"
                   style={{ transform: `translateY(${item.start}px)` }}
                 >
@@ -196,6 +208,7 @@ function BoardColumn({
               beforeId={dropSlot.beforeId}
               afterId={dropSlot.afterId}
               empty={issues.length === 0}
+              reserveSpace={incoming}
             />
           ) : null}
         </div>
@@ -398,6 +411,9 @@ export function IssueBoard({
                 actions={actions}
                 dropSlot={dropSlot?.status === column.id ? dropSlot : null}
                 active={overStatus === column.id}
+                incoming={Boolean(
+                  activeIssue && activeIssue.status !== column.id,
+                )}
                 onNewIssue={() => onNewIssue?.(column.id)}
                 onRename={
                   onRenameColumn ? () => onRenameColumn(column) : undefined
