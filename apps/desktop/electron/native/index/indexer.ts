@@ -2,17 +2,17 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type Database from "better-sqlite3";
-import {
-  isHiddenTaskContent,
-  isTaskSourcePath,
-  isTaskStorageDirectory,
-} from "../../../shared/task-paths";
 import { CopperError } from "../errors";
 import { parseFrontmatter } from "../markdown/frontmatter";
 import { parseWikiLink } from "../markdown/links";
 import { isInsideRoot, resolveInVault, toPosix } from "../path";
 import { migrateTaskStorage } from "../tasks/storage";
 import { openIndex } from "./db";
+import {
+  isMarkdownPath,
+  shouldIndexEntry,
+  shouldIndexFile,
+} from "./eligibility";
 
 function openRecovering(dbPath: string): Database.Database {
   try {
@@ -25,37 +25,6 @@ function openRecovering(dbPath: string): Database.Database {
     }
     return openIndex(dbPath);
   }
-}
-
-function isMarkdownPath(filePath: string): boolean {
-  const ext = path.extname(filePath).toLowerCase();
-  return ext === ".md" || ext === ".markdown";
-}
-
-function shouldIndexEntry(
-  relative: string,
-  name: string,
-  isDirectory: boolean,
-): boolean {
-  const managed = isDirectory
-    ? isTaskStorageDirectory(relative)
-    : isTaskSourcePath(relative);
-  return !(
-    ((isHiddenTaskContent(relative) || name.startsWith(".")) && !managed) ||
-    name === "node_modules" ||
-    name === "target"
-  );
-}
-
-function shouldIndexFile(relative: string): boolean {
-  const parts = toPosix(relative).split("/");
-  return parts.every((name, index) =>
-    shouldIndexEntry(
-      parts.slice(0, index + 1).join("/"),
-      name,
-      index < parts.length - 1,
-    ),
-  );
 }
 
 function actualVaultPath(

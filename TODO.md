@@ -46,7 +46,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 - [ ] Verify the draft safety check before restoring archived task sources in the next signed macOS build. Local regressions cover failed and pending saves; a disposable native-Vault browser flow confirmed blocked restore, draft recovery, preserved restored content, narrow layout, and focus return.
 
-- [ ] Verify duplicate task identity protection in the next signed macOS build. Native regressions cover active issue/project collisions, stale indexes, malformed archived metadata, and ID reservation across current and legacy archives. A disposable native-Vault browser flow confirmed a rejected restore leaves both files unchanged, a non-colliding restore succeeds, and a new issue skips the legacy archive's reserved ID.
+- [ ] Verify duplicate task identity protection in the next signed macOS build. Disk discovery shares indexing's Markdown and hidden-path rules, including nested active tasks and ordinary Archive paths. Regressions cover issue/project collisions, issue ID aliases, stale indexes, malformed managed metadata, and ID reservation across current and legacy archives without rewriting IDs. Disposable native-Vault browser checks confirmed rejected restores preserve both files, ordinary restores succeed, and new issues skip IDs reserved by nested and archived tasks; the restore dialog fits 390px.
 
 - [ ] Verify note recovery and guarded saves, Properties dialogs, archived task/project restore, macOS window reactivation, attachment settings, and punctuation searches in the next signed macOS build. The October 21 audit fixes have local regression and disposable native-Vault browser coverage; that is not installed-app acceptance.
 
