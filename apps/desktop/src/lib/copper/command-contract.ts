@@ -155,7 +155,7 @@ const commands: Record<string, Record<string, Rule>> = {
   delete_project: entity,
   git_status: vault,
   git_diff: file,
-  git_publish: vault,
+  git_publish: { ...vault, commitMessage: optional(text) },
   git_enable: vault,
   check_for_update: {},
   download_update: {},

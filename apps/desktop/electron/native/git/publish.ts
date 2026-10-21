@@ -29,6 +29,7 @@ export function assertNoForce(args: string[]): void {
 
 export async function publishGitVault(
   root: string,
+  options: { commitMessage?: string } = {},
   runner: GitRunner = runGit,
 ): Promise<GitPublishResult> {
   const detected = await isVaultRootGitRepo(root, runner);
@@ -81,7 +82,10 @@ export async function publishGitVault(
         "commit",
         "--no-verify",
         "-m",
-        gitCommitMessage(Math.max(stagedFiles.length, 1)),
+        gitCommitMessage(
+          Math.max(stagedFiles.length, 1),
+          options.commitMessage,
+        ),
       ]);
     }
 

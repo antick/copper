@@ -15,6 +15,9 @@ export const GIT_ORIGIN = "origin";
 export const GIT_DIFF_MAX_BYTES = 200_000;
 export const GIT_FORCE_FLAGS = ["--force", "--force-with-lease", "-f"] as const;
 
-export function gitCommitMessage(count: number): string {
-  return GIT_COMMIT_MESSAGE_TEMPLATE.replace("{count}", String(count));
+export function gitCommitMessage(count: number, message?: string): string {
+  return (
+    message?.trim() ||
+    GIT_COMMIT_MESSAGE_TEMPLATE.replace("{count}", String(count))
+  );
 }

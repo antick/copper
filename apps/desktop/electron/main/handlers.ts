@@ -378,7 +378,9 @@ export async function handleCommand(
       appState.gitTrust.run(root, () => undefined);
       stopVaultWatcher();
       try {
-        const result = await publishGitVault(root);
+        const result = await publishGitVault(root, {
+          commitMessage: str("commitMessage"),
+        });
         if (result.kind === "error") {
           console.error(`git_publish failed (${result.reason})`);
         }

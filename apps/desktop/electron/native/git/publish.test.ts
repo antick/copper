@@ -82,7 +82,7 @@ describe("publishGitVault", () => {
     writeFile(local, "Daily.md", "one\n");
     writeFile(local, "Projects/ideas.md", "two\n");
     const { runner, calls } = recordingRunner();
-    const result = await publishGitVault(local, runner);
+    const result = await publishGitVault(local, {}, runner);
     expect(result.kind).toBe("pushed");
     gitSetup(remote, ["pull", "--ff-only"]);
     expect(readFile(remote, "Daily.md")).toBe("one\n");
@@ -102,12 +102,41 @@ describe("publishGitVault", () => {
     gitSetup(remote, ["commit", "-m", "todo"]);
     gitSetup(remote, ["push"]);
     const before = gitSetup(local, ["rev-list", "--count", "HEAD"]).trim();
-    const result = await publishGitVault(local);
+    const result = await publishGitVault(local, {
+      commitMessage: "Only update from origin",
+    });
     expect(result.kind).toBe("updated");
     expect(fileExists(local, "Inbox/todo.md")).toBe(true);
     const after = gitSetup(local, ["rev-list", "--count", "HEAD"]).trim();
     expect(Number(after)).toBe(Number(before) + 1);
   });
+
+  it("pushes the user's commit message as literal multiline text", async () => {
+    const { local, remote } = makeLinkedClones();
+    track(local);
+    const message =
+      'Organize tasks\n\nKeep "quotes", $HOME and `notes` as text.';
+    writeFile(local, "Daily.md", "Custom message\n");
+    const result = await publishGitVault(local, { commitMessage: message });
+    expect(result.kind).toBe("pushed");
+    gitSetup(remote, ["pull", "--ff-only"]);
+    expect(gitSetup(remote, ["log", "-1", "--format=%B"]).trim()).toBe(message);
+  });
+
+  it.each([undefined, "", " \n\t "])(
+    "keeps the default commit message for blank input %j",
+    async (commitMessage) => {
+      const { local, remote } = makeLinkedClones();
+      track(local);
+      writeFile(local, "Daily.md", "Default message\n");
+      const result = await publishGitVault(local, { commitMessage });
+      expect(result.kind).toBe("pushed");
+      gitSetup(remote, ["pull", "--ff-only"]);
+      expect(gitSetup(remote, ["log", "-1", "--format=%s"]).trim()).toBe(
+        "Copper: 1 files updated",
+      );
+    },
+  );
 
   it("combines different files from both machines", async () => {
     const { local, remote } = makeLinkedClones();

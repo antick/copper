@@ -47,3 +47,16 @@ it("keeps production connections and remote scripts disabled", () => {
   expect(policy).toContain("script-src 'self'");
   expect(policy).not.toContain("unsafe-eval");
 });
+
+it("accepts an optional Git commit message and rejects other data types", () => {
+  const vaultId = "a".repeat(64);
+  expect(
+    validateInvocation("git_publish", { vaultId, commitMessage: "My changes" }),
+  ).toEqual({ vaultId, commitMessage: "My changes" });
+  expect(validateInvocation("git_publish", { vaultId })).toEqual({ vaultId });
+  for (const commitMessage of [null, 42, {}, ["message"]]) {
+    expect(() =>
+      validateInvocation("git_publish", { vaultId, commitMessage }),
+    ).toThrow();
+  }
+});

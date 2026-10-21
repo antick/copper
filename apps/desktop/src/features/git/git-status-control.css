@@ -1,0 +1,30 @@
+.copper-git-review .copper-git-review-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.copper-git-review-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .copper-git-review[role="dialog"] {
+    width: calc(100vw - 24px);
+    height: calc(100dvh - 32px);
+    padding: 12px;
+  }
+
+  .copper-git-review .copper-git-review-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(64px, 0.3fr) minmax(0, 1fr);
+  }
+
+  .copper-git-review-actions {
+    flex-wrap: wrap;
+  }
+}

@@ -58,8 +58,14 @@ export function status(vaultId: string): Promise<GitStatus> {
   return copperInvoke<GitStatus>("git_status", { vaultId });
 }
 
-export function publish(vaultId: string): Promise<GitPublishResult> {
-  return copperInvoke<GitPublishResult>("git_publish", { vaultId });
+export function publish(
+  vaultId: string,
+  commitMessage?: string,
+): Promise<GitPublishResult> {
+  return copperInvoke<GitPublishResult>("git_publish", {
+    vaultId,
+    commitMessage,
+  });
 }
 
 export function diff(vaultId: string, path: string): Promise<GitDiff> {

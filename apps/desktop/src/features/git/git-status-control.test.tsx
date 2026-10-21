@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { runCommand } from "@/app/commands/registry";
 import { GitStatusControl } from "@/features/git/git-status-control";
 import type { GitPublishResult, GitStatus } from "@/lib/copper/git";
 
@@ -10,7 +11,10 @@ const mocks = vi.hoisted(() => ({
   status: { kind: "not_git" } as GitStatus,
   enable: vi.fn(async () => false),
   publish: vi.fn(
-    async (): Promise<GitPublishResult> => ({
+    async (
+      _vaultId?: string,
+      _message?: string,
+    ): Promise<GitPublishResult> => ({
       kind: "pushed",
       changedPaths: ["Daily.md"],
       siblingPaths: [],
@@ -23,7 +27,8 @@ vi.mock("@/lib/copper", () => ({
     git: {
       status: async () => mocks.status,
       enable: () => mocks.enable(),
-      publish: () => mocks.publish(),
+      publish: (vaultId: string, message?: string) =>
+        mocks.publish(vaultId, message),
       diff: async () => ({ path: "Daily.md", text: "+hi", binary: false }),
     },
     search: {
@@ -84,6 +89,116 @@ describe("Git status bar control", () => {
     await waitFor(() => {
       expect(mocks.publish).toHaveBeenCalledTimes(1);
     });
+    expect(mocks.publish).toHaveBeenCalledWith("demo", "");
+  });
+
+  it("sends a custom message and clears it after a successful push", async () => {
+    mocks.status = dirtyStatus();
+    wrap(<GitStatusControl vaultId="demo" />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Review 1 Git change" }),
+    );
+    const message = screen.getByRole("textbox", {
+      name: "Commit message (optional)",
+    });
+    await user.type(message, "Organize my tasks");
+    await user.click(
+      screen.getByRole("button", { name: "Push vault to GitHub" }),
+    );
+    await waitFor(() =>
+      expect(mocks.publish).toHaveBeenCalledWith("demo", "Organize my tasks"),
+    );
+    await waitFor(() => expect(message).toHaveValue(""));
+  });
+
+  it("keeps the message available when a push fails", async () => {
+    mocks.status = dirtyStatus();
+    mocks.publish.mockResolvedValueOnce({
+      kind: "error",
+      reason: "auth",
+      changedPaths: [],
+      siblingPaths: [],
+    });
+    wrap(<GitStatusControl vaultId="demo" />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Review 1 Git change" }),
+    );
+    const message = screen.getByRole("textbox", {
+      name: "Commit message (optional)",
+    });
+    await user.type(message, "Keep this message");
+    await user.click(
+      screen.getByRole("button", { name: "Push vault to GitHub" }),
+    );
+    await waitFor(() =>
+      expect(mocks.publish).toHaveBeenCalledWith("demo", "Keep this message"),
+    );
+    expect(message).toHaveValue("Keep this message");
+    expect(message).toBeEnabled();
+  });
+
+  it("opens review from the push command so a message can be entered", async () => {
+    mocks.status = dirtyStatus();
+    wrap(<GitStatusControl vaultId="demo" />);
+    await screen.findByRole("button", { name: "Review 1 Git change" });
+    act(() => runCommand("publish-vault-git"));
+    expect(await screen.findByRole("dialog")).toBeVisible();
+    expect(
+      screen.getByRole("textbox", { name: "Commit message (optional)" }),
+    ).toBeVisible();
+    expect(mocks.publish).not.toHaveBeenCalled();
+  });
+
+  it("keeps the draft and shows a retry message when the bridge rejects", async () => {
+    mocks.status = dirtyStatus();
+    mocks.publish.mockRejectedValueOnce(new Error("Offline"));
+    wrap(<GitStatusControl vaultId="demo" />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Review 1 Git change" }),
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Commit message (optional)" }),
+      "Keep my draft",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Push vault to GitHub" }),
+    );
+    expect(
+      await screen.findByText("Couldn’t push your Vault. Please try again."),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", { name: "Commit message (optional)" }),
+    ).toHaveValue("Keep my draft");
+  });
+
+  it("does not carry a commit draft into another Vault", async () => {
+    mocks.status = dirtyStatus();
+    const client = new QueryClient();
+    const content = (vaultId: string) => (
+      <QueryClientProvider client={client}>
+        <GitStatusControl vaultId={vaultId} />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(content("first"));
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Review 1 Git change" }),
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Commit message (optional)" }),
+      "First Vault only",
+    );
+    rerender(content("second"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await user.click(
+      await screen.findByRole("button", { name: "Review 1 Git change" }),
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Commit message (optional)" }),
+    ).toHaveValue("");
   });
 
   it("shows Update from GitHub when behind", async () => {
@@ -159,6 +274,9 @@ describe("Git status bar control", () => {
     const action = document.querySelector(".copper-git-publish");
     expect(action).toBeDisabled();
     expect(action).toHaveTextContent("Pushing…");
+    expect(
+      screen.getByRole("textbox", { name: "Commit message (optional)" }),
+    ).toBeDisabled();
     release();
   });
 
@@ -193,6 +311,20 @@ describe("Git status bar control", () => {
     });
   });
 });
+
+function dirtyStatus(): GitStatus {
+  return {
+    kind: "git",
+    branch: "main",
+    host: "github",
+    dirtyCount: 1,
+    ahead: 0,
+    behind: 0,
+    noteCount: 1,
+    paths: ["Daily.md"],
+    blockReason: null,
+  };
+}
 
 it("keeps untrusted Git disabled after canceling its native prompt", async () => {
   mocks.status = { kind: "untrusted" };

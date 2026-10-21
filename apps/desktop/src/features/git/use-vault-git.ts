@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { registerCommand } from "@/app/commands/registry";
 import { queryClient } from "@/app/query-client";
 import { fileKeys } from "@/features/editor/file-keys";
 import { GIT_STATUS_QUERY_KEY } from "@/features/git/constants";
@@ -37,7 +36,7 @@ export function useVaultGit(vaultId: string | undefined) {
   }, [vaultId]);
 
   const publish = useMutation({
-    mutationFn: async (): Promise<GitPublishResult> => {
+    mutationFn: async (commitMessage?: string): Promise<GitPublishResult> => {
       if (!vaultId) {
         return {
           kind: "error",
@@ -47,7 +46,7 @@ export function useVaultGit(vaultId: string | undefined) {
         };
       }
       await flushOpenDocuments();
-      return copper.git.publish(vaultId);
+      return copper.git.publish(vaultId, commitMessage);
     },
     onSuccess: async (result) => {
       if (!vaultId) {
@@ -79,23 +78,12 @@ export function useVaultGit(vaultId: string | undefined) {
     },
   });
 
-  useEffect(() => {
-    if (!vaultId) {
-      return;
-    }
-    return registerCommand("publish-vault-git", () => {
-      if (publish.isPending) {
-        return;
-      }
-      void publish.mutateAsync();
-    });
-  }, [publish, vaultId]);
-
   return {
     status: statusQuery.data ?? idleGitStatus,
     running: publish.isPending,
     publish: publish.mutateAsync,
     result: publish.data ?? null,
+    error: publish.error,
     resetResult: publish.reset,
   };
 }

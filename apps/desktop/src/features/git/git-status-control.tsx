@@ -2,20 +2,32 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GitBranch } from "lucide-react";
 import { useEffect, useState } from "react";
-import { GIT_SUCCESS_NOTICE_MS } from "@/features/git/constants";
+import { registerCommand } from "@/app/commands/registry";
+import { TextAreaField } from "@/components/ui/text-area-field";
+import {
+  GIT_COMMIT_MESSAGE_FIELD,
+  GIT_PUBLISH_ERROR_COPY,
+  GIT_SUCCESS_NOTICE_MS,
+} from "@/features/git/constants";
 import { gitControlLabel, publishCommandLabel } from "@/features/git/copy";
 import { GitDiffView } from "@/features/git/git-diff-view";
 import { useVaultGit } from "@/features/git/use-vault-git";
 import { copper } from "@/lib/copper";
 import { fileName } from "@/lib/paths";
+import "./git-status-control.css";
 
 export function GitStatusControl({ vaultId }: { vaultId?: string }) {
+  return <VaultGitStatusControl key={vaultId} vaultId={vaultId} />;
+}
+
+function VaultGitStatusControl({ vaultId }: { vaultId?: string }) {
   const queryClient = useQueryClient();
   const [enabling, setEnabling] = useState(false);
-  const { status, running, publish, result, resetResult } =
+  const { status, running, publish, result, resetResult, error } =
     useVaultGit(vaultId);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string>();
+  const [commitMessage, setCommitMessage] = useState("");
   const label = gitControlLabel({
     status,
     running,
@@ -31,7 +43,7 @@ export function GitStatusControl({ vaultId }: { vaultId?: string }) {
   });
 
   useEffect(() => {
-    if (!result || running) {
+    if (!result || result.kind === "error" || running) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -49,6 +61,14 @@ export function GitStatusControl({ vaultId }: { vaultId?: string }) {
     }
     setSelected(paths[0]);
   }, [open, paths]);
+
+  useEffect(
+    () =>
+      registerCommand("publish-vault-git", () => {
+        if (vaultId && status.kind === "git" && !running) setOpen(true);
+      }),
+    [vaultId, status.kind, running],
+  );
 
   if (status.kind === "untrusted") {
     return (
@@ -76,7 +96,7 @@ export function GitStatusControl({ vaultId }: { vaultId?: string }) {
     );
   }
 
-  if (!label || (label === "Up to date" && !running && !result)) {
+  if (!label || (label === "Up to date" && !running && !result && !open)) {
     return null;
   }
 
@@ -87,7 +107,7 @@ export function GitStatusControl({ vaultId }: { vaultId?: string }) {
     ? status.kind === "git" && status.behind > 0 && status.noteCount === 0
       ? "Updating…"
       : "Pushing…"
-    : result
+    : result && result.kind !== "error"
       ? label
       : status.kind === "git"
         ? publishCommandLabel(status.host)
@@ -140,20 +160,40 @@ export function GitStatusControl({ vaultId }: { vaultId?: string }) {
             />
           </div>
           <div className="copper-git-review-footer">
-            <span className="copper-git-review-status">
-              {running ? actionLabel : result ? label : null}
-            </span>
-            <button
-              type="button"
-              className="copper-git-publish"
-              disabled={running}
-              onClick={() => {
-                if (running) return;
-                void publish();
-              }}
-            >
-              {actionLabel}
-            </button>
+            {paths.length > 0 ? (
+              <TextAreaField
+                {...GIT_COMMIT_MESSAGE_FIELD}
+                value={commitMessage}
+                disabled={running}
+                onChange={(event) => setCommitMessage(event.target.value)}
+              />
+            ) : null}
+            <div className="copper-git-review-actions">
+              <span className="copper-git-review-status">
+                {running
+                  ? actionLabel
+                  : result
+                    ? label
+                    : error
+                      ? GIT_PUBLISH_ERROR_COPY
+                      : null}
+              </span>
+              <button
+                type="button"
+                className="copper-git-publish"
+                disabled={running}
+                onClick={() => {
+                  if (running) return;
+                  void publish(commitMessage)
+                    .then((result) => {
+                      if (result.kind !== "error") setCommitMessage("");
+                    })
+                    .catch(() => undefined);
+                }}
+              >
+                {actionLabel}
+              </button>
+            </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
