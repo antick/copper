@@ -38,6 +38,8 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
+- [ ] Verify project list/detail count parity for nested sources in the next signed macOS build. Native regressions cover custom statuses and both archive layouts; a disposable native-Vault browser flow confirmed matching totals before and after restoring an issue.
+
 - [ ] Verify search refresh after remote note renames and deletions in the next signed macOS build. Disposable Git clone tests confirm both rename paths are reindexed, stale entries are removed, and filenames with spaces and quotes remain intact.
 
 - [ ] Verify the draft safety check before restoring archived task sources in the next signed macOS build. Local regressions cover failed and pending saves; a disposable native-Vault browser flow confirmed blocked restore, draft recovery, preserved restored content, narrow layout, and focus return.

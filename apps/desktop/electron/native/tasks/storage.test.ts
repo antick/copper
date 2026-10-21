@@ -273,14 +273,14 @@ it("keeps task archives lowercase and migrates archived legacy projects", () => 
   const v = vault();
   v.write("Archive/Tasks/Projects/agents.md", project);
   indexVault(v.db, v.root);
-  expect(getProject(v.root, "agents").path).toBe(
+  expect(getProject(v.root, v.db, "agents").path).toBe(
     ".copper/tasks/archive/projects/agents.md",
   );
   expect(listProjects(v.db)[0].archived).toBe(true);
   v.write("Tasks/Projects/second.md", project.replaceAll("agents", "second"));
   indexVault(v.db, v.root);
   archiveProject(v.root, v.db, "second");
-  expect(getProject(v.root, "second").path).toBe(
+  expect(getProject(v.root, v.db, "second").path).toBe(
     ".copper/tasks/archive/projects/second.md",
   );
 });

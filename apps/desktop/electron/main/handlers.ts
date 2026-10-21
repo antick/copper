@@ -303,7 +303,11 @@ export async function handleCommand(
       vaultRoot(str("vaultId"));
       return listProjects(dbPath(str("vaultId")));
     case "get_project":
-      return getProject(vaultRoot(str("vaultId")), str("id"));
+      return getProject(
+        vaultRoot(str("vaultId")),
+        dbPath(str("vaultId")),
+        str("id"),
+      );
     case "create_project":
       return createProject(
         vaultRoot(str("vaultId")),

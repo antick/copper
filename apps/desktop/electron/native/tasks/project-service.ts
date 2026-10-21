@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   ARCHIVED_PROJECTS_DIR,
-  ISSUES_DIR,
   isArchivedTaskPath,
 } from "../../../shared/task-paths";
 import { ARCHIVE_DIR } from "../constants";
@@ -32,7 +31,6 @@ import {
   TYPE_PROJECT,
 } from "./constants";
 import {
-  asIssueStatus,
   asOptionalString,
   asProjectStatus,
   asStringList,
@@ -61,31 +59,6 @@ function emptyCounts(): TaskProjectCounts {
   return Object.fromEntries(
     ISSUE_STATUSES.map((status) => [status, 0]),
   ) as TaskProjectCounts;
-}
-
-function countsForProjectFiles(root: string, projectId: string) {
-  const counts = emptyCounts();
-  const directory = path.join(root, ISSUES_DIR);
-  if (!fs.existsSync(directory)) return counts;
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if (!entry.isFile() || !/\.(md|markdown)$/i.test(entry.name)) continue;
-    try {
-      const relative = `${ISSUES_DIR}/${entry.name}`;
-      const [source] = readFile(root, relative);
-      const parsed = parseFrontmatter(source);
-      if (
-        parsed.values[FRONTMATTER_KEYS.type] !== TYPE_ISSUE ||
-        parsed.values[FRONTMATTER_KEYS.project] !== projectId
-      ) {
-        continue;
-      }
-      const status = asIssueStatus(parsed.values[FRONTMATTER_KEYS.status]);
-      counts[status] = (counts[status] ?? 0) + 1;
-    } catch {
-      // Ignore unreadable or malformed task sources.
-    }
-  }
-  return counts;
 }
 
 function projectFromParsed(
@@ -230,14 +203,20 @@ function findProjectPath(root: string, id: string): string {
   throw CopperError.notFound(`Project ${id} was not found`);
 }
 
-export function getProject(root: string, id: string): TaskProject {
+export function getProject(
+  root: string,
+  dbPath: string,
+  id: string,
+): TaskProject {
   const relative = findProjectPath(root, id);
   const [source] = readFile(root, relative);
-  return projectFromParsed(
-    relative,
-    parseFrontmatter(source),
-    countsForProjectFiles(root, id),
-  );
+  const db = openIndex(dbPath);
+  try {
+    const counts = countsByProject(db).get(id) ?? emptyCounts();
+    return projectFromParsed(relative, parseFrontmatter(source), counts);
+  } finally {
+    db.close();
+  }
 }
 
 function uniqueProjectPath(root: string, stem: string) {
@@ -288,7 +267,7 @@ export function createProject(
   };
   createFile(root, relative, writeFrontmatter(parsed, ""));
   indexFilePath(dbPath, root, relative);
-  return getProject(root, id);
+  return getProject(root, dbPath, id);
 }
 
 export function updateProject(
@@ -331,7 +310,7 @@ export function updateProject(
   const next = writeFrontmatter({ ...parsed, values, body }, source);
   if (next !== source) saveFile(root, relative, next);
   indexFilePath(dbPath, root, relative);
-  return getProject(root, id);
+  return getProject(root, dbPath, id);
 }
 
 function restoreSources(
@@ -355,7 +334,7 @@ export function updateProjectWorkflow(
   id: string,
   input: UpdateProjectWorkflowInput,
 ): TaskProject {
-  const project = getProject(root, id);
+  const project = getProject(root, dbPath, id);
   const workflow = parseWorkflow(id, input.workflow);
   if (JSON.stringify(workflow) !== JSON.stringify(input.workflow)) {
     throw CopperError.invalid("Project workflow is invalid");
@@ -388,7 +367,7 @@ export function updateProjectWorkflow(
 }
 
 export function archiveProject(root: string, dbPath: string, id: string) {
-  const project = getProject(root, id);
+  const project = getProject(root, dbPath, id);
   if (project.archived)
     throw CopperError.invalid("Project is already archived");
   const destination = archiveFile(root, project.path);
@@ -402,7 +381,7 @@ export async function deleteProject(
   id: string,
   trashBackend: (absolute: string) => Promise<void>,
 ) {
-  const project = getProject(root, id);
+  const project = getProject(root, dbPath, id);
   const affected = listIssues(dbPath).filter((issue) => issue.project === id);
   const snapshots = [project, ...affected].map((item) => ({
     path: item.path,
