@@ -1,0 +1,17 @@
+.copper-document-title {
+  font-family: var(--editor-font-family, var(--font-ui));
+}
+
+.copper-typography-preview {
+  margin: 16px;
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--pane-bg);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.copper-typography-preview p {
+  margin: 0;
+}

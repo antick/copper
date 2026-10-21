@@ -1,0 +1,42 @@
+@media (max-width: 600px) {
+  .copper-settings {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .copper-settings aside {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 10px 8px;
+  }
+
+  .copper-settings .copper-settings-title {
+    flex-shrink: 0;
+    margin-bottom: 4px;
+  }
+
+  .copper-settings nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .copper-settings .copper-settings-nav-item {
+    width: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .copper-settings .copper-settings-vaults-link {
+    margin-top: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .copper-settings .copper-settings-content {
+    padding: 20px 16px 40px;
+  }
+
+  .copper-settings > .copper-settings-drag-region {
+    display: none;
+  }
+}

@@ -20,6 +20,31 @@ afterEach(() => {
 });
 
 describe("settings", () => {
+  it("persists note typography and safely loads old or invalid preferences", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-fonts-"));
+    temps.push(dir);
+    saveSettings(dir, { fontFamily: "lora", fontSize: 24, lineHeight: 1.8 });
+    expect(loadSettings(dir)).toMatchObject({
+      fontFamily: "lora",
+      fontSize: 24,
+      lineHeight: 1.8,
+    });
+    fs.writeFileSync(
+      settingsPath(dir),
+      JSON.stringify({ fontFamily: "invalid", fontSize: -1, lineHeight: 99 }),
+    );
+    expect(loadSettings(dir)).toMatchObject({
+      fontFamily: "inter",
+      fontSize: 14,
+      lineHeight: 1.55,
+    });
+    fs.writeFileSync(settingsPath(dir), JSON.stringify({ fontSize: 19 }));
+    expect(loadSettings(dir)).toMatchObject({
+      fontFamily: "inter",
+      fontSize: 19,
+    });
+  });
+
   it("persists the expanded theme allowlist", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-set-themes-"));
     temps.push(dir);

@@ -125,6 +125,12 @@ bytes or modified time. Edited UTF-8 text uses Copper’s atomic replacement
 path. Images are read-only. Search, backlinks, Properties, favorites, and the
 disposable SQLite index remain Markdown-only.
 
+Choose **Editor settings…** from a note’s three-dot menu, or open **Settings →
+Editor**, to change the font face, size, and line spacing for all notes. Inter,
+Lora, and JetBrains Mono are bundled for offline use; system sans, Georgia, and
+system mono are also available with platform fallbacks. These preferences stay
+in Copper’s app data and do not change your Markdown files.
+
 `Archive/` at the Vault root is reserved and hidden from the tree. **Archive**
 moves a Markdown note to `Archive/<original-relative-path>` in the same Vault;
 **Restore from Archive** removes that prefix. Neither operation overwrites an

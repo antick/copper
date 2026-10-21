@@ -1,3 +1,8 @@
+import {
+  DEFAULT_EDITOR_TYPOGRAPHY,
+  type EditorTypography,
+  normalizeEditorTypography,
+} from "@/lib/copper/editor-typography";
 import { copperInvoke } from "@/lib/copper/invoke";
 import {
   DEFAULT_ISSUE_ID_PREFIX,
@@ -17,12 +22,10 @@ import {
 
 export type NavigationLayout = "note-list" | "tree";
 
-export interface CopperSettings {
+export interface CopperSettings extends EditorTypography {
   theme: "light" | "dark" | "system";
   lightTheme: LightThemeId;
   darkTheme: DarkThemeId;
-  fontSize: number;
-  lineHeight: number;
   tabSize: number;
   wrapping: boolean;
   attachmentFolder: string;
@@ -117,8 +120,7 @@ export const defaultSettings: CopperSettings = {
   theme: "system",
   lightTheme: DEFAULT_LIGHT_THEME,
   darkTheme: DEFAULT_DARK_THEME,
-  fontSize: 14,
-  lineHeight: 1.55,
+  ...DEFAULT_EDITOR_TYPOGRAPHY,
   tabSize: 2,
   wrapping: true,
   attachmentFolder: "attachments",
@@ -132,6 +134,7 @@ export function normalizeSettings(
   const merged = { ...defaultSettings, ...(settings ?? {}) };
   return {
     ...merged,
+    ...normalizeEditorTypography(merged),
     lightTheme: isLightThemeId(settings?.lightTheme)
       ? settings.lightTheme
       : DEFAULT_LIGHT_THEME,

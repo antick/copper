@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { copper } from "@/lib/copper";
+import { editorFont } from "@/lib/copper/editor-typography";
 import {
   type CopperSettings,
   defaultSettings,
@@ -60,6 +61,10 @@ export function applySettings(
   root.setAttribute("data-theme", effectiveTheme);
   root.setAttribute("data-color-theme", effectiveColorTheme);
   root.style.setProperty("--editor-font-size", `${settings.fontSize}px`);
+  root.style.setProperty(
+    "--editor-font-family",
+    editorFont(settings.fontFamily).family,
+  );
   root.style.setProperty("--editor-line-height", String(settings.lineHeight));
   return { effectiveTheme, effectiveColorTheme };
 }
@@ -69,8 +74,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     queryKey: ["settings"],
     queryFn: () => copper.settings.load(),
   });
-  // Older app-data files do not contain navigationLayout. Keep the provider
-  // total while the repository migrates those records to the new default.
+  // Older app-data files can be missing newer preferences.
   const settings = query.data ? normalizeSettings(query.data) : defaultSettings;
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
   const effectiveTheme = resolveEffectiveTheme(settings.theme, systemDark);

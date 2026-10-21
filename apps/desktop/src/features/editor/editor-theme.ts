@@ -7,9 +7,9 @@ export const copperEditorTheme = EditorView.theme({
     backgroundColor: "var(--editor-bg, #ffffff)",
     color: "var(--text-primary, #18181b)",
   },
+  "&.cm-focused": { outline: "none" },
   ".cm-scroller": {
-    fontFamily:
-      'var(--font-ui, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)',
+    fontFamily: "var(--editor-font-family, var(--font-ui))",
     lineHeight: "var(--editor-line-height, 1.65)",
   },
   ".cm-content": {

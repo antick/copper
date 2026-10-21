@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  DEFAULT_EDITOR_TYPOGRAPHY,
+  type EditorTypography,
+  normalizeEditorTypography,
+} from "../../src/lib/copper/editor-typography";
+import {
   DEFAULT_ISSUE_ID_PREFIX,
   type IssueColumnId,
   normalizeIssueColumnWidths,
@@ -12,12 +17,10 @@ import { DARK_THEME_IDS, LIGHT_THEME_IDS } from "../../src/lib/copper/themes";
 const LIGHT_THEMES = new Set<string>(LIGHT_THEME_IDS);
 const DARK_THEMES = new Set<string>(DARK_THEME_IDS);
 
-export interface CopperSettings {
+export interface CopperSettings extends EditorTypography {
   theme: string;
   lightTheme: string;
   darkTheme: string;
-  fontSize: number;
-  lineHeight: number;
   tabSize: number;
   wrapping: boolean;
   attachmentFolder: string;
@@ -63,8 +66,7 @@ export const defaultSettings: CopperSettings = {
   theme: "system",
   lightTheme: "linen",
   darkTheme: "graphite",
-  fontSize: 14,
-  lineHeight: 1.55,
+  ...DEFAULT_EDITOR_TYPOGRAPHY,
   tabSize: 2,
   wrapping: true,
   attachmentFolder: "attachments",
@@ -80,6 +82,7 @@ export function normalizeSettings(
   const merged = { ...defaultSettings, ...current };
   return {
     ...merged,
+    ...normalizeEditorTypography(merged),
     lightTheme: LIGHT_THEMES.has(merged.lightTheme)
       ? merged.lightTheme
       : defaultSettings.lightTheme,

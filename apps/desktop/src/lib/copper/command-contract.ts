@@ -62,6 +62,7 @@ const settings = object({
   theme: text,
   lightTheme: text,
   darkTheme: text,
+  fontFamily: optional(text),
   fontSize: number,
   lineHeight: number,
   tabSize: number,

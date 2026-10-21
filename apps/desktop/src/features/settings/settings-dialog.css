@@ -1,0 +1,33 @@
+.copper-settings-dialog {
+  position: fixed;
+  z-index: 71;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--elevated-bg);
+  box-shadow: 0 24px 72px rgb(28 27 25 / 24%);
+}
+
+.copper-settings-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.copper-settings-dialog > header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.copper-settings-dialog > p {
+  color: var(--text-secondary);
+  margin: 8px 0 20px;
+  font-size: 13px;
+}

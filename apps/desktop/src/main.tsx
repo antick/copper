@@ -1,4 +1,8 @@
 import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/jetbrains-mono/wght-italic.css";
+import "@fontsource-variable/lora";
+import "@fontsource-variable/lora/wght-italic.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
@@ -18,6 +22,7 @@ import "@/styles/issue-view.css";
 import "@/styles/tasks-responsive.css";
 import "@/styles/window-drag.css";
 import "@/styles/settings-task.css";
+import "@/styles/settings-responsive.css";
 
 async function boot() {
   const preview =

@@ -87,6 +87,30 @@ describe("normalizeVaultSession", () => {
 });
 
 describe("normalizeSettings", () => {
+  it("keeps valid typography and repairs invalid or legacy preferences", () => {
+    expect(normalizeSettings({})).toMatchObject({ fontFamily: "inter" });
+    expect(
+      normalizeSettings({
+        fontFamily: "jetbrains-mono",
+        fontSize: 24,
+        lineHeight: 1.8,
+      }),
+    ).toMatchObject({
+      fontFamily: "jetbrains-mono",
+      fontSize: 24,
+      lineHeight: 1.8,
+    });
+    expect(
+      normalizeSettings(
+        JSON.parse('{"fontFamily":"unknown","fontSize":0,"lineHeight":99}'),
+      ),
+    ).toMatchObject({
+      fontFamily: "inter",
+      fontSize: 14,
+      lineHeight: 1.55,
+    });
+  });
+
   it("validates issue prefixes", () => {
     expect(normalizeSettings({ issueIdPrefix: "work2" })).toMatchObject({
       issueIdPrefix: "WORK2",

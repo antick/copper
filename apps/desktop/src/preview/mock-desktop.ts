@@ -171,6 +171,7 @@ let previewSettings = {
   theme: "light",
   lightTheme: "linen" as const,
   darkTheme: "graphite" as const,
+  fontFamily: "inter" as const,
   fontSize: 15,
   lineHeight: 1.65,
   tabSize: 2,

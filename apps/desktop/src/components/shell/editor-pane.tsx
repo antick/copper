@@ -12,12 +12,15 @@ import {
   Star,
   Trash2,
   TriangleAlert,
+  Type,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { WorkspaceTopBar } from "@/components/shell/workspace-top-bar";
 import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { SupportedFileKind } from "@/features/file-tree/types";
+import { EditorTypographyControls } from "@/features/settings/editor-typography-controls";
+import { SettingsDialog } from "@/features/settings/settings-dialog";
 import type { EditorTab } from "@/features/tabs/types";
 import { fileStem } from "@/lib/paths";
 
@@ -93,6 +96,8 @@ export function EditorPane({
   onOpenInTasks?: () => void;
 }) {
   const markdown = fileKind === "markdown";
+  const [typographyOpen, setTypographyOpen] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   const editable = Boolean(fileKind && fileKind !== "image");
   const showProperties = Boolean(rightCollapsed && markdown);
 
@@ -151,14 +156,20 @@ export function EditorPane({
             ) : null}
             <DropdownMenu.Root>
               <Tooltip content="More file actions">
-                <DropdownMenu.Trigger asChild>
+                <DropdownMenu.Trigger asChild ref={menuTrigger}>
                   <IconButton label="More file actions" disabled={!path}>
                     <MoreHorizontal size={16} strokeWidth={1.75} />
                   </IconButton>
                 </DropdownMenu.Trigger>
               </Tooltip>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content className="copper-menu" align="end">
+                <DropdownMenu.Content
+                  className="copper-menu"
+                  align="end"
+                  onCloseAutoFocus={(event) => {
+                    if (typographyOpen) event.preventDefault();
+                  }}
+                >
                   <DropdownMenu.Item
                     className="copper-menu-item copper-menu-item-with-icon"
                     onSelect={() => {
@@ -189,6 +200,13 @@ export function EditorPane({
                       >
                         <Code2 size={14} strokeWidth={1.75} />
                         {livePreviewEnabled ? "Show source" : "Live preview"}
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="copper-menu-item copper-menu-item-with-icon"
+                        onSelect={() => setTypographyOpen(true)}
+                      >
+                        <Type size={14} strokeWidth={1.75} />
+                        Editor settings…
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         className="copper-menu-item copper-menu-item-with-icon"
@@ -234,6 +252,15 @@ export function EditorPane({
           </>
         }
       />
+      <SettingsDialog
+        title="Note appearance"
+        description="Choose how your notes look in Copper."
+        open={typographyOpen}
+        onOpenChange={setTypographyOpen}
+        onReturnFocus={() => menuTrigger.current?.focus()}
+      >
+        <EditorTypographyControls />
+      </SettingsDialog>
       <div
         className="copper-scroll"
         onPointerDownCapture={onDocumentInteraction}

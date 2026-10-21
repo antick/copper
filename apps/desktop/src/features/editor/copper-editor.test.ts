@@ -1,4 +1,5 @@
 import { EditorSelection } from "@codemirror/state";
+import { waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createCopperEditor } from "@/features/editor/create-editor";
 
@@ -16,6 +17,16 @@ function mount(doc: string) {
 }
 
 describe("Copper markdown editor", () => {
+  it("does not draw a dotted frame when the note receives focus", async () => {
+    const { view, cleanup } = mount("Notes");
+    view.focus();
+    expect(view.hasFocus).toBe(true);
+    await waitFor(() =>
+      expect(getComputedStyle(view.dom).outline).toBe("none"),
+    );
+    cleanup();
+  });
+
   it("highlights wiki links and tags in the viewport", () => {
     const { view, cleanup } = mount(
       "# Title\nSee [[Architecture]] and #research\n",

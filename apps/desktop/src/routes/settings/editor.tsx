@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { EditorTypographyControls } from "@/features/settings/editor-typography-controls";
 import {
   SettingsNumberField,
   SettingsPage,
@@ -23,45 +24,7 @@ export function EditorSettings() {
       title="Editor"
       description="Tune Markdown editing for comfortable reading and writing."
     >
-      <SettingsSection title="Typography">
-        <SettingsRow
-          label="Font size"
-          description="Editor text size in pixels."
-          control={
-            <SettingsNumberField
-              aria-label="Editor font size"
-              min={11}
-              max={22}
-              value={settings.fontSize}
-              onChange={(event) =>
-                save.mutate({
-                  ...settings,
-                  fontSize: Number(event.target.value),
-                })
-              }
-            />
-          }
-        />
-        <SettingsRow
-          label="Line height"
-          description="Vertical spacing between editor lines."
-          control={
-            <SettingsNumberField
-              aria-label="Editor line height"
-              step={0.05}
-              min={1.2}
-              max={2}
-              value={settings.lineHeight}
-              onChange={(event) =>
-                save.mutate({
-                  ...settings,
-                  lineHeight: Number(event.target.value),
-                })
-              }
-            />
-          }
-        />
-      </SettingsSection>
+      <EditorTypographyControls />
       <SettingsSection title="Editing">
         <SettingsRow
           label="Tab size"
