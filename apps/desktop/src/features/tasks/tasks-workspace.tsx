@@ -372,6 +372,7 @@ export function TasksWorkspace({
       {issueTabId ? (
         issueQuery.data ? (
           <IssueView
+            vaultId={vaultId}
             issue={issueQuery.data}
             projects={projects}
             variant="tab"
@@ -409,6 +410,7 @@ export function TasksWorkspace({
       ) : destination === "project" ? (
         selectedProject ? (
           <ProjectWorkspace
+            vaultId={vaultId}
             key={selectedProject.id}
             project={selectedProject}
             view={projectView}
@@ -452,6 +454,7 @@ export function TasksWorkspace({
         issueSurface
       )}
       <TaskOverlays
+        vaultId={vaultId}
         issue={peekIssueId ? issueQuery.data : undefined}
         projects={projects}
         composer={composer?.kind ?? null}

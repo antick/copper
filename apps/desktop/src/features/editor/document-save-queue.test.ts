@@ -47,6 +47,49 @@ it("retains failed saves after the editor detaches and blocks global flush", asy
   expect(queue.hasPending()).toBe(false);
 });
 
+it("waits for this Vault while leaving other Vault queues untouched", async () => {
+  const vaultA = "queue-vault-a";
+  const vaultB = "queue-vault-b";
+  const saveA = vi.fn().mockRejectedValue(new Error("A is unavailable"));
+  let completeB!: () => void;
+  const saveB = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        completeB = resolve;
+      }),
+  );
+  const queueA = new DocumentSaveQueue(saveA, 400, "a-note", vaultA);
+  const queueB = new DocumentSaveQueue(saveB, 400, "b-note", vaultB);
+  queueA.schedule("A draft");
+  await expect(queueA.flush()).rejects.toThrow("A is unavailable");
+  queueB.schedule("B edit");
+
+  try {
+    let finished = false;
+    let flushError: unknown;
+    const flushingB = flushDocumentSaves(vaultB).then(
+      () => {
+        finished = true;
+      },
+      (error) => {
+        flushError = error;
+      },
+    );
+    await Promise.resolve();
+    expect(finished).toBe(false);
+    expect(saveA).toHaveBeenCalledTimes(1);
+    expect(saveB).toHaveBeenCalledWith("B edit");
+    completeB();
+    await flushingB;
+    expect(flushError).toBeUndefined();
+    expect(finished).toBe(true);
+    expect(queueA.hasPending()).toBe(true);
+  } finally {
+    queueA.cancel();
+    queueB.cancel();
+  }
+});
+
 it("pauses autosave and unmount flushing until the user resolves a conflict", async () => {
   vi.useFakeTimers();
   const save = vi.fn().mockResolvedValue(undefined);

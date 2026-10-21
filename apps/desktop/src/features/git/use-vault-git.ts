@@ -45,7 +45,7 @@ export function useVaultGit(vaultId: string | undefined) {
           siblingPaths: [],
         };
       }
-      await flushOpenDocuments();
+      await flushOpenDocuments(vaultId);
       return copper.git.publish(vaultId, commitMessage);
     },
     onSuccess: async (result) => {

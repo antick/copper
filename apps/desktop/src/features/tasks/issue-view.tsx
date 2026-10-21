@@ -30,6 +30,7 @@ import type {
 } from "@/lib/copper/tasks";
 
 export function IssueView({
+  vaultId,
   issue,
   projects,
   variant,
@@ -38,6 +39,7 @@ export function IssueView({
   onUpdate,
   commentActions,
 }: {
+  vaultId: string;
   issue: TaskIssue;
   projects: TaskProject[];
   variant: "peek" | "tab";
@@ -133,6 +135,7 @@ export function IssueView({
           ) : null}
           <div className="copper-task-detail-description">
             <TaskDescriptionEditor
+              vaultId={vaultId}
               key={issue.id}
               documentId={issue.id}
               body={taskDescription(issue.body)}

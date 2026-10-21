@@ -37,6 +37,7 @@ const PROJECT_STATUS_OPTIONS = PROJECT_STATUSES.map((value) => ({
 }));
 
 export function TaskCreateDialog({
+  vaultId,
   open,
   kind,
   projects,
@@ -46,6 +47,7 @@ export function TaskCreateDialog({
   onSubmitIssue,
   onSubmitProject,
 }: {
+  vaultId: string;
   open: boolean;
   kind: "issue" | "project";
   projects: TaskProject[];
@@ -173,6 +175,7 @@ export function TaskCreateDialog({
             {kind === "issue" ? (
               <TaskDescriptionEditor
                 ref={descriptionRef}
+                vaultId={vaultId}
                 documentId="new-issue"
                 body=""
                 ariaLabel="Issue description"

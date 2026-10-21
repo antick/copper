@@ -52,7 +52,7 @@ export function TaskArchivedItemsDialog({
     setRestoringPath(path);
     setRestoreError(null);
     try {
-      await flushOpenDocuments();
+      await flushOpenDocuments(vaultId);
       const restoredPath = await copper.files.restore(vaultId, path);
       const indexResults = await Promise.allSettled([
         copper.search.removeIndexed(vaultId, path),

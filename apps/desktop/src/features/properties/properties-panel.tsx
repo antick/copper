@@ -32,8 +32,9 @@ export function PropertiesPanel({
   const update = useMutation({
     scope: { id: `properties:${vaultId}:${path}` },
     mutationFn: async (values: Record<string, unknown>) => {
-      return withDocumentWriteLock(vaultId ?? "", path ?? "", async () => {
-        await flushOpenDocuments();
+      if (!vaultId || !path) throw new Error("Select a note in a Vault first.");
+      return withDocumentWriteLock(vaultId, path, async () => {
+        await flushOpenDocuments(vaultId);
         const payload = await copper.properties.update(
           vaultId ?? "",
           path ?? "",

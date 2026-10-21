@@ -1,24 +1,41 @@
 import { useEffect, useMemo, useRef } from "react";
-import { documentSaveQueue } from "@/features/editor/document-save-queue";
+import {
+  type DocumentSaveQueue,
+  documentSaveQueue,
+} from "@/features/editor/document-save-queue";
 import { DOCUMENT_SAVE_DELAY_MS } from "../../../shared/document-save";
 
 export function useDocumentSave(
   save: (contents: string) => Promise<void>,
   delayMs = DOCUMENT_SAVE_DELAY_MS,
   key?: string,
+  vaultId?: string,
+  identityKey?: string,
 ) {
-  const current = useRef({ save, delayMs });
-  current.current = { save, delayMs };
-  const queue = useMemo(
-    () =>
-      documentSaveQueue(
-        key,
-        (contents) => current.current.save(contents),
-        current.current.delayMs,
-      ),
-    [key],
-  );
-  queue.configure((contents) => current.current.save(contents), delayMs);
+  const queueRef = useRef<
+    | {
+        key?: string;
+        vaultId?: string;
+        identityKey?: string;
+        queue: DocumentSaveQueue;
+      }
+    | undefined
+  >(undefined);
+  const identity = queueRef.current;
+  let queue: DocumentSaveQueue;
+  if (
+    identity &&
+    identity.key === key &&
+    identity.vaultId === vaultId &&
+    identity.identityKey === identityKey
+  ) {
+    queue = identity.queue;
+    queue.configure(save, delayMs);
+  } else {
+    queue = documentSaveQueue(key, save, delayMs, vaultId);
+    queue.configure(save, delayMs);
+    queueRef.current = { key, vaultId, identityKey, queue };
+  }
   useEffect(() => {
     queue.attach();
     return () => queue.detach();

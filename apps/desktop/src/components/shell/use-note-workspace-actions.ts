@@ -102,7 +102,7 @@ export function useNoteWorkspaceActions({
   }
 
   async function flushActiveDocument() {
-    await flushOpenDocuments();
+    if (vaultId) await flushOpenDocuments(vaultId);
   }
 
   async function trashActiveFile(path = session.activePath) {

@@ -41,15 +41,17 @@ export function isRecentVaultGitOperation(vaultId: string) {
 }
 
 export type FlushDocumentsDetail = {
+  vaultId?: string;
   enqueue: (promise: Promise<void>) => void;
 };
 
-export async function flushOpenDocuments(): Promise<void> {
-  await flushDocumentSaves();
+export async function flushOpenDocuments(vaultId?: string): Promise<void> {
+  await flushDocumentSaves(vaultId);
   const pending: Promise<void>[] = [];
   window.dispatchEvent(
     new CustomEvent<FlushDocumentsDetail>("copper:flush-documents", {
       detail: {
+        vaultId,
         enqueue(promise) {
           pending.push(promise);
         },
@@ -57,7 +59,7 @@ export async function flushOpenDocuments(): Promise<void> {
     }),
   );
   await Promise.all(pending);
-  if (hasDocumentDrafts())
+  if (hasDocumentDrafts(vaultId))
     throw new Error(
       "Unsaved note drafts remain. Reopen those notes and save or resolve their conflicts before continuing.",
     );

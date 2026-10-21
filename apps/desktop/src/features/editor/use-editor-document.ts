@@ -97,6 +97,7 @@ export function useEditorDocument(
     },
     DOCUMENT_SAVE_DELAY_MS,
     key,
+    vaultId,
   );
 
   useEffect(() => {

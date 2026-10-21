@@ -7,6 +7,8 @@ import {
 type Save = (contents: string) => Promise<void>;
 const pendingQueues = new Set<DocumentSaveQueue>();
 const keyedQueues = new Map<string, DocumentSaveQueue>();
+const queueRegistryKey = (key: string, vaultId?: string) =>
+  JSON.stringify([vaultId, key]);
 
 function notify() {
   window.dispatchEvent(new Event(DOCUMENT_SAVE_STATE_EVENT));
@@ -25,6 +27,7 @@ export class DocumentSaveQueue {
     private save: Save,
     private delayMs = DOCUMENT_SAVE_DELAY_MS,
     readonly key?: string,
+    readonly vaultId?: string,
   ) {}
 
   configure(save: Save, delayMs: number) {
@@ -34,7 +37,8 @@ export class DocumentSaveQueue {
 
   attach() {
     this.users++;
-    if (this.key) keyedQueues.set(this.key, this);
+    if (this.key)
+      keyedQueues.set(queueRegistryKey(this.key, this.vaultId), this);
   }
 
   detach() {
@@ -46,8 +50,9 @@ export class DocumentSaveQueue {
   private release() {
     if (!this.hasPending()) {
       pendingQueues.delete(this);
-      if (!this.users && this.key && keyedQueues.get(this.key) === this)
-        keyedQueues.delete(this.key);
+      const registryKey = this.key && queueRegistryKey(this.key, this.vaultId);
+      if (!this.users && registryKey && keyedQueues.get(registryKey) === this)
+        keyedQueues.delete(registryKey);
     }
   }
 
@@ -120,17 +125,22 @@ export function documentSaveQueue(
   key: string | undefined,
   save: Save,
   delayMs: number,
+  vaultId?: string,
 ) {
-  let queue = key ? keyedQueues.get(key) : undefined;
+  const registryKey = key ? queueRegistryKey(key, vaultId) : undefined;
+  let queue = registryKey ? keyedQueues.get(registryKey) : undefined;
   if (!queue) {
-    queue = new DocumentSaveQueue(save, delayMs, key);
-    if (key) keyedQueues.set(key, queue);
+    queue = new DocumentSaveQueue(save, delayMs, key, vaultId);
+    if (registryKey) keyedQueues.set(registryKey, queue);
   }
   return queue;
 }
 
-export function flushDocumentSaves() {
-  return Promise.all([...pendingQueues].map((queue) => queue.flush())).then(
+export function flushDocumentSaves(vaultId?: string) {
+  const queues = [...pendingQueues].filter(
+    (queue) => vaultId === undefined || queue.vaultId === vaultId,
+  );
+  return Promise.all(queues.map((queue) => queue.flush())).then(
     () => undefined,
   );
 }

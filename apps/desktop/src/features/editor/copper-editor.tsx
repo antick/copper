@@ -62,10 +62,11 @@ export function CopperEditor({
         .flush()
         .then(request.detail.resolve, request.detail.reject);
     };
-    const flushAll = (event: Event) =>
-      (event as CustomEvent<FlushDocumentsDetail>).detail.enqueue(
-        scheduleSave.flush(),
-      );
+    const flushAll = (event: Event) => {
+      const detail = (event as CustomEvent<FlushDocumentsDetail>).detail;
+      if (detail.vaultId !== undefined && detail.vaultId !== vaultId) return;
+      detail.enqueue(scheduleSave.flush());
+    };
     const search = () => {
       if (viewRef.current) openSearchPanel(viewRef.current);
     };

@@ -8,6 +8,7 @@ import type {
 } from "@/lib/copper/tasks";
 
 export function TaskDetail({
+  vaultId,
   issue,
   projects,
   onClose,
@@ -15,6 +16,7 @@ export function TaskDetail({
   onUpdate,
   commentActions,
 }: {
+  vaultId: string;
   issue?: TaskIssue;
   projects: TaskProject[];
   onClose: () => void;
@@ -38,6 +40,7 @@ export function TaskDetail({
           >
             <Dialog.Title className="sr-only">{issue.title}</Dialog.Title>
             <IssueView
+              vaultId={vaultId}
               issue={issue}
               projects={projects}
               variant="peek"

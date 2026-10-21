@@ -52,6 +52,7 @@ export interface TaskDescriptionEditorHandle {
 export const TaskDescriptionEditor = forwardRef<
   TaskDescriptionEditorHandle,
   {
+    vaultId: string;
     documentId: string;
     body: string;
     ariaLabel: string;
@@ -59,32 +60,41 @@ export const TaskDescriptionEditor = forwardRef<
     onSave?: (contents: string) => Promise<void>;
   }
 >(function TaskDescriptionEditor(
-  { documentId, body, ariaLabel, compact = false, onSave },
+  { vaultId, documentId, body, ariaLabel, compact = false, onSave },
   ref,
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<ReturnType<typeof createCopperEditor> | null>(null);
-  const mountedId = useRef(documentId);
+  const mountedIdentity = useRef({ vaultId, documentId });
   const initialBody = useRef(body);
-  if (mountedId.current !== documentId) {
-    mountedId.current = documentId;
+  if (
+    mountedIdentity.current.vaultId !== vaultId ||
+    mountedIdentity.current.documentId !== documentId
+  ) {
+    mountedIdentity.current = { vaultId, documentId };
     initialBody.current = body;
   }
   const persisted = Boolean(onSave);
   const [saveState, setSaveState] = useState<SaveState>(
     onSave ? "saved" : "draft",
   );
-  const scheduleSave = useDocumentSave(async (contents) => {
-    if (!onSave) return;
-    setSaveState("saving");
-    try {
-      await onSave(contents);
-      setSaveState("saved");
-    } catch (error) {
-      setSaveState("error");
-      throw error;
-    }
-  });
+  const scheduleSave = useDocumentSave(
+    async (contents) => {
+      if (!onSave) return;
+      setSaveState("saving");
+      try {
+        await onSave(contents);
+        setSaveState("saved");
+      } catch (error) {
+        setSaveState("error");
+        throw error;
+      }
+    },
+    undefined,
+    undefined,
+    vaultId,
+    documentId,
+  );
 
   useImperativeHandle(
     ref,
@@ -98,13 +108,14 @@ export const TaskDescriptionEditor = forwardRef<
 
   useEffect(() => {
     if (!persisted) return;
-    const flush = (event: Event) =>
-      (event as CustomEvent<FlushDocumentsDetail>).detail.enqueue(
-        scheduleSave.flush(),
-      );
+    const flush = (event: Event) => {
+      const detail = (event as CustomEvent<FlushDocumentsDetail>).detail;
+      if (detail.vaultId !== undefined && detail.vaultId !== vaultId) return;
+      detail.enqueue(scheduleSave.flush());
+    };
     window.addEventListener("copper:flush-documents", flush);
     return () => window.removeEventListener("copper:flush-documents", flush);
-  }, [persisted, scheduleSave]);
+  }, [persisted, scheduleSave, vaultId]);
 
   useEffect(() => {
     const host = hostRef.current;

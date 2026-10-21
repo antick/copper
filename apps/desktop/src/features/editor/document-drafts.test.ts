@@ -3,6 +3,7 @@ import {
   clearDocumentDraft,
   documentDraftKey,
   documentDraftTargets,
+  hasDocumentDrafts,
   keepDocumentDraft,
   readDocumentDraft,
 } from "./document-drafts";
@@ -33,4 +34,11 @@ it("isolates draft recovery by Vault and preserves persisted text", () => {
     contents: "private one",
     baseHash: "a",
   });
+  expect(hasDocumentDrafts("one")).toBe(true);
+  expect(hasDocumentDrafts("two")).toBe(true);
+  expect(hasDocumentDrafts("three")).toBe(false);
+  expect(hasDocumentDrafts()).toBe(true);
+  expect(documentDraftTargets("one")).toEqual([
+    { key: one, path: "Note.md", vaultId: "one" },
+  ]);
 });

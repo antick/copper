@@ -29,7 +29,7 @@ export function TaskSourceProvider({
     try {
       if (!isTaskSourcePath(path))
         throw new Error("This task has no managed source file.");
-      await flushOpenDocuments();
+      await flushOpenDocuments(vaultId);
       const payload = await copper.files.read(vaultId, path);
       queryClient.setQueryData(fileKeys.detail(vaultId, path), payload);
       onOpen(path);

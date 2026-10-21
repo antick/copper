@@ -26,6 +26,7 @@ function mount(
       <TooltipProvider>
         <TaskSourceProvider vaultId="demo" onOpen={onOpen}>
           <TaskDescriptionEditor
+            vaultId="demo"
             documentId={issueId}
             body="original"
             ariaLabel="Issue description"

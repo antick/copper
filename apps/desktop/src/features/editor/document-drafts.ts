@@ -52,11 +52,11 @@ export function clearDocumentDraft(key: string, savedContents?: string) {
   window.dispatchEvent(new Event(DOCUMENT_SAVE_STATE_EVENT));
 }
 
-export function hasDocumentDrafts() {
-  return documentDraftTargets().length > 0;
+export function hasDocumentDrafts(vaultId?: string) {
+  return documentDraftTargets(vaultId).length > 0;
 }
 
-export function documentDraftTargets() {
+export function documentDraftTargets(requestedVaultId?: string) {
   const keys = new Set(drafts.keys());
   try {
     for (let index = 0; index < localStorage.length; index++) {
@@ -73,6 +73,7 @@ export function documentDraftTargets() {
       );
       return typeof vaultId === "string" &&
         typeof path === "string" &&
+        (requestedVaultId === undefined || vaultId === requestedVaultId) &&
         readDocumentDraft(key)
         ? [{ vaultId, path, key }]
         : [];
