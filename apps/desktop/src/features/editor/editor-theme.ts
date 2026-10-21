@@ -3,15 +3,10 @@ import { EditorView } from "@codemirror/view";
 export const copperEditorTheme = EditorView.theme({
   "&": {
     height: "100%",
-    fontSize: "var(--editor-font-size, 15px)",
     backgroundColor: "var(--editor-bg, #ffffff)",
     color: "var(--text-primary, #18181b)",
   },
   "&.cm-focused": { outline: "none" },
-  ".cm-scroller": {
-    fontFamily: "var(--editor-font-family, var(--font-ui))",
-    lineHeight: "var(--editor-line-height, 1.65)",
-  },
   ".cm-content": {
     caretColor: "var(--accent, #2563eb)",
     maxWidth: "720px",

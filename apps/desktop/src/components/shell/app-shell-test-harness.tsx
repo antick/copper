@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   gitStatus: { kind: "not_git" } as GitStatus,
   createFile: vi.fn(async () => undefined),
   createFolder: vi.fn(async (path: string) => path),
+  renameFile: vi.fn(async (_vaultId: string, _from: string, to: string) => to),
   saveFile: vi.fn(async () => "revision"),
   loadSession: vi.fn(
     async (): Promise<Record<string, unknown>> => ({
@@ -124,7 +125,7 @@ vi.mock("@/lib/copper", () => ({
       }),
       createFile: mocks.createFile,
       createFolder: mocks.createFolder,
-      rename: async (_vaultId: string, _from: string, to: string) => to,
+      rename: mocks.renameFile,
       archive: mocks.archiveFile,
       restore: mocks.restoreFile,
       trash: mocks.trashFile,
@@ -309,6 +310,8 @@ export function resetAppShellMocks() {
   mocks.gitStatus = { kind: "not_git" };
   mocks.createFile.mockClear();
   mocks.createFolder.mockClear();
+  mocks.renameFile.mockReset();
+  mocks.renameFile.mockImplementation(async (_vaultId, _from, to) => to);
   mocks.saveFile.mockClear();
   mocks.loadSession.mockClear();
   mocks.saveSession.mockClear();

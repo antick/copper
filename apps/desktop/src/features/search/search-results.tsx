@@ -1,5 +1,9 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
+import {
+  NoteContextMenu,
+  type NoteFileActions,
+} from "@/features/file-tree/note-context-menu";
 import type { SearchHit } from "@/lib/copper/search";
 import { formatRelativeTime } from "@/lib/format-time";
 import { pillTone } from "@/lib/pills";
@@ -12,12 +16,14 @@ export function SearchResults({
   onOpen,
   onPin,
   emptyLabel = "No notes in this view.",
+  fileActions,
 }: {
   notes: SearchHit[];
   selectedPath?: string;
   onOpen: (path: string) => void;
   onPin?: (path: string) => void;
   emptyLabel?: string;
+  fileActions?: NoteFileActions;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -42,6 +48,7 @@ export function SearchResults({
               selected={note.path === selectedPath}
               onOpen={onOpen}
               onPin={onPin}
+              fileActions={fileActions}
             />
           ))}
         </div>
@@ -74,6 +81,7 @@ export function SearchResults({
                   selected={note.path === selectedPath}
                   onOpen={onOpen}
                   onPin={onPin}
+                  fileActions={fileActions}
                 />
               </div>
             </div>
@@ -89,49 +97,53 @@ function NoteRow({
   selected,
   onOpen,
   onPin,
+  fileActions,
 }: {
   note: SearchHit;
   selected: boolean;
   onOpen: (path: string) => void;
   onPin?: (path: string) => void;
+  fileActions?: NoteFileActions;
 }) {
   return (
-    <button
-      type="button"
-      className="copper-note-row"
-      data-selected={selected}
-      aria-current={selected ? "true" : undefined}
-      onClick={() => onOpen(note.path)}
-      onDoubleClick={() => onPin?.(note.path)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" && onPin) {
-          event.preventDefault();
-          onPin(note.path);
-        }
-      }}
-    >
-      <span className="copper-note-dot" aria-hidden="true" />
-      <div className="copper-note-body">
-        <div className="copper-note-title">{note.title || note.path}</div>
-        <div className="copper-note-snippet">{note.snippet || note.path}</div>
-        <div className="copper-note-meta">
-          {note.tags.map((tag) => {
-            const tone = pillTone(tag);
-            return (
-              <span
-                key={tag}
-                className="copper-chip"
-                style={{ background: tone.bg, color: tone.fg }}
-              >
-                {tag}
-              </span>
-            );
-          })}
-          <span className="copper-note-time">
-            {formatRelativeTime(note.mtimeNs)}
-          </span>
+    <NoteContextMenu path={note.path} actions={fileActions} onPin={onPin}>
+      <button
+        type="button"
+        className="copper-note-row"
+        data-selected={selected}
+        aria-current={selected ? "true" : undefined}
+        onClick={() => onOpen(note.path)}
+        onDoubleClick={() => onPin?.(note.path)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && onPin) {
+            event.preventDefault();
+            onPin(note.path);
+          }
+        }}
+      >
+        <span className="copper-note-dot" aria-hidden="true" />
+        <div className="copper-note-body">
+          <div className="copper-note-title">{note.title || note.path}</div>
+          <div className="copper-note-snippet">{note.snippet || note.path}</div>
+          <div className="copper-note-meta">
+            {note.tags.map((tag) => {
+              const tone = pillTone(tag);
+              return (
+                <span
+                  key={tag}
+                  className="copper-chip"
+                  style={{ background: tone.bg, color: tone.fg }}
+                >
+                  {tag}
+                </span>
+              );
+            })}
+            <span className="copper-note-time">
+              {formatRelativeTime(note.mtimeNs)}
+            </span>
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </NoteContextMenu>
   );
 }

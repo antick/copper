@@ -18,6 +18,7 @@ import {
   rectangularSelection,
 } from "@codemirror/view";
 import { copperEditorTheme } from "@/features/editor/editor-theme";
+import { editorTypography } from "@/features/editor/editor-typography";
 import { dropFiles } from "@/features/editor/extensions/drop-files";
 import { fenceBlocksField } from "@/features/editor/extensions/fence-blocks";
 import { folding } from "@/features/editor/extensions/folding";
@@ -77,6 +78,7 @@ export function createCopperEditor({
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       language.of(markdown ? markdownLanguageSupport() : []),
       copperEditorTheme,
+      editorTypography(),
       EditorView.contentAttributes.of({
         "aria-label":
           ariaLabel ?? (markdown ? "Markdown editor" : "Source editor"),

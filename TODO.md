@@ -38,6 +38,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
+- [ ] Verify Notes folder creation, title renaming, context menus, and source gutters in the next signed macOS build. Local regression tests and browser checks against a disposable native Vault cover root/nested folders, blank note bodies, file extensions, keyboard focus/cancellation, saved drafts, failed renames, and actions on inactive notes. Source gutter rows align with text at 880, 1280, and 1920 pixels; font/size/line-spacing changes recalculate metrics while preserving text, selection, and undo. All six font choices were checked in the browser.
 - [ ] Verify hidden task storage, legacy migration, and Edit source in the next signed macOS build. Local tests cover migration, preserved links, rollback, real filesystem events, hidden Notes content, and Git publish/edit/delete against disposable Vaults. Browser checks against native persistence verified issue/project source menus, saved descriptions, source edits, restored tabs, and menus at 880 and 1280 pixels.
 - [ ] Verify note typography and the removed editor focus border in the next signed macOS build. Shared menu/settings controls, native preference persistence, invalid input, and failed saves have local regression coverage. Browser checks against disposable app data verified all fonts, saved preferences, preserved text/undo, keyboard focus, and layouts at 320, 390, and 1280 pixels.
 - [ ] Verify optional Vault commit messages in the next signed macOS build. Custom and blank messages, command-menu review, failed-push drafts, and Vault isolation have local regression coverage. Browser checks against disposable local Git remotes verified custom/default commits and the review dialog at 320, 390, and 1280 pixels.
@@ -59,7 +60,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Follow-up improvements
 
-- [ ] Update the existing Vite 7.3.6 and 8.3.2 dependencies for [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm), [GHSA-698v-4r3x-3vcv](https://github.com/advisories/GHSA-698v-4r3x-3vcv), and [GHSA-r825-w8mm-5pxw](https://github.com/advisories/GHSA-r825-w8mm-5pxw). The dependency audit reports two high and four moderate affected entries and fails at CI's moderate threshold. The mise setup changes only package-manager metadata in the lockfile; the application dependency graph is unchanged.
+- [ ] Replace remaining unsupported `window.prompt` calls in Properties and task-label editing with app dialogs; Notes file/folder operations now use shared dialogs.
 - [ ] Split optional editor language data to reduce large production chunks.
 - [ ] Verify and fix accessible names for rendered editor task checkboxes and editable Properties values in the full narrow workspace.
 

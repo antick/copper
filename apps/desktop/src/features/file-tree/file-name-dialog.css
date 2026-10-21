@@ -1,0 +1,31 @@
+.copper-file-name-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.copper-file-name-form input {
+  min-width: 0;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--pane-bg);
+  color: var(--text-primary);
+}
+
+.copper-file-name-form footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.copper-file-name-form [role="alert"] {
+  color: var(--pill-red-fg);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  white-space: normal;
+}

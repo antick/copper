@@ -1,5 +1,5 @@
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef } from "react";
 import type { SupportedFileKind } from "@/features/file-tree/types";
 
 export function FileTreeContextMenu({
@@ -14,35 +14,46 @@ export function FileTreeContextMenu({
   onArchive,
   onRestore,
   onTrash,
+  onOpen,
 }: {
   children: ReactNode;
   isFolder: boolean;
   isRoot?: boolean;
   fileKind?: SupportedFileKind;
   archived?: boolean;
-  onNewNote: () => void;
-  onNewFolder: () => void;
-  onRename: () => void;
+  onNewNote: (returnFocus?: () => void) => void;
+  onNewFolder: (returnFocus?: () => void) => void;
+  onRename: (returnFocus?: () => void) => void;
   onArchive: () => void;
   onRestore: () => void;
   onTrash: () => void;
+  onOpen?: () => void;
 }) {
+  const trigger = useRef<HTMLSpanElement>(null);
+  const returnFocus = () => trigger.current?.focus();
   return (
     <ContextMenu.Root>
-      <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
+      <ContextMenu.Trigger ref={trigger} asChild>
+        {children}
+      </ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content className="copper-menu">
+          {onOpen ? (
+            <ContextMenu.Item className="copper-menu-item" onSelect={onOpen}>
+              Open in new tab
+            </ContextMenu.Item>
+          ) : null}
           {isFolder ? (
             <>
               <ContextMenu.Item
                 className="copper-menu-item"
-                onSelect={onNewNote}
+                onSelect={() => onNewNote(returnFocus)}
               >
                 New note
               </ContextMenu.Item>
               <ContextMenu.Item
                 className="copper-menu-item"
-                onSelect={onNewFolder}
+                onSelect={() => onNewFolder(returnFocus)}
               >
                 New folder
               </ContextMenu.Item>
@@ -52,7 +63,7 @@ export function FileTreeContextMenu({
             <>
               <ContextMenu.Item
                 className="copper-menu-item"
-                onSelect={onRename}
+                onSelect={() => onRename(returnFocus)}
               >
                 Rename
               </ContextMenu.Item>

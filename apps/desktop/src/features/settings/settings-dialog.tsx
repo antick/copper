@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { IconButton } from "@/components/ui/icon-button";
 import "./settings-dialog.css";
 
@@ -10,6 +10,7 @@ export function SettingsDialog({
   open,
   onOpenChange,
   onReturnFocus,
+  initialFocusRef,
   children,
 }: {
   title: string;
@@ -17,6 +18,7 @@ export function SettingsDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onReturnFocus?: () => void;
+  initialFocusRef?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   return (
@@ -33,6 +35,12 @@ export function SettingsDialog({
         <Dialog.Overlay className="copper-search-overlay" />
         <Dialog.Content
           className="copper-settings-dialog"
+          onOpenAutoFocus={(event) => {
+            if (initialFocusRef?.current) {
+              event.preventDefault();
+              initialFocusRef.current.focus();
+            }
+          }}
           onCloseAutoFocus={(event) => {
             if (onReturnFocus) {
               event.preventDefault();
