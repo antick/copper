@@ -58,6 +58,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Follow-up improvements
 
+- [ ] Update the existing Vite 7.3.6 and 8.3.2 dependencies for [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm), [GHSA-698v-4r3x-3vcv](https://github.com/advisories/GHSA-698v-4r3x-3vcv), and [GHSA-r825-w8mm-5pxw](https://github.com/advisories/GHSA-r825-w8mm-5pxw). The dependency audit reports two high and four moderate affected entries and fails at CI's moderate threshold. The mise setup changes only package-manager metadata in the lockfile; the application dependency graph is unchanged.
 - [ ] Split optional editor language data to reduce large production chunks.
 - [ ] Verify and fix accessible names for rendered editor task checkboxes and editable Properties values in the full narrow workspace.
 
