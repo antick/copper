@@ -1,8 +1,8 @@
-import { COPPER_DIR } from "../../shared/task-paths";
+import { ARCHIVE_DIR, COPPER_DIR } from "../../shared/task-paths";
 import { openIndex } from "./index/db";
 
 const visibleNotes = (column = "path") =>
-  `${column} NOT GLOB '${COPPER_DIR}/*'`;
+  `(${column} NOT GLOB '${COPPER_DIR}/*' AND ${column} NOT GLOB '${ARCHIVE_DIR}/${COPPER_DIR}/*')`;
 
 export interface SearchHit {
   path: string;
@@ -13,15 +13,10 @@ export interface SearchHit {
 }
 
 function ftsQuery(query: string): string {
-  return query
-    .split(/\s+/)
-    .map((token) => {
-      const cleaned = [...token]
-        .filter((ch) => /[a-zA-Z0-9_-]/.test(ch))
-        .join("");
-      return cleaned ? `${cleaned}*` : "";
-    })
-    .filter(Boolean)
+  const terms = query.match(/[\p{L}\p{M}\p{N}_-]+/gu) ?? [];
+  return terms
+    .filter((term) => /[\p{L}\p{N}]/u.test(term))
+    .map((term) => `"${term.replaceAll('"', '""')}"*`)
     .join(" OR ");
 }
 
@@ -64,7 +59,8 @@ export function searchNotes(
         parts.push([row.path, row.title, row.snippet ?? ""]);
       }
     }
-    const like = `%${trimmed}%`;
+    const escaped = trimmed.replace(/[\\%_]/g, (character) => `\\${character}`);
+    const like = `%${escaped}%`;
     const fileFilter = archiveOnly
       ? "path LIKE 'Archive/%'"
       : "path NOT LIKE 'Archive/%'";
@@ -74,10 +70,10 @@ export function searchNotes(
     const extra = db
       .prepare(
         `SELECT path, title FROM files
-         WHERE (path LIKE ? OR title LIKE ?) AND ${fileFilter} AND ${visibleNotes()}
+         WHERE (path LIKE ? ESCAPE '\\' OR title LIKE ? ESCAPE '\\') AND ${fileFilter} AND ${visibleNotes()}
          UNION
          SELECT file_path, file_path FROM tags
-         WHERE tag LIKE ? AND ${tagFilter} AND ${visibleNotes("file_path")}
+         WHERE tag LIKE ? ESCAPE '\\' AND ${tagFilter} AND ${visibleNotes("file_path")}
          LIMIT 200`,
       )
       .all(like, like, like) as Array<{ path: string; title: string }>;

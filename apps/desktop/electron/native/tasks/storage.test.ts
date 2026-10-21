@@ -88,6 +88,94 @@ it("migrates identified legacy tasks, preserves ordinary notes and links, and is
   );
 });
 
+it("rewrites links in managed active and archived tasks without touching unrelated hidden folders", () => {
+  const v = vault();
+  const currentActive = issue
+    .replaceAll("NOTE-9", "ISSUE-1")
+    .replace("Hidden migration", "Current active")
+    .replace(
+      "Body stays here.",
+      "[active](../../../Tasks/Issues/ISSUE-2-two.md)\n[[Tasks/Issues/ISSUE-2-two]]\n[[Archive/Tasks/Issues/ISSUE-3-three.md]]",
+    );
+  const currentArchived = issue
+    .replaceAll("NOTE-9", "ISSUE-4")
+    .replace("Hidden migration", "Current archived")
+    .replace(
+      "Body stays here.",
+      "[archived](../../../../Archive/Tasks/Issues/ISSUE-3-three.md)\n[[Archive/Tasks/Issues/ISSUE-3-three]]",
+    );
+  v.write(".copper/tasks/issues/ISSUE-1-one.md", currentActive);
+  v.write(".copper/tasks/archive/issues/ISSUE-4-four.md", currentArchived);
+  v.write(
+    "Tasks/Issues/ISSUE-2-two.md",
+    issue
+      .replaceAll("NOTE-9", "ISSUE-2")
+      .replace("Hidden migration", "Legacy active"),
+  );
+  v.write(
+    "Archive/Tasks/Issues/ISSUE-3-three.md",
+    issue
+      .replaceAll("NOTE-9", "ISSUE-3")
+      .replace("Hidden migration", "Legacy archived"),
+  );
+  const unrelated = "[legacy](Tasks/Issues/ISSUE-2-two.md)\n";
+  v.write(".other/note.md", unrelated);
+  v.write(".git/note.md", unrelated);
+  v.write(".copper/other/note.md", unrelated);
+
+  migrateTaskStorage(v.root);
+
+  expect(v.read(".copper/tasks/issues/ISSUE-1-one.md")).toContain(
+    "[active](ISSUE-2-two.md)",
+  );
+  expect(v.read(".copper/tasks/issues/ISSUE-1-one.md")).toContain(
+    "[[.copper/tasks/issues/ISSUE-2-two]]",
+  );
+  expect(v.read(".copper/tasks/issues/ISSUE-1-one.md")).toContain(
+    "[[.copper/tasks/archive/issues/ISSUE-3-three.md]]",
+  );
+  expect(v.read(".copper/tasks/archive/issues/ISSUE-4-four.md")).toContain(
+    "[archived](ISSUE-3-three.md)",
+  );
+  expect(v.read(".copper/tasks/archive/issues/ISSUE-4-four.md")).toContain(
+    "[[.copper/tasks/archive/issues/ISSUE-3-three]]",
+  );
+  expect(v.read(".other/note.md")).toBe(unrelated);
+  expect(v.read(".git/note.md")).toBe(unrelated);
+  expect(v.read(".copper/other/note.md")).toBe(unrelated);
+});
+
+it("restores rewritten managed tasks when a later migration step fails", () => {
+  const v = vault();
+  const current = issue
+    .replaceAll("NOTE-9", "ISSUE-1")
+    .replace("Hidden migration", "Current task")
+    .replace(
+      "Body stays here.",
+      "[legacy](../../../Tasks/Issues/ISSUE-2-two.md)",
+    );
+  const legacy = issue.replaceAll("NOTE-9", "ISSUE-2");
+  v.write(".copper/tasks/issues/ISSUE-1-one.md", current);
+  v.write("Tasks/Issues/ISSUE-2-two.md", legacy);
+  const unlink = fs.unlinkSync;
+  let contentAtFailure = "";
+  vi.spyOn(fs, "unlinkSync").mockImplementation((filePath) => {
+    if (String(filePath).endsWith("/Tasks/Issues/ISSUE-2-two.md")) {
+      contentAtFailure = v.read(".copper/tasks/issues/ISSUE-1-one.md");
+      throw new Error("permission denied");
+    }
+    return unlink(filePath);
+  });
+
+  expect(() => migrateTaskStorage(v.root)).toThrow("permission denied");
+  expect(contentAtFailure).toContain("[legacy](ISSUE-2-two.md)");
+  expect(v.read(".copper/tasks/issues/ISSUE-1-one.md")).toBe(current);
+  expect(v.read("Tasks/Issues/ISSUE-2-two.md")).toBe(legacy);
+  expect(
+    fs.existsSync(path.join(v.root, ".copper/tasks/issues/ISSUE-2-two.md")),
+  ).toBe(false);
+});
+
 it("keeps hidden tasks indexed after rebuild and source edits while excluding them from Notes", () => {
   const v = vault();
   v.write("Tasks/Issues/NOTE-9-hidden.md", issue);

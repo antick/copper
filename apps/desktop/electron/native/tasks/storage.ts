@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  isHiddenTaskContent,
+  isTaskSourcePath,
+  isTaskStorageDirectory,
   LEGACY_TASK_ARCHIVE_DIR,
   LEGACY_TASK_DIRECTORIES,
   LEGACY_TASKS_DIR,
@@ -19,12 +22,19 @@ export function migrateTaskStorage(root: string): TaskPathMove[] {
   const rewrites = new Map<string, string>();
   const moved = new Map(moves.map((move) => [move.from, move.to]));
   function inspect(dir: string) {
-    for (const entry of fs.readdirSync(resolveInVault(root, dir), {
+    const absoluteDir = resolveInVault(root, dir);
+    for (const entry of fs.readdirSync(absoluteDir, {
       withFileTypes: true,
     })) {
-      if (entry.name.startsWith(".") || SKIP_DIR_NAMES.has(entry.name))
-        continue;
       const relative = dir ? `${dir}/${entry.name}` : entry.name;
+      const managed =
+        isTaskStorageDirectory(relative) || isTaskSourcePath(relative);
+      if (
+        SKIP_DIR_NAMES.has(entry.name) ||
+        ((entry.name.startsWith(".") || isHiddenTaskContent(relative)) &&
+          !managed)
+      )
+        continue;
       if (entry.isDirectory()) {
         inspect(relative);
         continue;
