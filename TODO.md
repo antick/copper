@@ -71,3 +71,14 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 - [ ] A plugin system with explicit capabilities, isolation, compatibility, crash recovery, and safe mode.
 - [ ] Opt-in custom CSS with documented selectors, live reload, validation, and reliable recovery to the stock UI.
 - [ ] Excalidraw canvases as a separate feature, preserving the existing Tasks data model.
+
+## Secrets hardening
+
+Remaining manual steps to scope deploy and signing secrets to the GitHub environment that uses them and rotate tokens. Current deploys keep working until the repo-level copies are deleted, so do the delete step last.
+
+- [ ] Create a new Vercel token for `copper` only: Vercel Account Settings > Tokens > Create, scope it to the team that owns the project, and set an expiration date. Store it as `VERCEL_TOKEN` in the `Production` environment (Settings > Environments > Production > Environment secrets > Add environment secret).
+- [ ] Copy `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` into the `Production` environment as environment secrets (the workflow reads them from `secrets.*`, so they cannot be variables). These are not sensitive: the Team ID is under Vercel Team Settings > General and each Project ID is under the Vercel project > Settings > General.
+- [ ] Verify: run Actions > Vercel production > Run workflow on `main`. It redeploys the latest stable release. The deploy job runs in `Production` and should finish green with the new token.
+- [ ] After the verification run passes, delete the repo-level copies of `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` under Settings > Secrets and variables > Actions > Repository secrets.
+- [ ] Revoke the old Vercel token in Account Settings > Tokens once nothing else uses it.
+- [ ] Nothing to move for desktop releases: the `release` environment already holds the signing secrets.
