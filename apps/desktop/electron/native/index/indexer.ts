@@ -7,9 +7,10 @@ import {
   isTaskSourcePath,
   isTaskStorageDirectory,
 } from "../../../shared/task-paths";
+import { CopperError } from "../errors";
 import { parseFrontmatter } from "../markdown/frontmatter";
 import { parseWikiLink } from "../markdown/links";
-import { resolveInVault, toPosix } from "../path";
+import { isInsideRoot, resolveInVault, toPosix } from "../path";
 import { migrateTaskStorage } from "../tasks/storage";
 import { openIndex } from "./db";
 
@@ -29,6 +30,47 @@ function openRecovering(dbPath: string): Database.Database {
 function isMarkdownPath(filePath: string): boolean {
   const ext = path.extname(filePath).toLowerCase();
   return ext === ".md" || ext === ".markdown";
+}
+
+function shouldIndexEntry(
+  relative: string,
+  name: string,
+  isDirectory: boolean,
+): boolean {
+  const managed = isDirectory
+    ? isTaskStorageDirectory(relative)
+    : isTaskSourcePath(relative);
+  return !(
+    ((isHiddenTaskContent(relative) || name.startsWith(".")) && !managed) ||
+    name === "node_modules" ||
+    name === "target"
+  );
+}
+
+function shouldIndexFile(relative: string): boolean {
+  const parts = toPosix(relative).split("/");
+  return parts.every((name, index) =>
+    shouldIndexEntry(
+      parts.slice(0, index + 1).join("/"),
+      name,
+      index < parts.length - 1,
+    ),
+  );
+}
+
+function actualVaultPath(
+  vaultRoot: string,
+  absolute: string,
+): { absolute: string; relative: string } {
+  const canonicalRoot = fs.realpathSync.native(vaultRoot);
+  const canonicalAbsolute = fs.realpathSync.native(absolute);
+  if (!isInsideRoot(canonicalRoot, canonicalAbsolute)) {
+    throw CopperError.pathEscape("Path is outside the active Vault");
+  }
+  return {
+    absolute: canonicalAbsolute,
+    relative: toPosix(path.relative(canonicalRoot, canonicalAbsolute)),
+  };
 }
 
 function mtimeNs(filePath: string): number {
@@ -267,14 +309,7 @@ function indexDir(
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const name = entry.name;
     const relative = toPosix(path.relative(root, path.join(dir, name)));
-    const managed = entry.isDirectory()
-      ? isTaskStorageDirectory(relative)
-      : isTaskSourcePath(relative);
-    if (
-      ((isHiddenTaskContent(relative) || name.startsWith(".")) && !managed) ||
-      name === "node_modules" ||
-      name === "target"
-    ) {
+    if (!shouldIndexEntry(relative, name, entry.isDirectory())) {
       continue;
     }
     const absolute = path.join(dir, name);
@@ -348,12 +383,20 @@ export function indexFilePath(
   try {
     db.transaction(() => {
       const absolute = resolveInVault(vaultRoot, relative);
-      if (
-        fs.existsSync(absolute) &&
-        fs.statSync(absolute).isFile() &&
-        isMarkdownPath(absolute)
-      ) {
-        writeFileIndex(db, absolute, relative);
+      if (fs.existsSync(absolute) && fs.statSync(absolute).isFile()) {
+        const actual = actualVaultPath(vaultRoot, absolute);
+        const requested = toPosix(relative);
+        if (actual.relative !== requested) {
+          deletePath(db, requested);
+        }
+        if (
+          isMarkdownPath(actual.absolute) &&
+          shouldIndexFile(actual.relative)
+        ) {
+          writeFileIndex(db, actual.absolute, actual.relative);
+        } else {
+          deletePath(db, actual.relative);
+        }
       } else {
         deletePath(db, relative);
       }
