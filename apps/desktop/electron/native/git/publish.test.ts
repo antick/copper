@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { indexFilePath, indexVault } from "../index/indexer";
+import { searchNotes } from "../search";
 import { GIT_FORCE_FLAGS } from "./constants";
 import {
   FIXTURE_PNG,
@@ -109,6 +111,59 @@ describe("publishGitVault", () => {
     expect(fileExists(local, "Inbox/todo.md")).toBe(true);
     const after = gitSetup(local, ["rev-list", "--count", "HEAD"]).trim();
     expect(Number(after)).toBe(Number(before) + 1);
+  });
+
+  it("reindexes added, deleted, and renamed paths after publishing a remote change", async () => {
+    const { local, remote } = makeLinkedClones();
+    track(local);
+    writeFile(local, "Delete me.md", "# Delete me\n");
+    gitSetup(local, ["add", "Delete me.md"]);
+    gitSetup(local, ["commit", "-m", "add deletion fixture"]);
+    gitSetup(local, ["push"]);
+    gitSetup(remote, ["pull", "--ff-only"]);
+
+    const db = path.join(path.dirname(local), "index.db");
+    indexVault(db, local);
+    const renamed =
+      process.platform === "win32"
+        ? "Renamed note with spaces.md"
+        : 'Renamed note "quoted".md';
+    const added =
+      process.platform === "win32"
+        ? "Added note with spaces.md"
+        : 'Added note "with spaces".md';
+    gitSetup(remote, ["mv", "README.md", renamed]);
+    gitSetup(remote, ["rm", "Delete me.md"]);
+    writeFile(remote, added, "# Added note\nuniqueaddedterm\n");
+    gitSetup(remote, ["add", added]);
+    gitSetup(remote, ["commit", "-m", "rename and update notes"]);
+    gitSetup(remote, ["push"]);
+
+    const result = await publishGitVault(local);
+    expect(result.kind).toBe("updated");
+    if (result.kind !== "updated") return;
+    for (const changedPath of [
+      ...result.changedPaths,
+      ...result.siblingPaths,
+    ]) {
+      indexFilePath(db, local, changedPath);
+    }
+
+    expect(searchNotes(db, "README").map((hit) => hit.path)).not.toContain(
+      "README.md",
+    );
+    expect(searchNotes(db, "Delete me").map((hit) => hit.path)).not.toContain(
+      "Delete me.md",
+    );
+    expect(result.changedPaths).toEqual(
+      expect.arrayContaining(["README.md", renamed, "Delete me.md", added]),
+    );
+    expect(searchNotes(db, "Renamed note").map((hit) => hit.path)).toContain(
+      renamed,
+    );
+    expect(searchNotes(db, "uniqueaddedterm").map((hit) => hit.path)).toContain(
+      added,
+    );
   });
 
   it("pushes the user's commit message as literal multiline text", async () => {

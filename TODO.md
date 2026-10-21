@@ -38,6 +38,8 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
+- [ ] Verify search refresh after remote note renames and deletions in the next signed macOS build. Disposable Git clone tests confirm both rename paths are reindexed, stale entries are removed, and filenames with spaces and quotes remain intact.
+
 - [ ] Verify the draft safety check before restoring archived task sources in the next signed macOS build. Local regressions cover failed and pending saves; a disposable native-Vault browser flow confirmed blocked restore, draft recovery, preserved restored content, narrow layout, and focus return.
 
 - [ ] Verify note recovery and guarded saves, Properties dialogs, archived task/project restore, macOS window reactivation, attachment settings, and punctuation searches in the next signed macOS build. The October 21 audit fixes have local regression and disposable native-Vault browser coverage; that is not installed-app acceptance.
