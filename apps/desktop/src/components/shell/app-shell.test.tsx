@@ -216,6 +216,7 @@ describe("AppShell", () => {
         "demo",
         "Inbox/copper.md",
         expect.stringContaining("Edited before switch"),
+        "revision",
       );
     });
     const labels = screen
@@ -278,6 +279,7 @@ describe("AppShell", () => {
       "demo",
       "Inbox/copper.md",
       expect.stringContaining("edited before archive"),
+      "revision",
     );
     expect(mocks.saveFile.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.archiveFile.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,

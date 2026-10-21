@@ -1,6 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  DOCUMENT_CONFLICT_CODE,
+  DOCUMENT_CONFLICT_MESSAGE,
+} from "../../../shared/document-save";
+import {
   isArchivedTaskPath,
   isTaskSourcePath,
   TASK_ARCHIVE_DIR,
@@ -119,9 +123,10 @@ export function readFile(
   if (!isTextKind(classification.kind)) {
     throw CopperError.invalid("Images must be opened with the image viewer");
   }
-  const contents = validateTextBytes(fs.readFileSync(absolute));
+  const bytes = fs.readFileSync(absolute);
+  const contents = validateTextBytes(bytes);
   const posix = toPosix(relative);
-  return [contents, revisionFromPath(absolute, posix)];
+  return [contents, revisionFromPath(absolute, posix, bytes)];
 }
 
 export function binaryMetadata(
@@ -157,6 +162,7 @@ export function saveFile(
   root: string,
   relativeInput: string,
   contents: string,
+  expectedHash?: string,
 ): DiskRevision {
   const { relative, absolute, classification } = supportedExistingFile(
     root,
@@ -168,8 +174,19 @@ export function saveFile(
   if (Buffer.byteLength(contents, "utf8") > MAX_SUPPORTED_FILE_SIZE) {
     throw CopperError.invalid("File exceeds the 25 MiB supported-file limit");
   }
-  atomicWrite(absolute, contents);
-  return revisionFromPath(absolute, toPosix(relative));
+  atomicWrite(absolute, contents, () => {
+    if (
+      expectedHash !== undefined &&
+      revisionFromPath(absolute, toPosix(relative)).hash !== expectedHash
+    ) {
+      throw new CopperError(DOCUMENT_CONFLICT_CODE, DOCUMENT_CONFLICT_MESSAGE);
+    }
+  });
+  return revisionFromPath(
+    absolute,
+    toPosix(relative),
+    Buffer.from(contents, "utf8"),
+  );
 }
 
 export function renamePath(root: string, from: string, to: string): string {

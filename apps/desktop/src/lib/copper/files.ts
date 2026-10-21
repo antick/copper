@@ -54,11 +54,13 @@ export function save(
   vaultId: string,
   path: string,
   contents: string,
+  expectedHash?: string,
 ): Promise<DiskRevision> {
   return copperInvoke<DiskRevision>("save_file", {
     vaultId,
     path,
     contents,
+    ...(expectedHash === undefined ? {} : { expectedHash }),
   });
 }
 

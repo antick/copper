@@ -1,3 +1,4 @@
+import type { DiskRevision } from "@/lib/copper/files";
 import { copperInvoke } from "@/lib/copper/invoke";
 
 export interface Frontmatter {
@@ -16,11 +17,11 @@ export function read(vaultId: string, path: string): Promise<Frontmatter> {
 export function update(
   vaultId: string,
   path: string,
-  properties: Frontmatter,
-): Promise<void> {
-  return copperInvoke<void>("update_properties", {
+  values: Record<string, unknown>,
+): Promise<[string, DiskRevision]> {
+  return copperInvoke<[string, DiskRevision]>("update_properties", {
     vaultId,
     path,
-    properties,
+    values,
   });
 }

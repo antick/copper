@@ -22,6 +22,7 @@ class CheckboxWidget extends WidgetType {
     input.addEventListener("mousedown", (event) => event.preventDefault());
     input.addEventListener("click", (event) => {
       event.preventDefault();
+      if (view.state.readOnly) return;
       const pos = view.posAtDOM(input);
       const line = view.state.doc.lineAt(pos);
       const next = this.checked

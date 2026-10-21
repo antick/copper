@@ -11,6 +11,7 @@ import type {
   SessionState,
 } from "@/features/tabs/session-reducer";
 import { copper } from "@/lib/copper";
+import { flushOpenDocuments } from "@/lib/copper/events";
 import type { SearchHit } from "@/lib/copper/search";
 import { fileName } from "@/lib/paths";
 
@@ -101,19 +102,7 @@ export function useNoteWorkspaceActions({
   }
 
   async function flushActiveDocument() {
-    let resolveFlush: () => void = () => undefined;
-    let rejectFlush: (error: unknown) => void = () => undefined;
-    const completion = new Promise<void>((resolve, reject) => {
-      resolveFlush = resolve;
-      rejectFlush = reject;
-    });
-    const detail = {
-      handled: false,
-      resolve: resolveFlush,
-      reject: rejectFlush,
-    };
-    window.dispatchEvent(new CustomEvent("copper:flush-document", { detail }));
-    if (detail.handled) await completion;
+    await flushOpenDocuments();
   }
 
   async function trashActiveFile(path = session.activePath) {

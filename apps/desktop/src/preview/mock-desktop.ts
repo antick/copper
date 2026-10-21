@@ -440,15 +440,21 @@ function dispatch(cmd: string, args?: Record<string, unknown>) {
       return frontmatterFor(String(payload.path ?? ""));
     case "update_properties": {
       const path = String(payload.path ?? "");
-      const properties = payload.properties as {
-        body: string;
-        values: Record<string, unknown>;
-      };
+      const properties = frontmatterFor(path);
       previewFiles.set(
         path,
-        `---\n${serializePreviewFrontmatter(properties.values)}\n---\n${properties.body}`,
+        `---\n${serializePreviewFrontmatter({ ...properties.values, ...(payload.values as Record<string, unknown>) })}\n---\n${properties.body}`,
       );
-      return null;
+      const contents = previewFiles.get(path) ?? "";
+      return [
+        contents,
+        {
+          path,
+          size: contents.length,
+          mtimeNs: Date.now() * 1_000_000,
+          hash: "preview",
+        },
+      ];
     }
     case "git_status":
       return { kind: "not_git" };

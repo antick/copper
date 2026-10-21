@@ -100,7 +100,7 @@ const commands: Record<string, Record<string, Rule>> = {
   read_file: file,
   binary_file_metadata: file,
   read_binary_file: file,
-  save_file: { ...file, contents: text },
+  save_file: { ...file, contents: text, expectedHash: optional(text) },
   create_file: { ...file, contents: optional(text) },
   create_folder: file,
   rename_path: { ...vault, from: text, to: text },
@@ -117,7 +117,7 @@ const commands: Record<string, Record<string, Rule>> = {
   read_properties: file,
   update_properties: {
     ...file,
-    properties: object({ raw: text, body: text, values: record }),
+    values: record,
   },
   list_backlinks: file,
   load_settings: {},

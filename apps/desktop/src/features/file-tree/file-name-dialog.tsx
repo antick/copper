@@ -7,6 +7,7 @@ interface NameRequest {
   title: string;
   label: string;
   initialValue?: string;
+  description?: string;
   submitLabel: string;
   onSubmit: (name: string) => Promise<unknown>;
   onReturnFocus?: () => void;
@@ -56,7 +57,7 @@ function FileNameDialog({
   return (
     <SettingsDialog
       title={request.title}
-      description="Choose a name in this Vault."
+      description={request.description ?? "Choose a name in this Vault."}
       open
       initialFocusRef={input}
       onReturnFocus={request.onReturnFocus}

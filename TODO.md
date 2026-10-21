@@ -38,6 +38,8 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
+- [ ] Verify note recovery and guarded saves, Properties dialogs, archived task/project restore, macOS window reactivation, attachment settings, and punctuation searches in the next signed macOS build. The October 21 audit fixes have local regression and disposable native-Vault browser coverage; that is not installed-app acceptance.
+
 - [ ] Verify Notes folder creation, title renaming, context menus, and source gutters in the next signed macOS build. Local regression tests and browser checks against a disposable native Vault cover root/nested folders, blank note bodies, file extensions, keyboard focus/cancellation, saved drafts, failed renames, and actions on inactive notes. Source gutter rows align with text at 880, 1280, and 1920 pixels; font/size/line-spacing changes recalculate metrics while preserving text, selection, and undo. All six font choices were checked in the browser.
 - [ ] Verify hidden task storage, legacy migration, and Edit source in the next signed macOS build. Local tests cover migration, preserved links, rollback, real filesystem events, hidden Notes content, and Git publish/edit/delete against disposable Vaults. Browser checks against native persistence verified issue/project source menus, saved descriptions, source edits, restored tabs, and menus at 880 and 1280 pixels.
 - [ ] Verify note typography and the removed editor focus border in the next signed macOS build. Shared menu/settings controls, native preference persistence, invalid input, and failed saves have local regression coverage. Browser checks against disposable app data verified all fonts, saved preferences, preserved text/undo, keyboard focus, and layouts at 320, 390, and 1280 pixels.
@@ -60,7 +62,8 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Follow-up improvements
 
-- [ ] Replace remaining unsupported `window.prompt` calls in Properties and task-label editing with app dialogs; Notes file/folder operations now use shared dialogs.
+- [ ] Extend durable failed-draft recovery to task descriptions. Notes retain drafts across tabs and restarts; task descriptions still rely on their existing in-memory retry while the editor is open.
+
 - [ ] Split optional editor language data to reduce large production chunks.
 - [ ] Verify and fix accessible names for rendered editor task checkboxes and editable Properties values in the full narrow workspace.
 

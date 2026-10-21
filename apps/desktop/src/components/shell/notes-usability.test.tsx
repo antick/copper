@@ -142,7 +142,11 @@ it("keeps a failed title rename and unsaved body available for retry", async () 
   const title = screen.getByRole("textbox", { name: "Note title" });
   await user.clear(title);
   await user.type(title, "Research.v1{Enter}");
-  expect(await screen.findByRole("alert")).toHaveTextContent("Disk is full");
+  expect(
+    await screen.findByText("Disk is full", {
+      selector: ".copper-title-error",
+    }),
+  ).toHaveAttribute("role", "alert");
   expect(title).toHaveValue("Research.v1");
   expect(editor).toHaveTextContent("My unsaved body");
   expect(mocks.renameFile).not.toHaveBeenCalled();
@@ -158,6 +162,7 @@ it("keeps a failed title rename and unsaved body available for retry", async () 
     "demo",
     "Inbox/copper.md",
     "My unsaved body",
+    "revision",
   );
 });
 

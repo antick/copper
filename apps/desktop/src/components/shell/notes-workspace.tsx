@@ -6,6 +6,7 @@ import { PropertiesPane } from "@/components/shell/properties-pane";
 import type { NoteWorkspaceActions } from "@/components/shell/use-note-workspace-actions";
 import { PaneResizer } from "@/components/ui/pane-resizer";
 import { CopperEditor } from "@/features/editor/copper-editor";
+import { DocumentRecoveryBanner } from "@/features/editor/document-recovery-banner";
 import { ImageViewer } from "@/features/editor/image-viewer";
 import type { NoteFileActions } from "@/features/file-tree/note-context-menu";
 import type { SupportedFileKind } from "@/features/file-tree/types";
@@ -217,6 +218,11 @@ export function NotesWorkspace({
         onToggleRight={() => updateSession({ type: "toggle-right" })}
         onOpenInTasks={onOpenInTasks}
       >
+        <DocumentRecoveryBanner
+          vaultId={vaultId}
+          activePath={selectedPath}
+          onOpen={actions.openPinned}
+        />
         {children ??
           (vaultId && selectedPath && activeFileKind ? (
             activeFileKind === "image" ? (
@@ -227,7 +233,7 @@ export function NotesWorkspace({
               />
             ) : (
               <CopperEditor
-                key={`${selectedPath}:${activeFileKind}:${livePreviewEnabled}`}
+                key={`${vaultId}:${selectedPath}:${activeFileKind}`}
                 vaultId={vaultId}
                 path={selectedPath}
                 fileKind={activeFileKind}

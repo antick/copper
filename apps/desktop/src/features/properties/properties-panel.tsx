@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { withDocumentWriteLock } from "@/features/editor/document-write-lock";
 import { fileKeys } from "@/features/editor/file-keys";
+import { useFileNameDialog } from "@/features/file-tree/file-name-dialog";
 import { PropertyRow } from "@/features/properties/property-row";
 import { copper } from "@/lib/copper";
-import type { Frontmatter } from "@/lib/copper/properties";
+import { flushOpenDocuments } from "@/lib/copper/events";
+
+import "./properties-panel.css";
 
 const PRIORITY = ["type", "status", "date", "tags"];
 
@@ -16,6 +20,7 @@ export function PropertiesPanel({
   onInteraction?: () => void;
 }) {
   const queryClient = useQueryClient();
+  const { requestName, nameDialog } = useFileNameDialog();
   const query = useQuery({
     queryKey:
       path && vaultId
@@ -25,17 +30,28 @@ export function PropertiesPanel({
     enabled: Boolean(vaultId && path),
   });
   const update = useMutation({
-    mutationFn: (properties: Frontmatter) =>
-      copper.properties.update(vaultId ?? "", path ?? "", properties),
+    scope: { id: `properties:${vaultId}:${path}` },
+    mutationFn: async (values: Record<string, unknown>) => {
+      return withDocumentWriteLock(vaultId ?? "", path ?? "", async () => {
+        await flushOpenDocuments();
+        const payload = await copper.properties.update(
+          vaultId ?? "",
+          path ?? "",
+          values,
+        );
+        queryClient.setQueryData(
+          fileKeys.detail(vaultId ?? "", path ?? ""),
+          payload,
+        );
+        return payload;
+      });
+    },
     onSuccess: async () => {
       if (vaultId && path) {
         await copper.search.indexFile(vaultId, path);
         await Promise.all([
           queryClient.invalidateQueries({
             queryKey: fileKeys.properties(vaultId, path),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: fileKeys.detail(vaultId, path),
           }),
           queryClient.invalidateQueries({
             queryKey: ["vault", vaultId, "notes"],
@@ -73,38 +89,54 @@ export function PropertiesPanel({
       return;
     }
     onInteraction?.();
-    update.mutate({
-      ...query.data,
-      values: { ...query.data.values, [key]: value },
-    });
+    update.mutate({ [key]: value });
   }
 
   function addProperty() {
-    const key = window.prompt("Property name")?.trim();
-    if (!key || !query.data) return;
-    if (key in query.data.values) {
-      window.alert(`“${key}” already exists.`);
-      return;
-    }
-    commit(key, "");
+    const trigger = document.activeElement;
+    requestName({
+      title: "Add property",
+      description: "Choose a property name for this note.",
+      label: "Property name",
+      submitLabel: "Add property",
+      onReturnFocus: () => {
+        if (trigger instanceof HTMLElement) trigger.focus();
+      },
+      onSubmit: async (key) => {
+        const latest = await copper.properties.read(vaultId ?? "", path ?? "");
+        if (key in latest.values) throw new Error(`“${key}” already exists.`);
+        onInteraction?.();
+        await update.mutateAsync({ [key]: "" });
+      },
+    });
   }
 
   return (
     <div>
-      <dl>
-        {keys.length === 0 ? (
-          <p className="copper-empty">No frontmatter yet.</p>
-        ) : (
-          keys.map((key) => (
-            <PropertyRow
-              key={`${path}:${key}:${JSON.stringify(values[key])}`}
-              name={key}
-              value={values[key]}
-              onChange={(value) => commit(key, value)}
-            />
-          ))
-        )}
-      </dl>
+      {nameDialog}
+      {update.error ? (
+        <p role="alert">
+          {update.error instanceof Error
+            ? update.error.message
+            : "The property could not be saved."}
+        </p>
+      ) : null}
+      <fieldset disabled={update.isPending} className="copper-property-fields">
+        <dl>
+          {keys.length === 0 ? (
+            <p className="copper-empty">No frontmatter yet.</p>
+          ) : (
+            keys.map((key) => (
+              <PropertyRow
+                key={`${path}:${key}:${JSON.stringify(values[key])}`}
+                name={key}
+                value={values[key]}
+                onChange={(value) => commit(key, value)}
+              />
+            ))
+          )}
+        </dl>
+      </fieldset>
       <div className="copper-property-actions">
         <button
           type="button"

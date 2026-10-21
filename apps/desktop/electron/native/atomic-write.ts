@@ -3,7 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { CopperError } from "./errors";
 
-export function atomicWrite(filePath: string, contents: string): void {
+export function atomicWrite(
+  filePath: string,
+  contents: string,
+  beforeReplace?: () => void,
+): void {
   const parent = path.dirname(filePath);
   if (!parent || parent === ".") {
     throw CopperError.invalid("Cannot write a file without a parent directory");
@@ -21,6 +25,7 @@ export function atomicWrite(filePath: string, contents: string): void {
     } finally {
       fs.closeSync(handle);
     }
+    beforeReplace?.();
     fs.renameSync(tempPath, filePath);
   } catch (error) {
     try {
