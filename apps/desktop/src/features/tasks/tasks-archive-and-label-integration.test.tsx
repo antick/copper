@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -9,6 +10,12 @@ import {
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  clearDocumentDraft,
+  documentDraftKey,
+  keepDocumentDraft,
+  readDocumentDraft,
+} from "@/features/editor/document-drafts";
 import { initialTaskTabsState } from "@/features/tasks/task-tabs";
 import { TasksWorkspace } from "@/features/tasks/tasks-workspace";
 
@@ -184,6 +191,103 @@ it("restores archived projects and issues from the Tasks toolbar", async () => {
       screen.getByRole("button", { name: "Archived items" }),
     ).toHaveFocus(),
   );
+});
+
+it("keeps an archived source in place when an unsaved draft blocks restore", async () => {
+  const user = userEvent.setup();
+  const sourcePath = ".copper/tasks/archive/issues/COPP-2-old-board.md";
+  const draftKey = documentDraftKey("demo", sourcePath);
+  keepDocumentDraft(draftKey, {
+    contents: "My failed source draft",
+    baseHash: "old",
+  });
+
+  try {
+    renderTasks();
+    await user.click(screen.getByRole("button", { name: "Archived items" }));
+    const dialog = await screen.findByRole("dialog", {
+      name: "Archived items",
+    });
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "Restore COPP-2: Old board",
+      }),
+    );
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Unsaved note drafts remain. Reopen those notes and save or resolve their conflicts before continuing.",
+    );
+    expect(mocks.restore).not.toHaveBeenCalled();
+    expect(mocks.removeIndexed).not.toHaveBeenCalled();
+    expect(mocks.indexFile).not.toHaveBeenCalled();
+    expect(within(dialog).getByText("Old board")).toBeInTheDocument();
+    expect(readDocumentDraft(draftKey)?.contents).toBe(
+      "My failed source draft",
+    );
+    expect(localStorage.getItem(draftKey)).toContain("My failed source draft");
+  } finally {
+    clearDocumentDraft(draftKey);
+  }
+});
+
+it("waits for an open archived source draft to save before restoring", async () => {
+  const user = userEvent.setup();
+  const sourcePath = ".copper/tasks/archive/issues/COPP-2-old-board.md";
+  const draftKey = documentDraftKey("demo", sourcePath);
+  keepDocumentDraft(draftKey, {
+    contents: "Draft waiting to save",
+    baseHash: "old",
+  });
+
+  let resolveSave!: () => void;
+  const save = new Promise<void>((resolve) => {
+    resolveSave = resolve;
+  });
+  let flushEnqueuedSave = false;
+  const onFlush = (event: Event) => {
+    const detail = (
+      event as CustomEvent<{
+        enqueue: (promise: Promise<void>) => void;
+      }>
+    ).detail;
+    flushEnqueuedSave = true;
+    detail.enqueue(save.then(() => clearDocumentDraft(draftKey)));
+  };
+  window.addEventListener("copper:flush-documents", onFlush);
+
+  try {
+    renderTasks();
+    await user.click(screen.getByRole("button", { name: "Archived items" }));
+    const dialog = await screen.findByRole("dialog", {
+      name: "Archived items",
+    });
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "Restore COPP-2: Old board",
+      }),
+    );
+
+    await waitFor(() => expect(flushEnqueuedSave).toBe(true));
+    expect(mocks.restore).not.toHaveBeenCalled();
+    expect(readDocumentDraft(draftKey)?.contents).toBe("Draft waiting to save");
+
+    await act(async () => {
+      resolveSave();
+      await save;
+    });
+    await waitFor(() =>
+      expect(mocks.restore).toHaveBeenCalledWith("demo", sourcePath),
+    );
+    expect(readDocumentDraft(draftKey)).toBeUndefined();
+    expect(mocks.removeIndexed).toHaveBeenCalledWith("demo", sourcePath);
+    expect(mocks.indexFile).toHaveBeenCalledWith(
+      "demo",
+      ".copper/tasks/issues/COPP-2-old-board.md",
+    );
+  } finally {
+    window.removeEventListener("copper:flush-documents", onFlush);
+    clearDocumentDraft(draftKey);
+  }
 });
 
 it("keeps the archive dialog open and shows restore collisions", async () => {

@@ -5,7 +5,10 @@ import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { ProjectIcon } from "@/features/tasks/project-icons";
 import { taskKeys } from "@/features/tasks/queries";
 import { copper } from "@/lib/copper";
-import { invalidateVaultNoteQueries } from "@/lib/copper/events";
+import {
+  flushOpenDocuments,
+  invalidateVaultNoteQueries,
+} from "@/lib/copper/events";
 import {
   isArchivedTaskSourcePath,
   type TaskIssue,
@@ -49,6 +52,7 @@ export function TaskArchivedItemsDialog({
     setRestoringPath(path);
     setRestoreError(null);
     try {
+      await flushOpenDocuments();
       const restoredPath = await copper.files.restore(vaultId, path);
       const indexResults = await Promise.allSettled([
         copper.search.removeIndexed(vaultId, path),
