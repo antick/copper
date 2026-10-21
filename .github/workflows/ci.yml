@@ -15,7 +15,6 @@ concurrency:
 
 jobs:
   test:
-    name: Test
     runs-on: macos-latest
     timeout-minutes: 30
     env:
