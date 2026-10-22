@@ -6,7 +6,12 @@ import {
   syntaxHighlighting,
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
-import { Compartment, EditorState } from "@codemirror/state";
+import {
+  Annotation,
+  Compartment,
+  EditorState,
+  Transaction,
+} from "@codemirror/state";
 import {
   drawSelection,
   EditorView,
@@ -18,6 +23,7 @@ import {
   rectangularSelection,
 } from "@codemirror/view";
 import { copperEditorTheme } from "@/features/editor/editor-theme";
+import { editorTypography } from "@/features/editor/editor-typography";
 import { dropFiles } from "@/features/editor/extensions/drop-files";
 import { fenceBlocksField } from "@/features/editor/extensions/fence-blocks";
 import { folding } from "@/features/editor/extensions/folding";
@@ -32,6 +38,8 @@ import { tags } from "@/features/editor/extensions/tags";
 import { wikiLinks } from "@/features/editor/extensions/wiki-links";
 import { localImageLoader } from "@/features/editor/image-widget";
 import { markdownFormattingKeymap } from "@/features/editor/markdown-format";
+
+const documentSync = Annotation.define<boolean>();
 
 export interface CreateCopperEditorOptions {
   parent: HTMLElement;
@@ -62,12 +70,22 @@ export function createCopperEditor({
 }: CreateCopperEditorOptions): EditorView {
   const markdown = mode === "markdown";
   const language = new Compartment();
+  const presentation = new Compartment();
+  const editable = new Compartment();
   const state = EditorState.create({
     doc,
     extensions: [
-      markdown && livePreviewEnabled
-        ? []
-        : [lineNumbers(), highlightActiveLineGutter()],
+      presentation.of(
+        presentationExtensions(markdown, livePreviewEnabled, wrapping),
+      ),
+      editable.of([]),
+      EditorState.transactionFilter.of((transaction) =>
+        transaction.docChanged &&
+        transaction.startState.readOnly &&
+        !transaction.annotation(documentSync)
+          ? []
+          : transaction,
+      ),
       highlightActiveLine(),
       history(),
       drawSelection(),
@@ -77,6 +95,7 @@ export function createCopperEditor({
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       language.of(markdown ? markdownLanguageSupport() : []),
       copperEditorTheme,
+      editorTypography(),
       EditorView.contentAttributes.of({
         "aria-label":
           ariaLabel ?? (markdown ? "Markdown editor" : "Source editor"),
@@ -87,10 +106,7 @@ export function createCopperEditor({
       loadImage ? localImageLoader.of(loadImage) : [],
       markdown ? wikiLinks : [],
       markdown ? tags : [],
-      markdown && livePreviewEnabled ? livePreview() : [],
-      markdown && livePreviewEnabled ? slashMenu() : [],
       markdown ? links : [],
-      markdown ? folding(!livePreviewEnabled) : [],
       searchReplace(),
       performanceMode,
       markdown && onDropPaths ? dropFiles(onDropPaths) : [],
@@ -99,9 +115,13 @@ export function createCopperEditor({
         ...defaultKeymap,
         ...historyKeymap,
       ]),
-      wrapping ? EditorView.lineWrapping : [],
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
+        if (
+          update.docChanged &&
+          !update.transactions.some((transaction) =>
+            transaction.annotation(documentSync),
+          )
+        ) {
           onDocChanged?.(update.state.doc.toString());
         }
       }),
@@ -109,6 +129,7 @@ export function createCopperEditor({
   });
 
   const view = new EditorView({ state, parent });
+  presentations.set(view, { compartment: presentation, editable, markdown });
   if (!markdown && path) {
     void loadSourceLanguage(path).then((support) => {
       if (support && view.dom.isConnected) {
@@ -132,4 +153,54 @@ async function loadSourceLanguage(path: string) {
       candidate.filename?.test(fileName),
   );
   return description?.load();
+}
+
+const presentations = new WeakMap<
+  EditorView,
+  { compartment: Compartment; editable: Compartment; markdown: boolean }
+>();
+function presentationExtensions(
+  markdown: boolean,
+  preview: boolean,
+  wrapping: boolean,
+) {
+  return [
+    markdown && preview ? [] : [lineNumbers(), highlightActiveLineGutter()],
+    markdown && preview ? livePreview() : [],
+    markdown && preview ? slashMenu() : [],
+    markdown ? folding(!preview) : [],
+    wrapping ? EditorView.lineWrapping : [],
+  ];
+}
+export function reconfigureCopperEditor(
+  view: EditorView,
+  preview: boolean,
+  wrapping: boolean,
+) {
+  const presentation = presentations.get(view);
+  if (presentation)
+    view.dispatch({
+      effects: presentation.compartment.reconfigure(
+        presentationExtensions(presentation.markdown, preview, wrapping),
+      ),
+    });
+}
+
+export function setCopperEditorReadOnly(view: EditorView, readOnly: boolean) {
+  const presentation = presentations.get(view);
+  if (presentation)
+    view.dispatch({
+      effects: presentation.editable.reconfigure([
+        EditorState.readOnly.of(readOnly),
+        EditorView.editable.of(!readOnly),
+      ]),
+    });
+}
+
+export function syncCopperEditorDocument(view: EditorView, contents: string) {
+  if (view.state.doc.toString() === contents) return;
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: contents },
+    annotations: [Transaction.addToHistory.of(false), documentSync.of(true)],
+  });
 }

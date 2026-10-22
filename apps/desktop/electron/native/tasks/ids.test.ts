@@ -123,4 +123,27 @@ describe("allocateIssueId", () => {
     expect(allocateIssueId(dir, "I")).toBe("I-8");
     expect(allocateIssueId(dir, "#")).toBe("#8");
   });
+
+  it("reserves IDs in standard, generic, and legacy issue archives", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-ids-archives-"));
+    temps.push(dir);
+    const files = [
+      ".copper/tasks/archive/issues/ISSUE-3-standard.md",
+      "Archive/.copper/tasks/issues/ISSUE-5-generic.md",
+      "Archive/Tasks/Issues/ISSUE-7-legacy.md",
+    ];
+    for (const relative of files) {
+      const absolute = path.join(dir, relative);
+      fs.mkdirSync(path.dirname(absolute), { recursive: true });
+      fs.writeFileSync(
+        absolute,
+        `---\ntype: issue\nid: ${path.basename(relative).match(/^ISSUE-\d+/)?.[0]}\n---\n# Archived\n`,
+      );
+    }
+
+    expect(scanIssueIds(dir)).toEqual(
+      expect.arrayContaining(["ISSUE-3", "ISSUE-5", "ISSUE-7"]),
+    );
+    expect(allocateIssueId(dir)).toBe("ISSUE-8");
+  });
 });

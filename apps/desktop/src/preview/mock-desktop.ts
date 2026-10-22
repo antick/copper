@@ -8,6 +8,12 @@ import {
   PREVIEW_TASK_UNHANDLED,
 } from "@/preview/preview-task-service";
 import { PREVIEW_VAULT_TREE } from "@/preview/preview-vault-tree";
+import {
+  isArchivedTaskPath,
+  isTaskSourcePath,
+  TASK_ARCHIVE_DIR,
+  TASKS_DIR,
+} from "../../shared/task-paths";
 
 const DEMO_ID = "demo-vault";
 const DEMO_PATH = "~/Documents/Notes";
@@ -385,8 +391,12 @@ function dispatch(cmd: string, args?: Record<string, unknown>) {
       const from = String(payload.path ?? "");
       const to =
         cmd === "archive_file"
-          ? `Archive/${from}`
-          : from.replace(/^Archive\//, "");
+          ? isTaskSourcePath(from)
+            ? from.replace(`${TASKS_DIR}/`, `${TASK_ARCHIVE_DIR}/`)
+            : `Archive/${from}`
+          : isArchivedTaskPath(from)
+            ? from.replace(`${TASK_ARCHIVE_DIR}/`, `${TASKS_DIR}/`)
+            : from.replace(/^Archive\//, "");
       const contents = previewFiles.get(from);
       if (contents == null || previewFiles.has(to)) {
         throw new Error("Archive destination is unavailable");
@@ -440,15 +450,21 @@ function dispatch(cmd: string, args?: Record<string, unknown>) {
       return frontmatterFor(String(payload.path ?? ""));
     case "update_properties": {
       const path = String(payload.path ?? "");
-      const properties = payload.properties as {
-        body: string;
-        values: Record<string, unknown>;
-      };
+      const properties = frontmatterFor(path);
       previewFiles.set(
         path,
-        `---\n${serializePreviewFrontmatter(properties.values)}\n---\n${properties.body}`,
+        `---\n${serializePreviewFrontmatter({ ...properties.values, ...(payload.values as Record<string, unknown>) })}\n---\n${properties.body}`,
       );
-      return null;
+      const contents = previewFiles.get(path) ?? "";
+      return [
+        contents,
+        {
+          path,
+          size: contents.length,
+          mtimeNs: Date.now() * 1_000_000,
+          hash: "preview",
+        },
+      ];
     }
     case "git_status":
       return { kind: "not_git" };

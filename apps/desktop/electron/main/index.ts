@@ -17,6 +17,7 @@ import {
 } from "./updater";
 import { setWatchWindow } from "./watch";
 import { createMainWindow } from "./window";
+import { bindWindowActivation } from "./window-lifecycle";
 
 app.setName(APP_IDENTITY.appName);
 app.setPath(
@@ -81,13 +82,11 @@ app.whenReady().then(() => {
       }
     }
   });
-  app.on("activate", () => {
-    if (window.isDestroyed()) {
-      const next = createMainWindow();
-      setWatchWindow(next);
-    } else {
-      window.show();
-    }
+  bindWindowActivation({
+    app,
+    initialWindow: window,
+    createWindow: createMainWindow,
+    setWatchWindow,
   });
 });
 

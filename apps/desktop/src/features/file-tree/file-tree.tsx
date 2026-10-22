@@ -1,5 +1,7 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState } from "react";
+import { useFileNameDialog } from "@/features/file-tree/file-name-dialog";
+import { childPath, renamedPath } from "@/features/file-tree/file-names";
 import { FileTreeContextMenu } from "@/features/file-tree/file-tree-menu";
 import { FileTreeRow } from "@/features/file-tree/file-tree-row";
 import { flattenVisibleTree } from "@/features/file-tree/flatten-visible-tree";
@@ -32,6 +34,7 @@ export function FileTree({
   onBeforeFileOperation?: () => Promise<void>;
 }) {
   const mutations = useFileMutations(vaultId);
+  const { requestName, nameDialog } = useFileNameDialog();
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     const next = new Set<string>();
     for (const child of tree.children ?? []) {
@@ -101,53 +104,56 @@ export function FileTree({
     }
   }
 
-  function requestNewNote(folder: string) {
-    const requested = window.prompt("New note name", "Untitled.md")?.trim();
-    if (!requested) return;
-    const name = /\.md$/i.test(requested) ? requested : `${requested}.md`;
-    const path = folder ? `${folder}/${name}` : name;
-    mutations.createFile.mutate(path, {
-      onSuccess: () => onFileCreated?.(path),
-      onError: (error) =>
-        window.alert(
-          error instanceof Error ? error.message : "Couldn’t create the note.",
-        ),
+  function requestNewNote(folder: string, onReturnFocus?: () => void) {
+    requestName({
+      onReturnFocus,
+      title: "New note",
+      label: "File name",
+      submitLabel: "Create note",
+      onSubmit: async (name) => {
+        const path = childPath(
+          folder,
+          /\.(md|markdown)$/i.test(name) ? name : `${name}.md`,
+        );
+        await mutations.createFile.mutateAsync(path);
+        onFileCreated?.(path);
+      },
     });
   }
 
-  function requestNewFolder(folder: string) {
-    const name = window.prompt("New folder name", "folder");
-    if (!name) {
-      return;
-    }
-    mutations.createFolder.mutate(folder ? `${folder}/${name}` : name);
+  function requestNewFolder(folder: string, onReturnFocus?: () => void) {
+    requestName({
+      onReturnFocus,
+      title: "New folder",
+      label: "Folder name",
+      submitLabel: "Create folder",
+      onSubmit: (name) =>
+        mutations.createFolder.mutateAsync(childPath(folder, name)),
+    });
   }
 
-  async function requestRename(node: FileTreeNode) {
-    const slash = node.path.lastIndexOf("/");
-    const parent = slash >= 0 ? node.path.slice(0, slash + 1) : "";
-    const currentName = node.path.slice(slash + 1);
-    const requested = window.prompt("Rename to", currentName)?.trim();
-    if (!requested || requested === currentName) return;
-    const next = `${parent}${requested}`;
-    if (!(await prepareFileOperation())) return;
-    mutations.rename.mutate(
-      {
-        from: node.path,
-        to: next,
-        kind: node.kind,
-        fileKind: node.fileKind,
+  function requestRename(node: FileTreeNode, onReturnFocus?: () => void) {
+    requestName({
+      onReturnFocus,
+      title: node.kind === "directory" ? "Rename folder" : "Rename file",
+      label: node.kind === "directory" ? "Folder name" : "File name",
+      initialValue: node.name,
+      submitLabel: "Rename",
+      onSubmit: async (name) => {
+        const next = renamedPath(node.path, name, {
+          directory: node.kind === "directory",
+        });
+        if (next === node.path) return;
+        await onBeforeFileOperation?.();
+        await mutations.rename.mutateAsync({
+          from: node.path,
+          to: next,
+          kind: node.kind,
+          fileKind: node.fileKind,
+        });
+        onPathRenamed?.(node.path, next);
       },
-      {
-        onSuccess: () => onPathRenamed?.(node.path, next),
-        onError: (error) =>
-          window.alert(
-            error instanceof Error
-              ? error.message
-              : "Couldn’t rename the item.",
-          ),
-      },
-    );
+    });
   }
 
   async function requestTrash(node: FileTreeNode) {
@@ -191,9 +197,11 @@ export function FileTree({
         isRoot={row.node.path === ""}
         fileKind={row.node.fileKind}
         archived={row.node.path.startsWith("Archive/")}
-        onNewNote={() => requestNewNote(row.node.path)}
-        onNewFolder={() => requestNewFolder(row.node.path)}
-        onRename={() => void requestRename(row.node)}
+        onNewNote={(returnFocus) => requestNewNote(row.node.path, returnFocus)}
+        onNewFolder={(returnFocus) =>
+          requestNewFolder(row.node.path, returnFocus)
+        }
+        onRename={(returnFocus) => requestRename(row.node, returnFocus)}
         onArchive={() => void requestArchive(row.node)}
         onRestore={() => void requestArchive(row.node, true)}
         onTrash={() => void requestTrash(row.node)}
@@ -238,78 +246,87 @@ export function FileTree({
       : rows.map((row) => renderRow(row));
 
   return (
-    <div
-      ref={parentRef}
-      role="tree"
-      aria-label={mode === "tree" ? "Vault files and folders" : "Vault folders"}
-      className="copper-file-tree"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "ArrowDown") {
-          event.preventDefault();
-          move(1);
-        } else if (event.key === "ArrowUp") {
-          event.preventDefault();
-          move(-1);
-        } else if (event.key === "ArrowRight" && focusedPath) {
-          const index = rows.findIndex((row) => row.node.path === focusedPath);
-          const row = rows[index];
-          if (row?.node.kind === "directory" && row.node.children?.length) {
+    <>
+      {nameDialog}
+      <div
+        ref={parentRef}
+        role="tree"
+        aria-label={
+          mode === "tree" ? "Vault files and folders" : "Vault folders"
+        }
+        className="copper-file-tree"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") {
             event.preventDefault();
-            if (!row.expanded) toggle(focusedPath);
-            else if (rows[index + 1]?.depth === row.depth + 1) {
-              setFocusedPath(rows[index + 1]?.node.path);
+            move(1);
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            move(-1);
+          } else if (event.key === "ArrowRight" && focusedPath) {
+            const index = rows.findIndex(
+              (row) => row.node.path === focusedPath,
+            );
+            const row = rows[index];
+            if (row?.node.kind === "directory" && row.node.children?.length) {
+              event.preventDefault();
+              if (!row.expanded) toggle(focusedPath);
+              else if (rows[index + 1]?.depth === row.depth + 1) {
+                setFocusedPath(rows[index + 1]?.node.path);
+              }
             }
-          }
-        } else if (event.key === "ArrowLeft" && focusedPath) {
-          const index = rows.findIndex((row) => row.node.path === focusedPath);
-          const row = rows[index];
-          if (row) {
-            event.preventDefault();
-            if (row.node.kind === "directory" && row.expanded) {
-              setExpanded((current) => {
-                const next = new Set(current);
-                next.delete(focusedPath);
-                return next;
-              });
-            } else {
-              const parent = rows
-                .slice(0, index)
-                .reverse()
-                .find((candidate) => candidate.depth < row.depth);
-              setFocusedPath(parent?.node.path ?? focusedPath);
+          } else if (event.key === "ArrowLeft" && focusedPath) {
+            const index = rows.findIndex(
+              (row) => row.node.path === focusedPath,
+            );
+            const row = rows[index];
+            if (row) {
+              event.preventDefault();
+              if (row.node.kind === "directory" && row.expanded) {
+                setExpanded((current) => {
+                  const next = new Set(current);
+                  next.delete(focusedPath);
+                  return next;
+                });
+              } else {
+                const parent = rows
+                  .slice(0, index)
+                  .reverse()
+                  .find((candidate) => candidate.depth < row.depth);
+                setFocusedPath(parent?.node.path ?? focusedPath);
+              }
             }
-          }
-        } else if (event.key === "F2" && focusedPath) {
-          const row = rows.find((item) => item.node.path === focusedPath);
-          if (row?.node.path) {
-            event.preventDefault();
-            void requestRename(row.node);
-          }
-        } else if (event.key === "Enter" && focusedPath) {
-          const row = rows.find((item) => item.node.path === focusedPath);
-          if (row) {
-            if (row.node.kind === "file") {
-              onPinFile?.(row.node.path);
-            } else {
-              onSelect?.(row.node.path, row.node.kind);
-              if (row.node.children?.length) {
-                toggle(row.node.path);
+          } else if (event.key === "F2" && focusedPath) {
+            const row = rows.find((item) => item.node.path === focusedPath);
+            if (row?.node.path) {
+              event.preventDefault();
+              void requestRename(row.node);
+            }
+          } else if (event.key === "Enter" && focusedPath) {
+            const row = rows.find((item) => item.node.path === focusedPath);
+            if (row) {
+              if (row.node.kind === "file") {
+                onPinFile?.(row.node.path);
+              } else {
+                onSelect?.(row.node.path, row.node.kind);
+                if (row.node.children?.length) {
+                  toggle(row.node.path);
+                }
               }
             }
           }
-        }
-      }}
-    >
-      {rows.length > VIRTUALIZE_AFTER ? (
-        <div
-          style={{ height: virtualizer.getTotalSize(), position: "relative" }}
-        >
-          {rendered}
-        </div>
-      ) : (
-        rendered
-      )}
-    </div>
+        }}
+      >
+        {rows.length > VIRTUALIZE_AFTER ? (
+          <div
+            style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+          >
+            {rendered}
+          </div>
+        ) : (
+          rendered
+        )}
+      </div>
+    </>
   );
 }

@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { queryClient } from "@/app/query-client";
+import {
+  clearDocumentDraft,
+  documentDraftKey,
+  keepDocumentDraft,
+  readDocumentDraft,
+} from "@/features/editor/document-drafts";
+import { documentSaveQueue } from "@/features/editor/document-save-queue";
 import { vaultKeys } from "@/features/vault/queries";
 import { copper } from "@/lib/copper";
 import {
@@ -17,6 +24,50 @@ afterEach(() => {
 });
 
 describe("Vault filesystem invalidation", () => {
+  it("keeps failed recovery in Vault A from blocking a Vault B operation", async () => {
+    const vaultA = "barrier-vault-a";
+    const vaultB = "barrier-vault-b";
+    const draftKey = documentDraftKey(vaultA, "Failed.md");
+    const save = vi.fn().mockRejectedValue(new Error("Disk full"));
+    const queue = documentSaveQueue(draftKey, save, 400, vaultA);
+    queue.attach();
+    queue.schedule("Unsaved A work");
+    await expect(queue.flush()).rejects.toThrow("Disk full");
+    queue.detach();
+    keepDocumentDraft(draftKey, {
+      contents: "Unsaved A work",
+      baseHash: "original",
+    });
+    const rename = vi
+      .spyOn(copper.files, "rename")
+      .mockResolvedValue("Renamed.md");
+
+    try {
+      await flushOpenDocuments(vaultB);
+      await expect(
+        copper.files.rename(vaultB, "Current.md", "Renamed.md"),
+      ).resolves.toBe("Renamed.md");
+      expect(rename).toHaveBeenCalledWith(vaultB, "Current.md", "Renamed.md");
+      await expect(flushOpenDocuments(vaultA)).rejects.toThrow("Disk full");
+      await expect(flushOpenDocuments()).rejects.toThrow("Disk full");
+
+      queue.cancel();
+      await expect(flushOpenDocuments(vaultA)).rejects.toThrow(
+        "Unsaved note drafts remain",
+      );
+      await expect(flushOpenDocuments()).rejects.toThrow(
+        "Unsaved note drafts remain",
+      );
+      expect(readDocumentDraft(draftKey)).toEqual({
+        contents: "Unsaved A work",
+        baseHash: "original",
+      });
+    } finally {
+      queue.cancel();
+      clearDocumentDraft(draftKey);
+    }
+  });
+
   it("marks a recent Git operation window", () => {
     markVaultGitOperation(vaultId);
     expect(isRecentVaultGitOperation(vaultId)).toBe(true);

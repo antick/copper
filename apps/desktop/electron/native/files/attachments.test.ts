@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, expect, it } from "vitest";
+import { loadSettings, saveSettings } from "../settings";
 import { importAttachment } from "./attachments";
 
 const roots: string[] = [];
@@ -54,4 +55,68 @@ it("keeps existing attachment bytes and rejects an escaping directory", () => {
   fs.symlinkSync(outside, path.join(vault, "escape"));
   expect(() => importAttachment(vault, "escape", source)).toThrow();
   expect(fs.readdirSync(outside)).toEqual([]);
+});
+
+it("rejects absolute and traversal attachment folders and allows nested names with spaces", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "copper-attachment-folder-validation-"),
+  );
+  roots.push(root);
+  const vault = path.join(root, "vault");
+  fs.mkdirSync(vault);
+  const source = path.join(root, "sample.txt");
+  fs.writeFileSync(source, "attachment");
+
+  expect(() => importAttachment(vault, "/images", source)).toThrow();
+  expect(() => importAttachment(vault, "images/../outside", source)).toThrow();
+  expect(fs.readdirSync(vault)).toEqual([]);
+  expect(importAttachment(vault, "Notes and Images/Raw Uploads", source)).toBe(
+    "Notes and Images/Raw Uploads/sample.txt",
+  );
+  expect(
+    fs.readFileSync(
+      path.join(vault, "Notes and Images/Raw Uploads/sample.txt"),
+      "utf8",
+    ),
+  ).toBe("attachment");
+});
+
+it("imports into a saved attachment folder whose name starts with two dots", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "copper-attachment-prefix-"),
+  );
+  roots.push(root);
+  const vault = path.join(root, "vault");
+  const config = path.join(root, "config");
+  fs.mkdirSync(vault);
+  const source = path.join(root, "sample.txt");
+  fs.writeFileSync(source, "safe attachment");
+
+  saveSettings(config, { attachmentFolder: "..attachments" });
+  const attachmentFolder = loadSettings(config).attachmentFolder;
+
+  expect(attachmentFolder).toBe("..attachments");
+  expect(importAttachment(vault, attachmentFolder, source)).toBe(
+    "..attachments/sample.txt",
+  );
+  expect(
+    fs.readFileSync(path.join(vault, "..attachments", "sample.txt"), "utf8"),
+  ).toBe("safe attachment");
+});
+
+it("rejects Windows-reserved superscript device folders before importing", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "copper-reserved-attachment-folder-"),
+  );
+  roots.push(root);
+  const vault = path.join(root, "vault");
+  fs.mkdirSync(vault);
+  const source = path.join(root, "sample.txt");
+  fs.writeFileSync(source, "attachment to preserve");
+
+  for (const folder of ["COM¹", "LPT³", "images/com².png"]) {
+    expect(() => importAttachment(vault, folder, source)).toThrow();
+    expect(fs.readdirSync(vault)).toEqual([]);
+    expect(fs.readFileSync(source, "utf8")).toBe("attachment to preserve");
+  }
 });

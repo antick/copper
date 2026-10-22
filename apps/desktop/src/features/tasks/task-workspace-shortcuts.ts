@@ -4,6 +4,10 @@ import {
   cycleStatus,
   isTypingTarget,
 } from "@/features/tasks/filter-issues";
+import {
+  type OpenTaskLabels,
+  taskIssueFocusTarget,
+} from "@/features/tasks/task-label-dialog";
 import type { TaskTabsAction } from "@/features/tasks/task-tabs";
 import type { TasksTabTarget, TasksView } from "@/lib/copper/settings";
 import type {
@@ -66,6 +70,7 @@ export function useTaskWorkspaceShortcuts({
   onOpenIssue,
   onNavigateView,
   onUpdateIssue,
+  openLabels,
   onClearSelection,
   onToggleSelection,
 }: {
@@ -82,7 +87,8 @@ export function useTaskWorkspaceShortcuts({
   onCloseIssue: () => void;
   onOpenIssue: (id: string) => void;
   onNavigateView: (view: TasksView) => void;
-  onUpdateIssue: (id: string, input: UpdateIssueInput) => void;
+  onUpdateIssue: (id: string, input: UpdateIssueInput) => Promise<unknown>;
+  openLabels: OpenTaskLabels;
   onClearSelection: () => void;
   onToggleSelection: (id: string) => void;
 }) {
@@ -95,20 +101,19 @@ export function useTaskWorkspaceShortcuts({
       const current = issues.find((issue) => issue.id === selectedIssueId);
       if (!current) return;
       if (event.type === "copper:set-issue-status")
-        onUpdateIssue(current.id, { status: cycleStatus(current.status) });
+        void onUpdateIssue(current.id, {
+          status: cycleStatus(current.status),
+        });
       if (event.type === "copper:set-issue-priority")
-        onUpdateIssue(current.id, {
+        void onUpdateIssue(current.id, {
           priority: cyclePriority(current.priority),
         });
       if (event.type === "copper:set-issue-labels") {
-        const value = window.prompt("Labels (comma separated)");
-        if (value !== null)
-          onUpdateIssue(current.id, {
-            labels: value
-              .split(",")
-              .map((label) => label.trim())
-              .filter(Boolean),
-          });
+        openLabels(
+          current.labels.join(", "),
+          (labels) => onUpdateIssue(current.id, { labels }),
+          () => taskIssueFocusTarget(current.id),
+        );
       }
       const delta =
         event.type === "copper:next-issue"
@@ -135,6 +140,7 @@ export function useTaskWorkspaceShortcuts({
     onOpenComposer,
     onOpenIssue,
     onUpdateIssue,
+    openLabels,
     selectedIssueId,
     view,
   ]);

@@ -1,5 +1,4 @@
-import { type Dispatch, useEffect, useMemo, useReducer, useState } from "react";
-import { matchesIssueSearch, sortIssues } from "@/features/tasks/filter-issues";
+import { type Dispatch, useReducer, useState } from "react";
 import { useIssueBulkUpdate } from "@/features/tasks/issue-bulk-update";
 import {
   emptyIssueSelection,
@@ -26,13 +25,7 @@ import {
 } from "@/features/tasks/task-management";
 import { TaskOverlays } from "@/features/tasks/task-overlays";
 import {
-  normalizeProjectNavigation,
-  sameIds,
-} from "@/features/tasks/task-project-navigation";
-import {
   duplicateIssueInput,
-  effectiveTaskView,
-  issuesForDestination,
   taskSurfaceTitle,
 } from "@/features/tasks/task-selectors";
 import {
@@ -53,12 +46,10 @@ import {
   useTaskNavigation,
 } from "@/features/tasks/task-workspace-state";
 import { useIssueCommentActions } from "@/features/tasks/use-issue-comment-actions";
-import { useTaskIssueControls } from "@/features/tasks/use-task-issue-controls";
-import {
-  activeProjects,
-  isBaseBoardStatus,
-  projectWorkflow,
-} from "@/features/tasks/workflow";
+import { useTaskArchivedItemsDialog } from "@/features/tasks/use-task-archived-items-dialog";
+import { useTaskWorkspaceIssueControls } from "@/features/tasks/use-task-workspace-issue-controls";
+import { useTaskWorkspaceModel } from "@/features/tasks/use-task-workspace-model";
+import { isBaseBoardStatus, projectWorkflow } from "@/features/tasks/workflow";
 import type { IssueColumnId } from "@/lib/copper/task-settings";
 import type { CreateIssueInput, CreateProjectInput } from "@/lib/copper/tasks";
 
@@ -138,7 +129,10 @@ export function TasksWorkspace({
   const { composer, openComposer, closeComposer, takeFocus } =
     useTaskComposer();
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
-  const controls = useTaskIssueControls(issuesQuery.data ?? [], updateIssues);
+  const { controls, labelDialog, openLabels } = useTaskWorkspaceIssueControls(
+    issuesQuery.data ?? [],
+    updateIssues,
+  );
   const {
     filter,
     setFilter,
@@ -152,32 +146,38 @@ export function TasksWorkspace({
     editLabels,
   } = controls;
 
-  const issues = issuesQuery.data ?? [];
+  const issuesData = issuesQuery.data ?? [];
   const projects = projectsQuery.data ?? [];
-  const projectNavigation = useMemo(
-    () =>
-      normalizeProjectNavigation(
-        activeProjects(projects),
-        projectOrder,
-        pinnedProjects,
-      ),
-    [pinnedProjects, projectOrder, projects],
-  );
-  const visibleProjects = projectNavigation.projects;
-  useEffect(() => {
-    if (projectsQuery.isPending) return;
-    if (!sameIds(projectOrder, projectNavigation.projectOrder))
-      onProjectOrderChange(projectNavigation.projectOrder);
-    if (!sameIds(pinnedProjects, projectNavigation.pinnedProjects))
-      onPinnedProjectsChange(projectNavigation.pinnedProjects);
-  }, [
-    onPinnedProjectsChange,
-    onProjectOrderChange,
-    pinnedProjects,
-    projectNavigation,
-    projectOrder,
+  const archivedItems = useTaskArchivedItemsDialog(
+    vaultId,
+    projects,
     projectsQuery.isPending,
-  ]);
+  );
+  const workspaceModel = useTaskWorkspaceModel({
+    issues: issuesData,
+    projects,
+    project,
+    projectData: projectQuery.data,
+    destination,
+    projectView,
+    view,
+    query,
+    sort,
+    projectOrder,
+    pinnedProjects,
+    projectsPending: projectsQuery.isPending,
+    onProjectOrderChange,
+    onPinnedProjectsChange,
+  });
+  const {
+    issues,
+    projectNavigation,
+    visibleProjects,
+    scopedIssues,
+    selectedProject,
+    navigableIssues,
+    effectiveView,
+  } = workspaceModel;
   useTaskTargetValidation({
     target,
     issues,
@@ -185,30 +185,6 @@ export function TasksWorkspace({
     pending: issuesQuery.isPending || projectsQuery.isPending,
     dispatch: onTabsAction,
   });
-  const destinationIssues = useMemo(
-    () => issuesForDestination(issues, destination, projects),
-    [destination, issues, projects],
-  );
-  const scopedIssues = useMemo(
-    () =>
-      destination === "project" && project
-        ? destinationIssues.filter((issue) => issue.project === project)
-        : destinationIssues,
-    [destination, destinationIssues, project],
-  );
-  const selectedProject =
-    projectQuery.data && !projectQuery.data.archived
-      ? projectQuery.data
-      : visibleProjects.find((item) => item.id === project);
-  const navigableIssues = useMemo(
-    () =>
-      sortIssues(
-        scopedIssues.filter((issue) => matchesIssueSearch(issue, query)),
-        sort,
-      ),
-    [query, scopedIssues, sort],
-  );
-  const effectiveView = effectiveTaskView(destination, projectView, view);
   const { selectDestination, selectProject, navigateView } = useTaskNavigation({
     destination,
     project,
@@ -221,6 +197,8 @@ export function TasksWorkspace({
     activeProjectId: destination === "project" ? project : null,
     onTabsAction,
   });
+  const projectOverviewReady =
+    projectView !== "overview" || Boolean(projectQuery.data);
 
   useTaskWorkspaceShortcuts({
     issues,
@@ -236,7 +214,8 @@ export function TasksWorkspace({
     onCloseIssue: closeIssue,
     onOpenIssue: openIssue,
     onNavigateView: navigateView,
-    onUpdateIssue: (id, input) => void updateIssue.mutateAsync({ id, input }),
+    onUpdateIssue: (id, input) => updateIssue.mutateAsync({ id, input }),
+    openLabels,
     onClearSelection: () => dispatchSelection({ type: "clear" }),
     onToggleSelection: (id) => dispatchSelection({ type: "toggle", id }),
   });
@@ -379,6 +358,7 @@ export function TasksWorkspace({
       vaultName={vaultName}
       platform={platform}
       leftCollapsed={leftCollapsed}
+      onShowArchived={archivedItems.show}
       tabsState={tabsState}
       onTabsAction={onTabsAction}
       onToggleLeft={() => onToggleLeft?.()}
@@ -394,6 +374,7 @@ export function TasksWorkspace({
       {issueTabId ? (
         issueQuery.data ? (
           <IssueView
+            vaultId={vaultId}
             issue={issueQuery.data}
             projects={projects}
             variant="tab"
@@ -429,8 +410,9 @@ export function TasksWorkspace({
           onProjectAction={management.openProjectAction}
         />
       ) : destination === "project" ? (
-        selectedProject ? (
+        selectedProject && projectOverviewReady ? (
           <ProjectWorkspace
+            vaultId={vaultId}
             key={selectedProject.id}
             project={selectedProject}
             view={projectView}
@@ -474,6 +456,7 @@ export function TasksWorkspace({
         issueSurface
       )}
       <TaskOverlays
+        vaultId={vaultId}
         issue={peekIssueId ? issueQuery.data : undefined}
         projects={projects}
         composer={composer?.kind ?? null}
@@ -492,6 +475,8 @@ export function TasksWorkspace({
         onSubmitProject={submitProject}
       />
       <TaskManagementDialogs management={management} issues={issues} />
+      {archivedItems.dialog}
+      {labelDialog}
     </TaskWorkspaceFrame>
   );
 }

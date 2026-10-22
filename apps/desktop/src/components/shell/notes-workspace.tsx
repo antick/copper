@@ -6,7 +6,9 @@ import { PropertiesPane } from "@/components/shell/properties-pane";
 import type { NoteWorkspaceActions } from "@/components/shell/use-note-workspace-actions";
 import { PaneResizer } from "@/components/ui/pane-resizer";
 import { CopperEditor } from "@/features/editor/copper-editor";
+import { DocumentRecoveryBanner } from "@/features/editor/document-recovery-banner";
 import { ImageViewer } from "@/features/editor/image-viewer";
+import type { NoteFileActions } from "@/features/file-tree/note-context-menu";
 import type { SupportedFileKind } from "@/features/file-tree/types";
 import type {
   SessionAction,
@@ -85,6 +87,13 @@ export function NotesWorkspace({
   onToggleNoteList: () => void;
   onOpenInTasks?: () => void;
 }) {
+  const fileActions: NoteFileActions = {
+    onRename: (path, returnFocus) =>
+      actions.renameActiveFile(path, returnFocus),
+    onArchive: (path) => void actions.moveActiveArchive(false, path),
+    onRestore: (path) => void actions.moveActiveArchive(true, path),
+    onTrash: (path) => void actions.trashActiveFile(path),
+  };
   return (
     <div className="copper-panes">
       {!session.leftCollapsed ? (
@@ -117,6 +126,7 @@ export function NotesWorkspace({
             leftCollapsed={false}
             onToggleLeft={() => updateSession({ type: "toggle-left" })}
             favorites={favoriteNotes}
+            fileActions={fileActions}
             onFileCreated={actions.openPinned}
             onPathRenamed={actions.renameSessionPaths}
             onPathRemoved={actions.removeSessionPaths}
@@ -145,6 +155,7 @@ export function NotesWorkspace({
             selectedPath={selectedPath}
             onOpen={actions.openPreview}
             onPin={actions.openPinned}
+            fileActions={fileActions}
             onNewNote={() => void actions.createNote()}
             searchRef={searchRef}
             indexing={indexState === "indexing"}
@@ -170,7 +181,13 @@ export function NotesWorkspace({
           updateSession({ type: "toggle-favorite", path: selectedPath })
         }
         onToggleSource={() => setLivePreviewEnabled((value) => !value)}
-        onRename={() => void actions.renameActiveFile()}
+        onRename={(name, returnFocus) =>
+          name === undefined
+            ? actions.renameActiveFile(selectedPath, returnFocus)
+            : selectedPath
+              ? actions.renameFileTo(selectedPath, name, true)
+              : undefined
+        }
         onArchive={() => void actions.moveActiveArchive(false)}
         onRestore={() => void actions.moveActiveArchive(true)}
         onTrash={() => void actions.trashActiveFile()}
@@ -201,6 +218,11 @@ export function NotesWorkspace({
         onToggleRight={() => updateSession({ type: "toggle-right" })}
         onOpenInTasks={onOpenInTasks}
       >
+        <DocumentRecoveryBanner
+          vaultId={vaultId}
+          activePath={selectedPath}
+          onOpen={actions.openPinned}
+        />
         {children ??
           (vaultId && selectedPath && activeFileKind ? (
             activeFileKind === "image" ? (
@@ -211,7 +233,7 @@ export function NotesWorkspace({
               />
             ) : (
               <CopperEditor
-                key={`${selectedPath}:${activeFileKind}:${livePreviewEnabled}`}
+                key={`${vaultId}:${selectedPath}:${activeFileKind}`}
                 vaultId={vaultId}
                 path={selectedPath}
                 fileKind={activeFileKind}
@@ -222,6 +244,7 @@ export function NotesWorkspace({
             )
           ) : null)}
       </EditorPane>
+      {actions.nameDialog}
       {activeIsMarkdown && !session.rightCollapsed ? (
         <>
           <PaneResizer cssVar="--properties-width" min={220} max={420} invert />

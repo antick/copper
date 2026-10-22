@@ -1,4 +1,6 @@
 import { queryClient } from "@/app/query-client";
+import { hasDocumentDrafts } from "@/features/editor/document-drafts";
+import { flushDocumentSaves } from "@/features/editor/document-save-queue";
 import { fileKeys } from "@/features/editor/file-keys";
 import { vaultKeys } from "@/features/vault/queries";
 import { copper } from "@/lib/copper";
@@ -39,21 +41,28 @@ export function isRecentVaultGitOperation(vaultId: string) {
 }
 
 export type FlushDocumentsDetail = {
+  vaultId?: string;
   enqueue: (promise: Promise<void>) => void;
 };
 
-export function flushOpenDocuments(): Promise<void> {
+export async function flushOpenDocuments(vaultId?: string): Promise<void> {
+  await flushDocumentSaves(vaultId);
   const pending: Promise<void>[] = [];
   window.dispatchEvent(
     new CustomEvent<FlushDocumentsDetail>("copper:flush-documents", {
       detail: {
+        vaultId,
         enqueue(promise) {
           pending.push(promise);
         },
       },
     }),
   );
-  return Promise.all(pending).then(() => undefined);
+  await Promise.all(pending);
+  if (hasDocumentDrafts(vaultId))
+    throw new Error(
+      "Unsaved note drafts remain. Reopen those notes and save or resolve their conflicts before continuing.",
+    );
 }
 
 export type FileSystemEvent =

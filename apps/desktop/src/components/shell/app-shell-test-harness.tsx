@@ -19,7 +19,13 @@ const mocks = vi.hoisted(() => ({
   gitStatus: { kind: "not_git" } as GitStatus,
   createFile: vi.fn(async () => undefined),
   createFolder: vi.fn(async (path: string) => path),
-  saveFile: vi.fn(async () => "revision"),
+  renameFile: vi.fn(async (_vaultId: string, _from: string, to: string) => to),
+  saveFile: vi.fn(async () => ({
+    path: "Inbox/copper.md",
+    hash: "revision",
+    size: 7,
+    mtimeNs: 1,
+  })),
   loadSession: vi.fn(
     async (): Promise<Record<string, unknown>> => ({
       tabs: [],
@@ -124,13 +130,16 @@ vi.mock("@/lib/copper", () => ({
       }),
       createFile: mocks.createFile,
       createFolder: mocks.createFolder,
-      rename: async (_vaultId: string, _from: string, to: string) => to,
+      rename: mocks.renameFile,
       archive: mocks.archiveFile,
       restore: mocks.restoreFile,
       trash: mocks.trashFile,
       binaryMetadata: async () => ({ mimeType: "image/png", size: 8 }),
       readBinary: async () => new Uint8Array(8),
-      read: async () => ["# Note\n", "revision"],
+      read: async () => [
+        "# Note\n",
+        { path: "Inbox/copper.md", hash: "revision", size: 7, mtimeNs: 1 },
+      ],
       save: mocks.saveFile,
     },
     search: {
@@ -309,6 +318,8 @@ export function resetAppShellMocks() {
   mocks.gitStatus = { kind: "not_git" };
   mocks.createFile.mockClear();
   mocks.createFolder.mockClear();
+  mocks.renameFile.mockReset();
+  mocks.renameFile.mockImplementation(async (_vaultId, _from, to) => to);
   mocks.saveFile.mockClear();
   mocks.loadSession.mockClear();
   mocks.saveSession.mockClear();

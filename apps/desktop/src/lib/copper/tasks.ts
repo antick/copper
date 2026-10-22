@@ -1,5 +1,7 @@
 import { copperInvoke } from "@/lib/copper/invoke";
 
+export { isArchivedPath as isArchivedTaskSourcePath } from "../../../shared/task-paths";
+
 export type BaseIssueStatus =
   | "backlog"
   | "todo"
@@ -49,6 +51,10 @@ export interface TaskIssue {
   updated: string;
   comments?: TaskComment[];
   body?: string;
+}
+
+export interface ListIssuesOptions {
+  includeArchived?: boolean;
 }
 
 export interface TaskProjectCounts {
@@ -131,8 +137,11 @@ export interface UpdateProjectWorkflowInput {
   fallbackStatusId?: string;
 }
 
-export function listIssues(vaultId: string): Promise<TaskIssue[]> {
-  return copperInvoke<TaskIssue[]>("list_issues", { vaultId });
+export function listIssues(
+  vaultId: string,
+  options: ListIssuesOptions = {},
+): Promise<TaskIssue[]> {
+  return copperInvoke<TaskIssue[]>("list_issues", { vaultId, ...options });
 }
 
 export function getIssue(vaultId: string, id: string): Promise<TaskIssue> {

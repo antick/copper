@@ -5,10 +5,10 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip } from "@/components/ui/tooltip";
 import { fileKeys } from "@/features/editor/file-keys";
+import { isMarkdownPath } from "@/features/file-tree/file-names";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { copper } from "@/lib/copper";
 import { flushOpenDocuments } from "@/lib/copper/events";
-import { isTaskSourcePath } from "../../../shared/task-paths";
 
 const TaskSourceContext = createContext<
   ((path: string) => Promise<void>) | null
@@ -27,9 +27,9 @@ export function TaskSourceProvider({
   const [error, setError] = useState<string | null>(null);
   async function open(path: string) {
     try {
-      if (!isTaskSourcePath(path))
-        throw new Error("This task has no managed source file.");
-      await flushOpenDocuments();
+      if (!isMarkdownPath(path))
+        throw new Error("This task has no Markdown source file.");
+      await flushOpenDocuments(vaultId);
       const payload = await copper.files.read(vaultId, path);
       queryClient.setQueryData(fileKeys.detail(vaultId, path), payload);
       onOpen(path);

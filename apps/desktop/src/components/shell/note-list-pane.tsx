@@ -2,6 +2,7 @@ import { PanelLeft, Plus, Search, X } from "lucide-react";
 import { type RefObject, useMemo, useState } from "react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip } from "@/components/ui/tooltip";
+import type { NoteFileActions } from "@/features/file-tree/note-context-menu";
 import { useNoteList } from "@/features/search/queries";
 import { SearchResults } from "@/features/search/search-results";
 import type { SearchHit } from "@/lib/copper/search";
@@ -25,6 +26,7 @@ export function NoteListPane({
   leftRestoreControl = false,
   onToggleLeft,
   notesOverride,
+  fileActions,
 }: {
   title?: string;
   vaultId?: string;
@@ -44,6 +46,7 @@ export function NoteListPane({
   leftRestoreControl?: boolean;
   onToggleLeft?: () => void;
   notesOverride?: SearchHit[];
+  fileActions?: NoteFileActions;
 }) {
   const notes = useNoteList(vaultId, scope, searchQuery ?? "");
   const [sort, setSort] = useState<"modified" | "title">("modified");
@@ -161,6 +164,7 @@ export function NoteListPane({
           selectedPath={selectedPath}
           onOpen={onOpen ?? (() => undefined)}
           onPin={onPin}
+          fileActions={fileActions}
           emptyLabel={
             indexError
               ? "The note index could not be updated."

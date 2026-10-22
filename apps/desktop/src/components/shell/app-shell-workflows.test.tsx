@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   getAppShellMocks,
   renderShell,
@@ -139,15 +139,17 @@ describe("AppShell workspace workflows", () => {
     expect(await screen.findByText("This Vault is empty.")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Add to Vault" }));
     await user.click(screen.getByRole("menuitem", { name: "New note" }));
-    expect(mocks.createFile).toHaveBeenCalledWith(
-      "demo",
-      "Untitled.md",
-      "# Untitled\n",
-    );
+    expect(mocks.createFile).toHaveBeenCalledWith("demo", "Untitled.md", "");
 
-    vi.spyOn(window, "prompt").mockReturnValueOnce("Projects");
     await user.click(screen.getByRole("button", { name: "Add to Vault" }));
     await user.click(screen.getByRole("menuitem", { name: "New folder" }));
+    await user.type(
+      await screen.findByRole("textbox", { name: "Folder name" }),
+      "Projects{Enter}",
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "New folder" })).toBeNull(),
+    );
     expect(mocks.createFolder).toHaveBeenCalledWith("demo", "Projects");
   });
 
@@ -159,17 +161,13 @@ describe("AppShell workspace workflows", () => {
 
     await user.click(screen.getByRole("button", { name: "Add to Vault" }));
     await user.click(screen.getByRole("menuitem", { name: "New note" }));
-    expect(mocks.createFile).toHaveBeenCalledWith(
-      "demo",
-      "Untitled.md",
-      "# Untitled\n",
-    );
+    expect(mocks.createFile).toHaveBeenCalledWith("demo", "Untitled.md", "");
 
     await user.click(screen.getByRole("button", { name: "New note" }));
     expect(mocks.createFile).toHaveBeenCalledWith(
       "demo",
       "Projects/Untitled.md",
-      "# Untitled\n",
+      "",
     );
   });
 

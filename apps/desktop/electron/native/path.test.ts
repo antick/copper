@@ -2,7 +2,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { canonicalizeDir, normalizeRelative, resolveInVault } from "./path";
+import {
+  canonicalizeDir,
+  isInsideRoot,
+  normalizeRelative,
+  resolveInVault,
+} from "./path";
 
 const temps: string[] = [];
 
@@ -25,6 +30,18 @@ describe("normalizeRelative", () => {
     );
     expect(() => normalizeRelative("../secret.md")).toThrowError(/outside/);
     expect(normalizeRelative("notes/../Inbox/a.md")).toBe("Inbox/a.md");
+  });
+});
+
+describe("isInsideRoot", () => {
+  it("allows contained paths whose names start with two dots", () => {
+    const root = tmpDir();
+    const candidate = path.join(root, "..attachments", "sample.txt");
+
+    expect(isInsideRoot(root, candidate)).toBe(true);
+    expect(isInsideRoot(root, path.resolve(root, "..", "outside.txt"))).toBe(
+      false,
+    );
   });
 });
 

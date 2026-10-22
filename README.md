@@ -145,6 +145,13 @@ Lora, and JetBrains Mono are bundled for offline use; system sans, Georgia, and
 system mono are also available with platform fallbacks. These preferences stay
 in Copper’s app data and do not change your Markdown files.
 
+New notes start with an empty body; Copper does not insert a duplicate title
+heading. Click the title above the editor to rename the file, press Enter to
+save, or Escape to cancel. The file extension is preserved. Existing Markdown
+headings stay in your content. Right-click notes in the list or Pinned section
+to open a tab, rename, archive, or move them to Trash. File and folder naming
+uses app dialogs, including in the folder tree.
+
 `Archive/` at the Vault root is reserved and hidden from the tree. **Archive**
 moves a Markdown note to `Archive/<original-relative-path>` in the same Vault;
 **Restore from Archive** removes that prefix. Neither operation overwrites an

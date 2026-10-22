@@ -130,6 +130,32 @@ describe("settings", () => {
     expect(settings.issueIdPrefix).toBe("ISSUE");
   });
 
+  it("falls back from invalid legacy attachment folders and rejects invalid saves", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-set-folder-"));
+    temps.push(dir);
+    fs.writeFileSync(
+      settingsPath(dir),
+      JSON.stringify({ attachmentFolder: "/images" }),
+    );
+
+    expect(loadSettings(dir).attachmentFolder).toBe("attachments");
+    expect(() => saveSettings(dir, { attachmentFolder: "../outside" })).toThrow(
+      /parent|Vault/i,
+    );
+    expect(fs.readFileSync(settingsPath(dir), "utf8")).toContain("/images");
+    expect(() => saveSettings(dir, { attachmentFolder: "/images" })).toThrow(
+      /relative/i,
+    );
+    expect(fs.readFileSync(settingsPath(dir), "utf8")).toContain("/images");
+
+    saveSettings(dir, {
+      attachmentFolder: "Notes and Images/Raw Uploads",
+    });
+    expect(loadSettings(dir).attachmentFolder).toBe(
+      "Notes and Images/Raw Uploads",
+    );
+  });
+
   it("migrates legacy string tabs", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-set3-"));
     temps.push(dir);

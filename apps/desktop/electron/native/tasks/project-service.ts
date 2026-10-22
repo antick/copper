@@ -1,9 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import {
-  ARCHIVED_PROJECTS_DIR,
-  isArchivedTaskPath,
-} from "../../../shared/task-paths";
+import { isArchivedTaskPath } from "../../../shared/task-paths";
 import { ARCHIVE_DIR } from "../constants";
 import { CopperError } from "../errors";
 import {
@@ -21,9 +18,11 @@ import {
   writeFrontmatter,
 } from "../markdown/frontmatter";
 import { resolveInVault, toPosix } from "../path";
+import { activeTaskArchivePatterns } from "./archive-service";
 import {
   DEFAULT_PROJECT_STATUS,
   FRONTMATTER_KEYS,
+  ISSUE_STATUSES,
   PROJECTS_DIR,
   TYPE_ISSUE,
   TYPE_PROJECT,
@@ -37,7 +36,13 @@ import {
   replaceHeading,
 } from "./fields";
 import { slugifyTitle } from "./ids";
-import { ensureTaskFolders, listIssues, updateIssue } from "./service";
+import {
+  ensureTaskFolders,
+  listIssues,
+  updateIssueForTransaction,
+} from "./service";
+import { fallbackTaskId } from "./task-identity";
+import { findTaskPath } from "./task-lookup";
 import type {
   CreateProjectInput,
   TaskProject,
@@ -52,16 +57,13 @@ import {
   parseWorkflow,
   projectIcon,
 } from "./workflow";
+import type { TaskWriteSnapshot } from "./write-rollback";
+import { rollbackTaskWrites } from "./write-rollback";
 
 function emptyCounts(): TaskProjectCounts {
-  return {
-    backlog: 0,
-    todo: 0,
-    in_progress: 0,
-    in_review: 0,
-    done: 0,
-    canceled: 0,
-  };
+  return Object.fromEntries(
+    ISSUE_STATUSES.map((status) => [status, 0]),
+  ) as TaskProjectCounts;
 }
 
 function projectFromParsed(
@@ -69,10 +71,11 @@ function projectFromParsed(
   parsed: Frontmatter,
   counts: TaskProjectCounts,
 ): TaskProject {
+  const storedId = parsed.values[FRONTMATTER_KEYS.id];
   const id =
-    typeof parsed.values[FRONTMATTER_KEYS.id] === "string"
-      ? String(parsed.values[FRONTMATTER_KEYS.id])
-      : slugifyTitle(fileStemTitle(relative));
+    typeof storedId === "string" && storedId.length > 0
+      ? storedId
+      : fallbackTaskId(relative, "project");
   return {
     path: toPosix(relative),
     id,
@@ -119,13 +122,14 @@ function labelsFor(db: ReturnType<typeof openIndex>, filePath: string) {
 
 function countsByProject(db: ReturnType<typeof openIndex>) {
   const map = new Map<string | null, TaskProjectCounts>();
+  const archivePatterns = activeTaskArchivePatterns();
   const rows = db
     .prepare(
       `SELECT project_id, status, count(*) as n FROM tasks
-       WHERE kind = ? AND path NOT LIKE 'Archive/%'
+       WHERE kind = ? AND path NOT LIKE ? AND path NOT LIKE ?
        GROUP BY project_id, status`,
     )
-    .all(TYPE_ISSUE) as Array<{
+    .all(TYPE_ISSUE, ...archivePatterns) as Array<{
     project_id: string | null;
     status: string;
     n: number;
@@ -186,29 +190,23 @@ export function listProjects(dbPath: string): TaskProject[] {
 }
 
 function findProjectPath(root: string, id: string): string {
-  for (const directory of [PROJECTS_DIR, ARCHIVED_PROJECTS_DIR]) {
-    const absolute = path.join(root, directory);
-    if (!fs.existsSync(absolute)) continue;
-    for (const name of fs.readdirSync(absolute)) {
-      if (!/\.(md|markdown)$/i.test(name)) continue;
-      const relative = `${directory}/${name}`;
-      try {
-        const [source] = readFile(root, relative);
-        if (parseFrontmatter(source).values[FRONTMATTER_KEYS.id] === id) {
-          return relative;
-        }
-      } catch {
-        // Skip unreadable files.
-      }
-    }
-  }
-  throw CopperError.notFound(`Project ${id} was not found`);
+  return findTaskPath(root, "project", id, { includeArchived: true });
 }
 
-export function getProject(root: string, id: string): TaskProject {
+export function getProject(
+  root: string,
+  dbPath: string,
+  id: string,
+): TaskProject {
   const relative = findProjectPath(root, id);
   const [source] = readFile(root, relative);
-  return projectFromParsed(relative, parseFrontmatter(source), emptyCounts());
+  const db = openIndex(dbPath);
+  try {
+    const counts = countsByProject(db).get(id) ?? emptyCounts();
+    return projectFromParsed(relative, parseFrontmatter(source), counts);
+  } finally {
+    db.close();
+  }
 }
 
 function uniqueProjectPath(root: string, stem: string) {
@@ -259,17 +257,18 @@ export function createProject(
   };
   createFile(root, relative, writeFrontmatter(parsed, ""));
   indexFilePath(dbPath, root, relative);
-  return getProject(root, id);
+  return getProject(root, dbPath, id);
 }
 
-export function updateProject(
+function updateProjectInternal(
   root: string,
   dbPath: string,
   id: string,
   input: UpdateProjectInput,
+  onWrite?: (snapshot: TaskWriteSnapshot) => void,
 ): TaskProject {
   const relative = findProjectPath(root, id);
-  const [source] = readFile(root, relative);
+  const [source, revision] = readFile(root, relative);
   const parsed = parseFrontmatter(source);
   const current = projectFromParsed(relative, parsed, emptyCounts());
   const title = input.title?.trim() || current.title;
@@ -300,24 +299,31 @@ export function updateProject(
     workflow,
   });
   const next = writeFrontmatter({ ...parsed, values, body }, source);
-  if (next !== source) saveFile(root, relative, next);
+  if (next !== source) {
+    const written = saveFile(root, relative, next, revision.hash);
+    onWrite?.({ path: relative, source, writtenHash: written.hash });
+  }
   indexFilePath(dbPath, root, relative);
-  return getProject(root, id);
+  return getProject(root, dbPath, id);
 }
 
-function restoreSources(
+export function updateProject(
   root: string,
   dbPath: string,
-  snapshots: Array<{ path: string; source: string }>,
-) {
-  for (const snapshot of snapshots) {
-    if (fs.existsSync(resolveInVault(root, snapshot.path))) {
-      saveFile(root, snapshot.path, snapshot.source);
-    } else {
-      createFile(root, snapshot.path, snapshot.source);
-    }
-    indexFilePath(dbPath, root, snapshot.path);
-  }
+  id: string,
+  input: UpdateProjectInput,
+): TaskProject {
+  return updateProjectInternal(root, dbPath, id, input);
+}
+
+function updateProjectForTransaction(
+  root: string,
+  dbPath: string,
+  id: string,
+  input: UpdateProjectInput,
+  onWrite: (snapshot: TaskWriteSnapshot) => void,
+): TaskProject {
+  return updateProjectInternal(root, dbPath, id, input, onWrite);
 }
 
 export function updateProjectWorkflow(
@@ -326,7 +332,7 @@ export function updateProjectWorkflow(
   id: string,
   input: UpdateProjectWorkflowInput,
 ): TaskProject {
-  const project = getProject(root, id);
+  getProject(root, dbPath, id);
   const workflow = parseWorkflow(id, input.workflow);
   if (JSON.stringify(workflow) !== JSON.stringify(input.workflow)) {
     throw CopperError.invalid("Project workflow is invalid");
@@ -343,23 +349,33 @@ export function updateProjectWorkflow(
   ) {
     throw CopperError.invalid("Choose a valid fallback column");
   }
-  const snapshots = [project, ...affected].map((item) => ({
-    path: item.path,
-    source: readFile(root, item.path)[0],
-  }));
+  const writes: TaskWriteSnapshot[] = [];
+  const trackWrite = (snapshot: TaskWriteSnapshot) => writes.push(snapshot);
   try {
     for (const issue of affected) {
-      updateIssue(root, dbPath, issue.id, { status: input.fallbackStatusId });
+      updateIssueForTransaction(
+        root,
+        dbPath,
+        issue.id,
+        { status: input.fallbackStatusId },
+        trackWrite,
+      );
     }
-    return updateProject(root, dbPath, id, { workflow });
+    return updateProjectForTransaction(
+      root,
+      dbPath,
+      id,
+      { workflow },
+      trackWrite,
+    );
   } catch (error) {
-    restoreSources(root, dbPath, snapshots);
+    rollbackTaskWrites(root, dbPath, writes);
     throw error;
   }
 }
 
 export function archiveProject(root: string, dbPath: string, id: string) {
-  const project = getProject(root, id);
+  const project = getProject(root, dbPath, id);
   if (project.archived)
     throw CopperError.invalid("Project is already archived");
   const destination = archiveFile(root, project.path);
@@ -373,23 +389,55 @@ export async function deleteProject(
   id: string,
   trashBackend: (absolute: string) => Promise<void>,
 ) {
-  const project = getProject(root, id);
+  const project = getProject(root, dbPath, id);
   const affected = listIssues(dbPath).filter((issue) => issue.project === id);
-  const snapshots = [project, ...affected].map((item) => ({
-    path: item.path,
-    source: readFile(root, item.path)[0],
-  }));
+  const writes: TaskWriteSnapshot[] = [];
+  const trackWrite = (snapshot: TaskWriteSnapshot) => writes.push(snapshot);
+  let projectSourceForTrash: string | undefined;
+  let trashBackendStarted = false;
   try {
     for (const issue of affected) {
-      updateIssue(root, dbPath, issue.id, {
-        project: null,
-        status: isCustomStatus(issue.status) ? "todo" : issue.status,
-      });
+      updateIssueForTransaction(
+        root,
+        dbPath,
+        issue.id,
+        {
+          project: null,
+          status: isCustomStatus(issue.status) ? "todo" : issue.status,
+        },
+        trackWrite,
+      );
     }
     removeIndexedPath(dbPath, project.path);
-    await trashPath(root, project.path, trashBackend);
+    projectSourceForTrash = readFile(root, project.path)[0];
+    await trashPath(root, project.path, async (absolute) => {
+      trashBackendStarted = true;
+      return trashBackend(absolute);
+    });
   } catch (error) {
-    restoreSources(root, dbPath, snapshots);
+    rollbackTaskWrites(root, dbPath, writes);
+    try {
+      const projectAbsolute = resolveInVault(root, project.path);
+      if (
+        trashBackendStarted &&
+        projectSourceForTrash !== undefined &&
+        !fs.existsSync(projectAbsolute)
+      ) {
+        createFile(root, project.path, projectSourceForTrash);
+      }
+    } catch {
+      // Failed trash compensation must not replace the original failure.
+    }
+    try {
+      const projectAbsolute = resolveInVault(root, project.path);
+      if (fs.existsSync(projectAbsolute)) {
+        indexFilePath(dbPath, root, project.path);
+      } else {
+        removeIndexedPath(dbPath, project.path);
+      }
+    } catch {
+      // Index repair must not replace the original failure.
+    }
     throw error;
   }
 }

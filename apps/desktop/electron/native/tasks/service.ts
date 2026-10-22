@@ -7,7 +7,6 @@ import {
   insertionRank,
   issueInsertionIndex,
 } from "../../../shared/task-order";
-import { TASK_ARCHIVE_DIR } from "../../../shared/task-paths";
 import { CopperError } from "../errors";
 import { createFile, createFolder, readFile, saveFile } from "../files/service";
 import { openIndex } from "../index/db";
@@ -18,6 +17,10 @@ import {
   writeFrontmatter,
 } from "../markdown/frontmatter";
 import { toPosix } from "../path";
+import {
+  activeTaskArchivePatterns,
+  isArchivedTaskSourcePath,
+} from "./archive-service";
 import {
   DEFAULT_ISSUE_PRIORITY,
   DEFAULT_ISSUE_STATUS,
@@ -39,6 +42,8 @@ import {
 } from "./fields";
 import { allocateIssueId, slugifyTitle } from "./ids";
 import { migrateTaskStorage } from "./storage";
+import { fallbackTaskId } from "./task-identity";
+import { findTaskPath, sameTaskIdentity } from "./task-lookup";
 import type {
   CreateIssueInput,
   MoveIssueInput,
@@ -46,6 +51,12 @@ import type {
   TaskIssue,
   UpdateIssueInput,
 } from "./types";
+import type { TaskCreationSnapshot, TaskWriteSnapshot } from "./write-rollback";
+import {
+  rollbackTaskCreations,
+  rollbackTaskWrites,
+  snapshotTaskCreation,
+} from "./write-rollback";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -69,10 +80,11 @@ function uniquePath(root: string, directory: string, stem: string): string {
 }
 
 function issueFromParsed(relative: string, parsed: Frontmatter): TaskIssue {
+  const storedId = parsed.values[FRONTMATTER_KEYS.id];
   const id =
-    typeof parsed.values[FRONTMATTER_KEYS.id] === "string"
-      ? String(parsed.values[FRONTMATTER_KEYS.id])
-      : fileStemTitle(relative);
+    typeof storedId === "string" && storedId.length > 0
+      ? storedId
+      : fallbackTaskId(relative, "issue");
   const title = headingTitle(parsed.body, fileStemTitle(relative));
   return {
     path: toPosix(relative),
@@ -123,19 +135,26 @@ function labelsFor(
     .map((row) => (row as { label: string }).label);
 }
 
-export function listIssues(dbPath: string): TaskIssue[] {
+export function listIssues(
+  dbPath: string,
+  options: { includeArchived?: boolean } = {},
+): TaskIssue[] {
   const db = openIndex(dbPath);
   try {
-    const rows = db
-      .prepare(
-        `SELECT path, id, status, priority, project_id, due, rank, title, created, updated
+    const archivePatterns = activeTaskArchivePatterns();
+    const sql = options.includeArchived
+      ? `SELECT path, id, status, priority, project_id, due, rank, title, created, updated
+         FROM tasks WHERE kind = ? ORDER BY rank ASC, id ASC`
+      : `SELECT path, id, status, priority, project_id, due, rank, title, created, updated
          FROM tasks
-         WHERE kind = ?
-           AND path NOT LIKE 'Archive/%'
-           AND path NOT LIKE ?
-         ORDER BY rank ASC, id ASC`,
-      )
-      .all(TYPE_ISSUE, `${TASK_ARCHIVE_DIR}/%`) as Array<{
+         WHERE kind = ? AND path NOT LIKE ? AND path NOT LIKE ?
+         ORDER BY rank ASC, id ASC`;
+    const query = db.prepare(sql);
+    const rows = (
+      options.includeArchived
+        ? query.all(TYPE_ISSUE)
+        : query.all(TYPE_ISSUE, ...archivePatterns)
+    ) as Array<{
       path: string;
       id: string;
       status: string;
@@ -147,19 +166,23 @@ export function listIssues(dbPath: string): TaskIssue[] {
       created: string | null;
       updated: string | null;
     }>;
-    return rows.map((row) => ({
-      path: row.path,
-      id: row.id,
-      title: row.title,
-      status: asIssueStatus(row.status),
-      priority: asIssuePriority(row.priority),
-      project: row.project_id,
-      labels: labelsFor(db, row.path),
-      due: row.due,
-      rank: row.rank,
-      created: row.created ?? "",
-      updated: row.updated ?? "",
-    }));
+    return rows
+      .filter(
+        (row) => options.includeArchived || !isArchivedTaskSourcePath(row.path),
+      )
+      .map((row) => ({
+        path: row.path,
+        id: row.id,
+        title: row.title,
+        status: asIssueStatus(row.status),
+        priority: asIssuePriority(row.priority),
+        project: row.project_id,
+        labels: labelsFor(db, row.path),
+        due: row.due,
+        rank: row.rank,
+        created: row.created ?? "",
+        updated: row.updated ?? "",
+      }));
   } finally {
     db.close();
   }
@@ -172,25 +195,7 @@ export function getIssue(root: string, id: string): TaskIssue {
 }
 
 function findIssuePath(root: string, id: string): string {
-  const dir = path.join(root, ISSUES_DIR);
-  if (fs.existsSync(dir)) {
-    for (const name of fs.readdirSync(dir)) {
-      if (!/\.(md|markdown)$/i.test(name)) {
-        continue;
-      }
-      const relative = `${ISSUES_DIR}/${name}`;
-      try {
-        const [source] = readFile(root, relative);
-        const parsed = parseFrontmatter(source);
-        if (parsed.values[FRONTMATTER_KEYS.id] === id) {
-          return relative;
-        }
-      } catch {
-        // Skip unreadable files.
-      }
-    }
-  }
-  throw CopperError.notFound(`Issue ${id} was not found`);
+  return findTaskPath(root, "issue", id);
 }
 
 export function createIssue(
@@ -209,6 +214,7 @@ export function createIssue(
     ? column.find((issue) => issue.id === input.afterId)
     : undefined;
   const after = named ?? column.at(-1);
+  const creations: TaskCreationSnapshot[] = [];
   return writeAtPosition(
     root,
     dbPath,
@@ -240,21 +246,25 @@ export function createIssue(
           },
         ),
       };
-      createFile(root, relative, writeFrontmatter(parsed, ""));
-      indexFilePath(dbPath, root, relative);
+      const contents = writeFrontmatter(parsed, "");
+      const createdPath = createFile(root, relative, contents);
+      creations.push(snapshotTaskCreation(createdPath, contents));
+      indexFilePath(dbPath, root, createdPath);
       return getIssue(root, id);
     },
+    creations,
   );
 }
 
-export function updateIssue(
+function updateIssueInternal(
   root: string,
   dbPath: string,
   id: string,
   input: UpdateIssueInput,
+  onWrite?: (snapshot: TaskWriteSnapshot) => void,
 ): TaskIssue {
   const relative = findIssuePath(root, id);
-  const [source] = readFile(root, relative);
+  const [source, revision] = readFile(root, relative);
   const parsed = parseFrontmatter(source);
   const current = issueFromParsed(relative, parsed);
   const title = input.title?.trim() ?? current.title;
@@ -282,10 +292,30 @@ export function updateIssue(
     source,
   );
   if (next !== source) {
-    saveFile(root, relative, next);
+    const written = saveFile(root, relative, next, revision.hash);
+    onWrite?.({ path: relative, source, writtenHash: written.hash });
   }
   indexFilePath(dbPath, root, relative);
   return getIssue(root, id);
+}
+
+export function updateIssue(
+  root: string,
+  dbPath: string,
+  id: string,
+  input: UpdateIssueInput,
+): TaskIssue {
+  return updateIssueInternal(root, dbPath, id, input);
+}
+
+export function updateIssueForTransaction(
+  root: string,
+  dbPath: string,
+  id: string,
+  input: UpdateIssueInput,
+  onWrite: (snapshot: TaskWriteSnapshot) => void,
+): TaskIssue {
+  return updateIssueInternal(root, dbPath, id, input, onWrite);
 }
 
 function commentBody(value: string): string {
@@ -301,7 +331,7 @@ function mutateIssueComments(
   mutate: (comments: TaskComment[], updated: string) => TaskComment[],
 ): TaskIssue {
   const relative = findIssuePath(root, id);
-  const [source] = readFile(root, relative);
+  const [source, revision] = readFile(root, relative);
   const parsed = parseFrontmatter(source);
   const updated = nowIso();
   const comments = mutate(
@@ -314,7 +344,7 @@ function mutateIssueComments(
     [FRONTMATTER_KEYS.updated]: updated,
   };
   const next = writeFrontmatter({ ...parsed, values }, source);
-  if (next !== source) saveFile(root, relative, next);
+  if (next !== source) saveFile(root, relative, next, revision.hash);
   indexFilePath(dbPath, root, relative);
   return getIssue(root, id);
 }
@@ -379,20 +409,26 @@ export function moveIssue(
   input: MoveIssueInput,
 ): TaskIssue {
   const issues = listIssues(dbPath);
-  const current = issues.find((issue) => issue.id === id);
+  const current =
+    issues.find((issue) => issue.id === id) ??
+    issues.find((issue) => sameTaskIdentity("issue", issue.id, id));
   if (!current) {
     throw CopperError.notFound(`Issue ${id} was not found`);
   }
   const status = input.status ?? current.status;
   const column = issues
-    .filter((issue) => issue.status === status && issue.id !== id)
+    .filter(
+      (issue) =>
+        issue.status === status && !sameTaskIdentity("issue", issue.id, id),
+    )
     .sort(compareTaskOrder);
   return writeAtPosition(
     root,
     dbPath,
     column,
     issueInsertionIndex(column, input),
-    (rank) => updateIssue(root, dbPath, id, { status, rank }),
+    (rank, onWrite) =>
+      updateIssueInternal(root, dbPath, id, { status, rank }, onWrite),
   );
 }
 
@@ -401,25 +437,29 @@ function writeAtPosition(
   dbPath: string,
   column: TaskIssue[],
   index: number,
-  write: (rank: string) => TaskIssue,
+  write: (
+    rank: string,
+    onWrite?: (snapshot: TaskWriteSnapshot) => void,
+  ) => TaskIssue,
+  creations: TaskCreationSnapshot[] = [],
 ): TaskIssue {
   const { rank, repairs } = insertionRank(column, index);
-  const originals = repairs.length
-    ? column.map((issue) => ({
-        path: issue.path,
-        source: readFile(root, issue.path)[0],
-      }))
-    : [];
+  const writes: TaskWriteSnapshot[] = [];
+  const trackWrite = (snapshot: TaskWriteSnapshot) => writes.push(snapshot);
   try {
     for (const repair of repairs) {
-      updateIssue(root, dbPath, repair.id, { rank: repair.rank });
+      updateIssueInternal(
+        root,
+        dbPath,
+        repair.id,
+        { rank: repair.rank },
+        trackWrite,
+      );
     }
-    return write(rank);
+    return write(rank, trackWrite);
   } catch (error) {
-    for (const original of originals) {
-      saveFile(root, original.path, original.source);
-      indexFilePath(dbPath, root, original.path);
-    }
+    rollbackTaskWrites(root, dbPath, writes);
+    rollbackTaskCreations(root, dbPath, creations);
     throw error;
   }
 }

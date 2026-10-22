@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -181,21 +182,6 @@ describe("TasksWorkspace", () => {
     const restore = screen.getByRole("button", { name: "Show left sidebar" });
     await userEvent.click(restore);
     expect(onToggleLeft).toHaveBeenCalledOnce();
-  });
-
-  it("opens the shared composer from a column with its status selected", async () => {
-    const user = userEvent.setup();
-    renderTasks();
-    await screen.findByText("Fast board");
-    await user.click(
-      screen.getByRole("button", { name: "New Canceled issue" }),
-    );
-    expect(
-      screen.getByRole("button", { name: "Issue status" }),
-    ).toHaveTextContent("Canceled");
-    expect(
-      screen.getByRole("button", { name: "Issue project" }),
-    ).toHaveTextContent("No project");
   });
 
   it("opens project actions from the shared right-click menu", async () => {
@@ -483,16 +469,25 @@ describe("TasksWorkspace", () => {
   });
 
   it("preserves issue command events", async () => {
-    const prompt = vi.spyOn(window, "prompt").mockReturnValue("ui, desktop");
+    const user = userEvent.setup();
     renderTasks({ selectedIssueId: "COPP-1" });
     await screen.findByLabelText("Issue title");
 
-    window.dispatchEvent(new Event("copper:set-issue-labels"));
+    act(() => window.dispatchEvent(new Event("copper:set-issue-labels")));
+    const dialog = await screen.findByRole("dialog", {
+      name: "Edit issue labels",
+    });
+    const input = within(dialog).getByRole("textbox", { name: "Labels" });
+    expect(input).toHaveValue("ui");
+    await user.clear(input);
+    await user.type(input, "ui, desktop");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save labels" }),
+    );
     await waitFor(() =>
       expect(mocks.updateIssue).toHaveBeenCalledWith("demo", "COPP-1", {
         labels: ["ui", "desktop"],
       }),
     );
-    prompt.mockRestore();
   });
 });

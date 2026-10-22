@@ -1,68 +1,50 @@
-import { useEffect, useState } from "react";
-import { isRecentCopperSave, subscribeToVaultFs } from "@/lib/copper/events";
+import { useState } from "react";
 
 export function ExternalChangeBanner({
-  vaultId,
-  path,
-  dirty,
+  visible,
   onReload,
   onKeep,
 }: {
-  vaultId: string;
-  path: string;
-  dirty: boolean;
-  onReload: () => void;
-  onKeep: () => void;
+  visible: boolean;
+  onReload: () => Promise<void>;
+  onKeep: () => Promise<void>;
 }) {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const stop = subscribeToVaultFs((payload) => {
-      const matches =
-        ("path" in payload && payload.path === path) ||
-        (payload.type === "renamed" &&
-          (payload.from === path || payload.to === path));
-      if (matches && dirty && !isRecentCopperSave(vaultId, path)) {
-        setVisible(true);
-      }
-    });
-    return () => {
-      stop();
-    };
-  }, [dirty, path, vaultId]);
-
-  if (!visible) {
-    return null;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!visible) return null;
+  async function resolve(action: () => Promise<void>) {
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The conflict could not be resolved. Your draft is kept.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
-
   return (
     <div className="copper-conflict-banner" role="status">
-      {dirty
-        ? "This file changed on disk while you have unsaved edits."
-        : "This file changed on disk."}
+      This file changed on disk. Autosave is paused until you choose a version.
       <button
         type="button"
-        onClick={() => {
-          setVisible(false);
-          onReload();
-        }}
+        disabled={busy}
+        onClick={() => void resolve(onReload)}
       >
         Reload Disk Version
       </button>
-      {dirty ? (
-        <button
-          type="button"
-          onClick={() => {
-            setVisible(false);
-            onKeep();
-          }}
-        >
-          Keep Mine
-        </button>
-      ) : null}
-      <button type="button" onClick={() => setVisible(false)}>
-        Dismiss
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void resolve(onKeep)}
+      >
+        Keep Mine
       </button>
+      {error ? <p role="alert">{error}</p> : null}
     </div>
   );
 }

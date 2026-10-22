@@ -10,6 +10,7 @@ import type {
 } from "@/lib/copper/tasks";
 
 export function TaskOverlays({
+  vaultId,
   issue,
   projects,
   composer,
@@ -23,6 +24,7 @@ export function TaskOverlays({
   onSubmitIssue,
   onSubmitProject,
 }: {
+  vaultId: string;
   issue?: TaskIssue;
   projects: TaskProject[];
   composer: "issue" | "project" | null;
@@ -39,6 +41,7 @@ export function TaskOverlays({
   return (
     <>
       <TaskDetail
+        vaultId={vaultId}
         issue={issue}
         projects={projects}
         onClose={onCloseIssue}
@@ -49,6 +52,7 @@ export function TaskOverlays({
       {composer ? (
         <TaskCreateDialog
           key={composer}
+          vaultId={vaultId}
           open
           kind={composer}
           projects={projects}

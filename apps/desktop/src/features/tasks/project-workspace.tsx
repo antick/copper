@@ -30,6 +30,7 @@ const PROJECT_STATUS_OPTIONS = PROJECT_STATUSES.map((value) => ({
 }));
 
 export function ProjectWorkspace({
+  vaultId,
   project,
   view,
   onViewChange,
@@ -38,6 +39,7 @@ export function ProjectWorkspace({
   toolbar,
   children,
 }: {
+  vaultId: string;
   project: TaskProject;
   view: TasksProjectView;
   onViewChange: (view: TasksProjectView) => void;
@@ -153,6 +155,7 @@ export function ProjectWorkspace({
           />
           <div className="copper-task-project-description">
             <TaskDescriptionEditor
+              vaultId={vaultId}
               key={project.id}
               documentId={project.id}
               body={taskDescription(project.body)}

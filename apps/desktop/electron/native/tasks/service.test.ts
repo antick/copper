@@ -405,6 +405,32 @@ describe("tasks service", () => {
     expect(listIssues(db).map((item) => item.id)).toEqual([]);
   });
 
+  it("can discover issues archived by Tasks and Notes", () => {
+    const { root, db } = vault();
+    const taskArchived = createIssue(root, db, { title: "Tasks archive" });
+    const notesArchived = createIssue(root, db, { title: "Notes archive" });
+    const taskArchivePath = archiveFile(root, taskArchived.path);
+    const notesArchivePath = `Archive/${notesArchived.path}`;
+    fs.mkdirSync(path.dirname(path.join(root, notesArchivePath)), {
+      recursive: true,
+    });
+    fs.renameSync(
+      path.join(root, notesArchived.path),
+      path.join(root, notesArchivePath),
+    );
+    indexFilePath(db, root, taskArchived.path);
+    indexFilePath(db, root, taskArchivePath);
+    indexFilePath(db, root, notesArchived.path);
+    indexFilePath(db, root, notesArchivePath);
+
+    expect(listIssues(db)).toEqual([]);
+    expect(
+      listIssues(db, { includeArchived: true })
+        .map((issue) => issue.id)
+        .sort(),
+    ).toEqual([taskArchived.id, notesArchived.id].sort());
+  });
+
   it("drops trashed issues from the list", async () => {
     const { root, db } = vault();
     const issue = createIssue(root, db, { title: "Gone" });

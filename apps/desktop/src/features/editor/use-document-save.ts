@@ -1,75 +1,55 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  type DocumentSaveQueue,
+  documentSaveQueue,
+} from "@/features/editor/document-save-queue";
+import { DOCUMENT_SAVE_DELAY_MS } from "../../../shared/document-save";
 
-export type ScheduledDocumentSave = ((contents: string) => void) & {
-  flush: () => Promise<void>;
-  hasPending: () => boolean;
-  cancel: () => void;
-};
-
-/**
- * Debounces normal persistence while guaranteeing that a pending edit is
- * flushed when the editor unmounts (for example, during a quick tab switch).
- */
 export function useDocumentSave(
   save: (contents: string) => Promise<void>,
-  delayMs = 400,
-): ScheduledDocumentSave {
-  const saveRef = useRef(save);
-  saveRef.current = save;
-  const timerRef = useRef<number>(undefined);
-  const pendingRef = useRef<string | undefined>(undefined);
-
-  const flush = useCallback(async () => {
-    window.clearTimeout(timerRef.current);
-    timerRef.current = undefined;
-    const contents = pendingRef.current;
-    if (contents === undefined) return;
-    pendingRef.current = undefined;
-    try {
-      await saveRef.current(contents);
-    } catch (error) {
-      pendingRef.current ??= contents;
-      throw error;
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(timerRef.current);
-      const contents = pendingRef.current;
-      pendingRef.current = undefined;
-      if (contents !== undefined) {
-        // React cleanup cannot await, but starting the save here prevents a
-        // tab switch from simply discarding the debounced buffer.
-        void saveRef.current(contents).catch(() => undefined);
+  delayMs = DOCUMENT_SAVE_DELAY_MS,
+  key?: string,
+  vaultId?: string,
+  identityKey?: string,
+) {
+  const queueRef = useRef<
+    | {
+        key?: string;
+        vaultId?: string;
+        identityKey?: string;
+        queue: DocumentSaveQueue;
       }
-    };
-  }, []);
-
-  const cancel = useCallback(() => {
-    window.clearTimeout(timerRef.current);
-    timerRef.current = undefined;
-    pendingRef.current = undefined;
-  }, []);
-
-  const schedule = useCallback(
-    (contents: string) => {
-      pendingRef.current = contents;
-      window.clearTimeout(timerRef.current);
-      timerRef.current = window.setTimeout(() => {
-        void flush().catch(() => undefined);
-      }, delayMs);
-    },
-    [delayMs, flush],
-  );
-
+    | undefined
+  >(undefined);
+  const identity = queueRef.current;
+  let queue: DocumentSaveQueue;
+  if (
+    identity &&
+    identity.key === key &&
+    identity.vaultId === vaultId &&
+    identity.identityKey === identityKey
+  ) {
+    queue = identity.queue;
+    queue.configure(save, delayMs);
+  } else {
+    queue = documentSaveQueue(key, save, delayMs, vaultId);
+    queue.configure(save, delayMs);
+    queueRef.current = { key, vaultId, identityKey, queue };
+  }
+  useEffect(() => {
+    queue.attach();
+    return () => queue.detach();
+  }, [queue]);
   return useMemo(
     () =>
-      Object.assign(schedule, {
-        flush,
-        hasPending: () => pendingRef.current !== undefined,
-        cancel,
+      Object.assign(queue.schedule, {
+        flush: queue.flush,
+        hasPending: queue.hasPending,
+        cancel: queue.cancel,
+        pause: queue.pause,
+        resume: queue.resume,
+        settle: queue.settle,
       }),
-    [cancel, flush, schedule],
+    [queue],
   );
 }

@@ -1,4 +1,4 @@
-import { Plus, RotateCcw } from "lucide-react";
+import { ArchiveRestore, Plus, RotateCcw } from "lucide-react";
 import type { Dispatch } from "react";
 import { WorkspaceTopBar } from "@/components/shell/workspace-top-bar";
 import { IconButton } from "@/components/ui/icon-button";
@@ -44,6 +44,7 @@ export function TaskTopBar({
   projects,
   leftCollapsed,
   onRestoreSidebar,
+  onShowArchived,
 }: {
   state: TaskTabsState;
   dispatch: Dispatch<TaskTabsAction>;
@@ -51,6 +52,7 @@ export function TaskTopBar({
   projects: TaskProject[];
   leftCollapsed: boolean;
   onRestoreSidebar: () => void;
+  onShowArchived: () => void;
 }) {
   const active = state.tabs.find((tab) => tab.id === state.activeTabId);
   return (
@@ -74,6 +76,11 @@ export function TaskTopBar({
       firstVisible={leftCollapsed}
       actions={
         <>
+          <Tooltip content="Archived items">
+            <IconButton label="Archived items" onClick={onShowArchived}>
+              <ArchiveRestore size={15} strokeWidth={1.75} />
+            </IconButton>
+          </Tooltip>
           <Tooltip content="New task tab">
             <IconButton
               label="New task tab"

@@ -2,6 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { archiveFile } from "../files/service";
+import { indexFilePath } from "../index/indexer";
 import {
   archiveProject,
   createProject,
@@ -157,7 +159,9 @@ describe("project task persistence", () => {
     failure.mockRestore();
     expect(fs.readFileSync(path.join(root, issue.path), "utf8")).toBe(before);
     expect(listIssues(db)[0]?.status).toBe("alpha--review");
-    expect(getProject(root, project.id).workflow).toEqual(workflow("alpha"));
+    expect(getProject(root, db, project.id).workflow).toEqual(
+      workflow("alpha"),
+    );
   });
 
   it("persists icon and rename updates without changing identity or extra metadata", () => {
@@ -188,11 +192,114 @@ describe("project task persistence", () => {
     const project = createProject(root, db, { name: "Alpha" });
     createIssue(root, db, { title: "Keep me", project: project.id });
     archiveProject(root, db, project.id);
-    expect(getProject(root, project.id).archived).toBe(true);
+    expect(getProject(root, db, project.id).archived).toBe(true);
     expect(
       listProjects(db).find((item) => item.id === project.id)?.archived,
     ).toBe(true);
     expect(listIssues(db)[0]?.project).toBe(project.id);
+  });
+
+  it("counts active issue files in project list and project detail", () => {
+    const { root, db } = vault();
+    const project = createProject(root, db, { name: "Count me" });
+    createIssue(root, db, { title: "To do", project: project.id });
+    createIssue(root, db, {
+      title: "Done",
+      project: project.id,
+      status: "done",
+    });
+    const archivedIssue = createIssue(root, db, {
+      title: "Archived backlog",
+      project: project.id,
+      status: "backlog",
+    });
+    const notesArchivedIssue = createIssue(root, db, {
+      title: "Notes archived backlog",
+      project: project.id,
+      status: "backlog",
+    });
+    const archivedPath = archiveFile(root, archivedIssue.path);
+    const notesArchivePath = `Archive/${notesArchivedIssue.path}`;
+    fs.mkdirSync(path.dirname(path.join(root, notesArchivePath)), {
+      recursive: true,
+    });
+    fs.renameSync(
+      path.join(root, notesArchivedIssue.path),
+      path.join(root, notesArchivePath),
+    );
+    indexFilePath(db, root, archivedIssue.path);
+    indexFilePath(db, root, archivedPath);
+    indexFilePath(db, root, notesArchivedIssue.path);
+    indexFilePath(db, root, notesArchivePath);
+
+    const expected = {
+      backlog: 0,
+      todo: 1,
+      in_progress: 0,
+      in_review: 0,
+      done: 1,
+      canceled: 0,
+    };
+    expect(
+      listProjects(db).find(({ id }) => id === project.id)?.counts,
+    ).toEqual(expected);
+    expect(getProject(root, db, project.id).counts).toEqual(expected);
+  });
+
+  it("counts nested indexed issues and excludes current and legacy archives", () => {
+    const { root, db } = vault();
+    const project = createProject(root, db, {
+      name: "Nested counts",
+      workflow: workflow("nested-counts"),
+    });
+    const nestedIssue = createIssue(root, db, {
+      title: "Nested custom status",
+      project: project.id,
+      status: "nested-counts--review",
+    });
+    const currentArchivedIssue = createIssue(root, db, {
+      title: "Current archive",
+      project: project.id,
+      status: "done",
+    });
+    const legacyArchivedIssue = createIssue(root, db, {
+      title: "Legacy archive",
+      project: project.id,
+      status: "backlog",
+    });
+
+    const nestedPath = "Research/Issues/nested-custom-status.md";
+    fs.mkdirSync(path.dirname(path.join(root, nestedPath)), {
+      recursive: true,
+    });
+    fs.renameSync(
+      path.join(root, nestedIssue.path),
+      path.join(root, nestedPath),
+    );
+    indexFilePath(db, root, nestedIssue.path);
+    indexFilePath(db, root, nestedPath);
+
+    const currentArchivePath = archiveFile(root, currentArchivedIssue.path);
+    indexFilePath(db, root, currentArchivedIssue.path);
+    indexFilePath(db, root, currentArchivePath);
+
+    const legacyArchivePath = `Archive/${legacyArchivedIssue.path}`;
+    fs.mkdirSync(path.dirname(path.join(root, legacyArchivePath)), {
+      recursive: true,
+    });
+    fs.renameSync(
+      path.join(root, legacyArchivedIssue.path),
+      path.join(root, legacyArchivePath),
+    );
+    indexFilePath(db, root, legacyArchivedIssue.path);
+    indexFilePath(db, root, legacyArchivePath);
+
+    const overview = listProjects(db).find(({ id }) => id === project.id);
+    expect(overview?.counts["nested-counts--review"]).toBe(1);
+    expect(overview?.counts.done).toBe(0);
+    expect(overview?.counts.backlog).toBe(0);
+    expect(listIssues(db).map(({ id }) => id)).toEqual([nestedIssue.id]);
+    expect(getProject(root, db, project.id).counts).toEqual(overview?.counts);
   });
 
   it("deletes a project, unassigns issues, and resets only custom statuses", async () => {

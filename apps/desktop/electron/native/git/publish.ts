@@ -75,7 +75,7 @@ export async function publishGitVault(
       }
       const stagedFiles = await nameOnly(
         root,
-        ["diff", "--cached", "--name-only"],
+        ["diff", "--cached", "--name-only", "-z"],
         runner,
       );
       await runner(root, [
@@ -296,13 +296,10 @@ async function nameOnly(
   runner: GitRunner,
 ): Promise<string[]> {
   const result = await runner(root, args, { allowFailure: true });
-  if (result.code !== 0 || !result.stdout.trim()) {
+  if (result.code !== 0 || !result.stdout) {
     return [];
   }
-  return result.stdout
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  return result.stdout.split("\0").filter((filePath) => filePath.length > 0);
 }
 
 async function changedSince(
@@ -311,7 +308,15 @@ async function changedSince(
   runner: GitRunner,
 ): Promise<string[]> {
   if (!beforeHead) {
-    return nameOnly(root, ["ls-tree", "-r", "--name-only", "HEAD"], runner);
+    return nameOnly(
+      root,
+      ["ls-tree", "-r", "--name-only", "-z", "HEAD"],
+      runner,
+    );
   }
-  return nameOnly(root, ["diff", "--name-only", beforeHead, "HEAD"], runner);
+  return nameOnly(
+    root,
+    ["diff", "--name-only", "-z", "--no-renames", beforeHead, "HEAD"],
+    runner,
+  );
 }

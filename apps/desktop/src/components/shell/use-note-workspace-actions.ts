@@ -1,10 +1,17 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { type Dispatch, useCallback, useState } from "react";
-import { queryClient } from "@/app/query-client";
+import { useFileNameDialog } from "@/features/file-tree/file-name-dialog";
+import {
+  isMarkdownPath,
+  renamedPath,
+  UNTITLED_NOTE,
+} from "@/features/file-tree/file-names";
 import type {
   SessionAction,
   SessionState,
 } from "@/features/tabs/session-reducer";
 import { copper } from "@/lib/copper";
+import { flushOpenDocuments } from "@/lib/copper/events";
 import type { SearchHit } from "@/lib/copper/search";
 import { fileName } from "@/lib/paths";
 
@@ -25,6 +32,8 @@ export function useNoteWorkspaceActions({
   activeIsMarkdown: boolean;
   updateSession: Dispatch<SessionAction>;
 }) {
+  const queryClient = useQueryClient();
+  const { requestName, nameDialog } = useFileNameDialog();
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
@@ -93,23 +102,10 @@ export function useNoteWorkspaceActions({
   }
 
   async function flushActiveDocument() {
-    let resolveFlush: () => void = () => undefined;
-    let rejectFlush: (error: unknown) => void = () => undefined;
-    const completion = new Promise<void>((resolve, reject) => {
-      resolveFlush = resolve;
-      rejectFlush = reject;
-    });
-    const detail = {
-      handled: false,
-      resolve: resolveFlush,
-      reject: rejectFlush,
-    };
-    window.dispatchEvent(new CustomEvent("copper:flush-document", { detail }));
-    if (detail.handled) await completion;
+    if (vaultId) await flushOpenDocuments(vaultId);
   }
 
-  async function trashActiveFile() {
-    const path = session.activePath;
+  async function trashActiveFile(path = session.activePath) {
     if (!vaultId || !path) return;
     if (!window.confirm(`Move “${fileName(path)}” to the system Trash?`))
       return;
@@ -125,38 +121,45 @@ export function useNoteWorkspaceActions({
     }
   }
 
-  async function renameActiveFile() {
-    const path = session.activePath;
-    if (!vaultId || !path) return;
-    const slash = path.lastIndexOf("/");
-    const parent = slash >= 0 ? path.slice(0, slash + 1) : "";
-    const currentName = fileName(path);
-    const requested = window.prompt("Rename file", currentName)?.trim();
-    if (!requested || requested === currentName) return;
-    const currentExtension = currentName.includes(".")
-      ? `.${currentName.split(".").at(-1)}`
-      : "";
-    const nextName =
-      !requested.includes(".") && currentExtension
-        ? `${requested}${currentExtension}`
-        : requested;
-    const nextPath = `${parent}${nextName}`;
-    try {
-      await flushActiveDocument();
-      await copper.files.rename(vaultId, path, nextPath);
-      await copper.search.removeIndexed(vaultId, path);
-      if (activeIsMarkdown) await copper.search.indexFile(vaultId, nextPath);
-      queryClient.removeQueries({ queryKey: ["file", vaultId, path] });
-      renameSessionPaths(path, nextPath);
-      await refreshVaultData();
-    } catch (error) {
-      window.alert(operationError("Couldn’t rename the file", error));
-    }
+  async function renameFileTo(path: string, name: string, title = false) {
+    if (!vaultId) return;
+    const nextPath = renamedPath(path, name, { title });
+    if (path === nextPath) return;
+    await flushActiveDocument();
+    await copper.files.rename(vaultId, path, nextPath);
+    await copper.search.removeIndexed(vaultId, path);
+    if (isMarkdownPath(nextPath))
+      await copper.search.indexFile(vaultId, nextPath);
+    queryClient.removeQueries({ queryKey: ["file", vaultId, path] });
+    renameSessionPaths(path, nextPath);
+    await refreshVaultData();
   }
 
-  async function moveActiveArchive(restore: boolean) {
-    const path = session.activePath;
-    if (!vaultId || !path || !activeIsMarkdown) return;
+  function renameActiveFile(
+    path = session.activePath,
+    onReturnFocus?: () => void,
+  ) {
+    if (!vaultId || !path) return;
+    requestName({
+      title: "Rename file",
+      label: "File name",
+      initialValue: fileName(path),
+      submitLabel: "Rename",
+      onSubmit: (name) => renameFileTo(path, name),
+      onReturnFocus,
+    });
+  }
+
+  async function moveActiveArchive(
+    restore: boolean,
+    path = session.activePath,
+  ) {
+    if (
+      !vaultId ||
+      !path ||
+      !(path === session.activePath ? activeIsMarkdown : isMarkdownPath(path))
+    )
+      return;
     try {
       await flushActiveDocument();
       const nextPath = restore
@@ -184,7 +187,7 @@ export function useNoteWorkspaceActions({
       targetFolderOverride ?? (nav === "folder" ? folder : "");
     const path = uniqueNotePath(existing, targetFolder);
     try {
-      await copper.files.createFile(vaultId, path, "# Untitled\n");
+      await copper.files.createFile(vaultId, path, "");
       await copper.search.indexFile(vaultId, path);
       await refreshVaultData();
       openPinned(path);
@@ -194,6 +197,8 @@ export function useNoteWorkspaceActions({
   }
 
   return {
+    nameDialog,
+    renameFileTo,
     historyIndex,
     historyLength: history.length,
     restoreHistory,
@@ -219,10 +224,10 @@ function operationError(message: string, error: unknown) {
 
 export function uniqueNotePath(existing: ReadonlySet<string>, folder = "") {
   const prefix = folder ? `${folder.replace(/\/+$/, "")}/` : "";
-  let candidate = `${prefix}Untitled.md`;
+  let candidate = `${prefix}${UNTITLED_NOTE}.md`;
   let suffix = 2;
   while (existing.has(candidate)) {
-    candidate = `${prefix}Untitled ${suffix}.md`;
+    candidate = `${prefix}${UNTITLED_NOTE} ${suffix}.md`;
     suffix += 1;
   }
   return candidate;

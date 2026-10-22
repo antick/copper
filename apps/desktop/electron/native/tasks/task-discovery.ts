@@ -1,0 +1,157 @@
+import fs from "node:fs";
+import path from "node:path";
+import {
+  ARCHIVE_DIR,
+  ARCHIVED_ISSUES_DIR,
+  ARCHIVED_PROJECTS_DIR,
+  ISSUES_DIR,
+  isArchivedPath,
+  isTaskSourcePath,
+  LEGACY_TASK_DIRECTORIES,
+  PROJECTS_DIR,
+} from "../../../shared/task-paths";
+import {
+  isMarkdownPath,
+  shouldIndexEntry,
+  shouldIndexFile,
+} from "../index/eligibility";
+import { parseFrontmatter } from "../markdown/frontmatter";
+import { toPosix } from "../path";
+import { FRONTMATTER_KEYS } from "./constants";
+import { fallbackTaskId, type TaskKind } from "./task-identity";
+
+export type { TaskKind } from "./task-identity";
+export { parseIssueId, slugifyTitle } from "./task-identity";
+
+export interface DiscoveredTaskIdentity {
+  relative: string;
+  kind: TaskKind;
+  id: string;
+  archived: boolean;
+}
+
+const TASK_SOURCE_DIRECTORIES: Array<[TaskKind, string]> = [
+  ["issue", ISSUES_DIR],
+  ["issue", ARCHIVED_ISSUES_DIR],
+  ["project", PROJECTS_DIR],
+  ["project", ARCHIVED_PROJECTS_DIR],
+];
+function isMarkdownFileInDirectory(relative: string, directory: string) {
+  if (!relative.startsWith(`${directory}/`)) return false;
+  const name = relative.slice(directory.length + 1);
+  return /^[^/.][^/]*\.(md|markdown)$/i.test(name);
+}
+
+function managedTaskKind(relative: string): TaskKind | undefined {
+  const candidates = relative.startsWith(`${ARCHIVE_DIR}/`)
+    ? [relative, relative.slice(ARCHIVE_DIR.length + 1)]
+    : [relative];
+  const legacy = LEGACY_TASK_DIRECTORIES.find((directory) =>
+    candidates.some((candidate) =>
+      isMarkdownFileInDirectory(candidate, directory.from),
+    ),
+  );
+  if (legacy) return legacy.kind;
+  if (!isTaskSourcePath(relative)) return undefined;
+
+  for (const [kind, directory] of TASK_SOURCE_DIRECTORIES) {
+    if (
+      candidates.some((candidate) =>
+        isMarkdownFileInDirectory(candidate, directory),
+      )
+    ) {
+      return kind;
+    }
+  }
+  return undefined;
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "ENOENT"
+  );
+}
+
+function discoveryError(
+  operation: "list directory" | "read file",
+  relative: string,
+  error: unknown,
+): Error {
+  const detail = error instanceof Error ? error.message : String(error);
+  return new Error(
+    `Cannot discover task identities: failed to ${operation} "${relative}": ${detail}`,
+    { cause: error },
+  );
+}
+
+export function taskIdentityFromSource(
+  relative: string,
+  source: string,
+): DiscoveredTaskIdentity | undefined {
+  if (!isMarkdownPath(relative) || !shouldIndexFile(relative)) return undefined;
+
+  let values: Record<string, unknown> = {};
+  try {
+    values = parseFrontmatter(source).values;
+  } catch {
+    // A recognizable managed filename still reserves its fallback identity.
+  }
+  const pathKind = managedTaskKind(relative);
+  const type = values[FRONTMATTER_KEYS.type];
+  const kind = type === "issue" || type === "project" ? type : pathKind;
+  if (!kind) return undefined;
+
+  const storedId = values[FRONTMATTER_KEYS.id];
+  const id =
+    typeof storedId === "string" && storedId.length > 0
+      ? storedId
+      : fallbackTaskId(relative, kind);
+  if (!id) return undefined;
+  return { relative, kind, id, archived: isArchivedPath(relative) };
+}
+
+export function discoverTaskIdentities(
+  vaultRoot: string,
+): DiscoveredTaskIdentity[] {
+  const tasks: DiscoveredTaskIdentity[] = [];
+
+  function visit(directory: string): void {
+    const relativeDirectory =
+      toPosix(path.relative(vaultRoot, directory)) || ".";
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(directory, { withFileTypes: true });
+    } catch (error) {
+      throw discoveryError("list directory", relativeDirectory, error);
+    }
+
+    for (const entry of entries) {
+      const absolute = path.join(directory, entry.name);
+      const relative = toPosix(path.relative(vaultRoot, absolute));
+      const isDirectory = entry.isDirectory();
+      if (!shouldIndexEntry(relative, entry.name, isDirectory)) continue;
+      if (isDirectory) {
+        visit(absolute);
+        continue;
+      }
+      if (!entry.isFile() || !isMarkdownPath(absolute)) continue;
+
+      try {
+        const identity = taskIdentityFromSource(
+          relative,
+          fs.readFileSync(absolute, "utf8"),
+        );
+        if (identity) tasks.push(identity);
+      } catch (error) {
+        if (isMissingFileError(error)) continue;
+        throw discoveryError("read file", relative, error);
+      }
+    }
+  }
+
+  visit(vaultRoot);
+  return tasks;
+}

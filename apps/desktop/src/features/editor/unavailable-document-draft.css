@@ -1,0 +1,14 @@
+.copper-recovered-draft {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+.copper-recovered-draft textarea {
+  width: 100%;
+  min-height: 240px;
+  padding: 12px;
+  background: var(--editor-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+}

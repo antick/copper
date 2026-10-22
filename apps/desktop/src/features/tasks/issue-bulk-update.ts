@@ -22,6 +22,7 @@ export function useIssueBulkUpdate(
       setFailure(null);
       const failed = await updateIssuesWithFailures(ids, input, update);
       if (failed.length) setFailure({ ids: failed, input });
+      return failed;
     },
     [update],
   );

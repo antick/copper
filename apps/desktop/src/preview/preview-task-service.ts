@@ -8,7 +8,12 @@ import {
   parsePreviewFrontmatter,
   writePreviewMarkdown,
 } from "@/preview/preview-markdown";
-import { ISSUES_DIR, PROJECTS_DIR } from "../../shared/task-paths";
+import {
+  ARCHIVED_PROJECTS_DIR,
+  ISSUES_DIR,
+  isArchivedPath,
+  PROJECTS_DIR,
+} from "../../shared/task-paths";
 
 export const PREVIEW_TASK_UNHANDLED = Symbol("preview-task-unhandled");
 
@@ -73,7 +78,7 @@ function projectFromPath(files: Map<string, string>, filePath: string) {
   for (const issue of [...files.keys()].map((path) =>
     issueFromPath(files, path),
   )) {
-    if (issue?.project === id)
+    if (issue?.project === id && !isArchivedPath(issue.path))
       counts[issue.status] = (counts[issue.status] ?? 0) + 1;
   }
   return {
@@ -91,7 +96,7 @@ function projectFromPath(files: Map<string, string>, filePath: string) {
         ? "folder"
         : String(parsed.values.icon ?? "folder"),
     workflow: parsePreviewWorkflow(parsed.values.workflow),
-    archived: filePath.startsWith("Archive/"),
+    archived: isArchivedPath(filePath),
     counts,
     body: parsed.body,
   };
@@ -119,9 +124,14 @@ export function dispatchPreviewTask(
 ) {
   switch (command) {
     case "list_issues":
-      return issues(files).sort(
-        (a, b) => a.rank.localeCompare(b.rank) || a.id.localeCompare(b.id),
-      );
+      return issues(files)
+        .filter(
+          (issue) =>
+            payload.includeArchived === true || !isArchivedPath(issue.path),
+        )
+        .sort(
+          (a, b) => a.rank.localeCompare(b.rank) || a.id.localeCompare(b.id),
+        );
     case "get_issue": {
       const issue = issues(files).find((item) => item.id === payload.id);
       if (!issue) throw new Error("Issue was not found");
@@ -301,7 +311,10 @@ export function dispatchPreviewTask(
       const source = files.get(current.path);
       if (source) {
         files.delete(current.path);
-        files.set(`Archive/${current.path}`, source);
+        files.set(
+          current.path.replace(PROJECTS_DIR, ARCHIVED_PROJECTS_DIR),
+          source,
+        );
       }
       return null;
     }

@@ -12,6 +12,61 @@
   overscroll-behavior: contain;
 }
 
+/* Center the editor, including its gutters, as one column. */
+.copper-pane-editor .copper-editor-host .cm-editor {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.copper-pane-editor .copper-editor-host .cm-content {
+  max-width: none;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.copper-pane-editor .copper-editor-host .cm-gutters {
+  padding-left: 8px;
+  min-width: clamp(28px, 7%, 48px);
+}
+
+.copper-pane-editor .copper-editor-host .cm-gutters + .cm-content {
+  padding-left: 0;
+}
+
+.copper-title-heading {
+  margin: 0;
+  font: inherit;
+}
+
+.copper-title-button,
+.copper-title-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+}
+
+.copper-title-button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.copper-title-error {
+  color: var(--pill-red-fg);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  white-space: normal;
+}
+
 .copper-image-viewer {
   display: grid;
   width: 100%;

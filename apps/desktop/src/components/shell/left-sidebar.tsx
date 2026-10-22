@@ -1,8 +1,15 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { FilePlus2, FolderPlus, Plus, Star, StickyNote } from "lucide-react";
+import { useRef } from "react";
 import { TitleRegion } from "@/components/shell/title-region";
+import { useFileNameDialog } from "@/features/file-tree/file-name-dialog";
+import { childPath } from "@/features/file-tree/file-names";
 import { FileTree } from "@/features/file-tree/file-tree";
 import { useFileMutations } from "@/features/file-tree/mutations";
+import {
+  NoteContextMenu,
+  type NoteFileActions,
+} from "@/features/file-tree/note-context-menu";
 import { useVaultTree } from "@/features/file-tree/queries";
 import type { FileTreeNode } from "@/features/file-tree/types";
 import { useNoteList } from "@/features/search/queries";
@@ -31,6 +38,7 @@ export function LeftSidebar({
   onPathRenamed,
   onPathRemoved,
   onBeforeFileOperation,
+  fileActions,
 }: {
   selectedNav?: string;
   onSelectNav?: (id: string) => void;
@@ -49,9 +57,12 @@ export function LeftSidebar({
   onPathRenamed?: (from: string, to: string) => void;
   onPathRemoved?: (path: string) => void;
   onBeforeFileOperation?: () => Promise<void>;
+  fileActions?: NoteFileActions;
 }) {
   const tree = useVaultTree(vaultId);
   const mutations = useFileMutations(vaultId);
+  const { requestName, nameDialog } = useFileNameDialog();
+  const addButton = useRef<HTMLButtonElement>(null);
   const all = useNoteList(vaultId, "all", "");
   const counts = {
     all: all.data?.length ?? 0,
@@ -99,18 +110,24 @@ export function LeftSidebar({
           ) : (
             (favorites ?? []).map((note) => (
               <li key={note.path}>
-                <button
-                  type="button"
-                  className="copper-nav-item"
-                  data-selected={selectedPath === note.path}
-                  onClick={() => onSelectPath?.(note.path, "file")}
-                  onDoubleClick={() => onPinFile?.(note.path)}
+                <NoteContextMenu
+                  path={note.path}
+                  actions={fileActions}
+                  onPin={onPinFile}
                 >
-                  <Star size={14} strokeWidth={1.75} />
-                  <span className="copper-nav-item-label">
-                    {fileName(note.path)}
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    className="copper-nav-item"
+                    data-selected={selectedPath === note.path}
+                    onClick={() => onSelectPath?.(note.path, "file")}
+                    onDoubleClick={() => onPinFile?.(note.path)}
+                  >
+                    <Star size={14} strokeWidth={1.75} />
+                    <span className="copper-nav-item-label">
+                      {fileName(note.path)}
+                    </span>
+                  </button>
+                </NoteContextMenu>
               </li>
             ))
           )}
@@ -123,6 +140,7 @@ export function LeftSidebar({
                 type="button"
                 className="copper-section-add"
                 aria-label="Add to Vault"
+                ref={addButton}
               >
                 <Plus size={14} strokeWidth={1.75} />
               </button>
@@ -138,16 +156,16 @@ export function LeftSidebar({
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
                   className="copper-menu-item copper-menu-item-with-icon"
-                  onSelect={() => {
-                    const path = window
-                      .prompt("New folder name", "folder")
-                      ?.trim();
-                    if (path) {
-                      mutations.createFolder.mutate(path, {
-                        onError: showMutationError,
-                      });
-                    }
-                  }}
+                  onSelect={() =>
+                    requestName({
+                      title: "New folder",
+                      label: "Folder name",
+                      submitLabel: "Create folder",
+                      onReturnFocus: () => addButton.current?.focus(),
+                      onSubmit: (name) =>
+                        mutations.createFolder.mutateAsync(childPath("", name)),
+                    })
+                  }
                 >
                   <FolderPlus size={14} strokeWidth={1.75} />
                   New folder
@@ -171,12 +189,9 @@ export function LeftSidebar({
           onBeforeFileOperation={onBeforeFileOperation}
         />
       </div>
+      {nameDialog}
     </aside>
   );
-}
-
-function showMutationError(error: Error) {
-  window.alert(error.message || "The file operation failed.");
 }
 
 function FolderSection({

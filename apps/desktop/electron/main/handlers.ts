@@ -2,6 +2,7 @@ import { app, dialog } from "electron";
 import { backlinksFor } from "../native/backlinks";
 import { CopperError } from "../native/errors";
 import { importAttachment } from "../native/files/attachments";
+import { updateProperties } from "../native/files/properties";
 import {
   archiveFile,
   binaryMetadata,
@@ -28,10 +29,7 @@ import {
   rebuildIndex,
   removeIndexedPath,
 } from "../native/index/indexer";
-import {
-  parseFrontmatter,
-  writeFrontmatter,
-} from "../native/markdown/frontmatter";
+import { parseFrontmatter } from "../native/markdown/frontmatter";
 import { resolveInVault } from "../native/path";
 import { notesInFolder, searchNotes } from "../native/search";
 import {
@@ -147,7 +145,12 @@ export async function handleCommand(
     case "read_binary_file":
       return readBinaryFile(vaultRoot(str("vaultId")), str("path"));
     case "save_file":
-      return saveFile(vaultRoot(str("vaultId")), str("path"), str("contents"));
+      return saveFile(
+        vaultRoot(str("vaultId")),
+        str("path"),
+        str("contents"),
+        typeof args.expectedHash === "string" ? args.expectedHash : undefined,
+      );
     case "create_file":
       return createFile(
         vaultRoot(str("vaultId")),
@@ -223,20 +226,12 @@ export async function handleCommand(
       const [source] = readFile(vaultRoot(str("vaultId")), str("path"));
       return parseFrontmatter(source);
     }
-    case "update_properties": {
-      const root = vaultRoot(str("vaultId"));
-      const [source] = readFile(root, str("path"));
-      const properties = args.properties as {
-        raw: string;
-        body: string;
-        values: Record<string, unknown>;
-      };
-      const next = writeFrontmatter(properties, source);
-      if (next !== source) {
-        saveFile(root, str("path"), next);
-      }
-      return null;
-    }
+    case "update_properties":
+      return updateProperties(
+        vaultRoot(str("vaultId")),
+        str("path"),
+        args.values as Record<string, unknown>,
+      );
     case "list_backlinks":
       vaultRoot(str("vaultId"));
       return backlinksFor(dbPath(str("vaultId")), str("path"));
@@ -256,7 +251,9 @@ export async function handleCommand(
       return null;
     case "list_issues":
       vaultRoot(str("vaultId"));
-      return listIssues(dbPath(str("vaultId")));
+      return listIssues(dbPath(str("vaultId")), {
+        includeArchived: args.includeArchived === true,
+      });
     case "get_issue":
       return getIssue(vaultRoot(str("vaultId")), str("id"));
     case "create_issue":
@@ -306,7 +303,11 @@ export async function handleCommand(
       vaultRoot(str("vaultId"));
       return listProjects(dbPath(str("vaultId")));
     case "get_project":
-      return getProject(vaultRoot(str("vaultId")), str("id"));
+      return getProject(
+        vaultRoot(str("vaultId")),
+        dbPath(str("vaultId")),
+        str("id"),
+      );
     case "create_project":
       return createProject(
         vaultRoot(str("vaultId")),

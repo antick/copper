@@ -15,6 +15,7 @@ import {
   Type,
 } from "lucide-react";
 import { type ReactNode, useRef, useState } from "react";
+import { DocumentTitle } from "@/components/shell/document-title";
 import { WorkspaceTopBar } from "@/components/shell/workspace-top-bar";
 import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -22,7 +23,6 @@ import type { SupportedFileKind } from "@/features/file-tree/types";
 import { EditorTypographyControls } from "@/features/settings/editor-typography-controls";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import type { EditorTab } from "@/features/tabs/types";
-import { fileStem } from "@/lib/paths";
 import { isTaskSourcePath } from "../../../shared/task-paths";
 
 const SAVE_CHROME = {
@@ -79,7 +79,7 @@ export function EditorPane({
   onDocumentInteraction?: () => void;
   onToggleFavorite?: () => void;
   onToggleSource?: () => void;
-  onRename?: () => void;
+  onRename?: (name?: string, returnFocus?: () => void) => void | Promise<void>;
   onArchive?: () => void;
   onRestore?: () => void;
   onTrash?: () => void;
@@ -99,6 +99,7 @@ export function EditorPane({
   const markdown = fileKind === "markdown";
   const [typographyOpen, setTypographyOpen] = useState(false);
   const menuTrigger = useRef<HTMLButtonElement>(null);
+  const titleButton = useRef<HTMLButtonElement>(null);
   const editable = Boolean(fileKind && fileKind !== "image");
   const showProperties = Boolean(rightCollapsed && markdown);
 
@@ -175,7 +176,7 @@ export function EditorPane({
                     className="copper-menu-item copper-menu-item-with-icon"
                     onSelect={() => {
                       onDocumentInteraction?.();
-                      onRename?.();
+                      onRename?.(undefined, () => menuTrigger.current?.focus());
                     }}
                   >
                     <Pencil size={14} strokeWidth={1.75} />
@@ -268,7 +269,12 @@ export function EditorPane({
         onFocusCapture={onDocumentInteraction}
       >
         {path ? (
-          <h1 className="copper-document-title">{fileStem(path)}</h1>
+          <DocumentTitle
+            key={path}
+            path={path}
+            onRename={onRename}
+            buttonRef={titleButton}
+          />
         ) : null}
         {children ?? (
           <div className="copper-empty">Select a file to start working.</div>
