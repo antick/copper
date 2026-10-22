@@ -41,6 +41,7 @@ import {
   listIssues,
   updateIssueForTransaction,
 } from "./service";
+import { fallbackTaskId } from "./task-identity";
 import { findTaskPath } from "./task-lookup";
 import type {
   CreateProjectInput,
@@ -70,10 +71,11 @@ function projectFromParsed(
   parsed: Frontmatter,
   counts: TaskProjectCounts,
 ): TaskProject {
+  const storedId = parsed.values[FRONTMATTER_KEYS.id];
   const id =
-    typeof parsed.values[FRONTMATTER_KEYS.id] === "string"
-      ? String(parsed.values[FRONTMATTER_KEYS.id])
-      : slugifyTitle(fileStemTitle(relative));
+    typeof storedId === "string" && storedId.length > 0
+      ? storedId
+      : fallbackTaskId(relative, "project");
   return {
     path: toPosix(relative),
     id,

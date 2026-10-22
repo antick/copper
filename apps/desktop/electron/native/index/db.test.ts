@@ -34,7 +34,7 @@ describe("openIndex", () => {
     db.close();
   });
 
-  it("creates tasks tables at schema version 2", () => {
+  it("creates tasks tables at schema version 3", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copper-db-tasks-"));
     temps.push(dir);
     const db = openIndex(path.join(dir, "index.db"));
@@ -45,8 +45,8 @@ describe("openIndex", () => {
         )
         .all() as Array<{ name: string }>
     ).map((row) => row.name);
-    expect(INDEX_SCHEMA_VERSION).toBe(2);
-    expect(schemaVersion(db)).toBe(2);
+    expect(INDEX_SCHEMA_VERSION).toBe(3);
+    expect(schemaVersion(db)).toBe(3);
     expect(names).toEqual(
       expect.arrayContaining(["tasks", "task_labels", "task_links"]),
     );

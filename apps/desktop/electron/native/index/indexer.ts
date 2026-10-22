@@ -7,6 +7,7 @@ import { parseFrontmatter } from "../markdown/frontmatter";
 import { parseWikiLink } from "../markdown/links";
 import { isInsideRoot, resolveInVault, toPosix } from "../path";
 import { migrateTaskStorage } from "../tasks/storage";
+import { fallbackTaskId } from "../tasks/task-identity";
 import { openIndex } from "./db";
 import {
   isMarkdownPath,
@@ -183,7 +184,7 @@ function upsertTaskRow(
   const id =
     typeof parsed.values.id === "string" && parsed.values.id.length > 0
       ? parsed.values.id
-      : path.parse(relative).name;
+      : fallbackTaskId(relative, type);
   const status =
     typeof parsed.values.status === "string" ? parsed.values.status : null;
   const priority =

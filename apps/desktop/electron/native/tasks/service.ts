@@ -42,6 +42,7 @@ import {
 } from "./fields";
 import { allocateIssueId, slugifyTitle } from "./ids";
 import { migrateTaskStorage } from "./storage";
+import { fallbackTaskId } from "./task-identity";
 import { findTaskPath, sameTaskIdentity } from "./task-lookup";
 import type {
   CreateIssueInput,
@@ -79,10 +80,11 @@ function uniquePath(root: string, directory: string, stem: string): string {
 }
 
 function issueFromParsed(relative: string, parsed: Frontmatter): TaskIssue {
+  const storedId = parsed.values[FRONTMATTER_KEYS.id];
   const id =
-    typeof parsed.values[FRONTMATTER_KEYS.id] === "string"
-      ? String(parsed.values[FRONTMATTER_KEYS.id])
-      : fileStemTitle(relative);
+    typeof storedId === "string" && storedId.length > 0
+      ? storedId
+      : fallbackTaskId(relative, "issue");
   const title = headingTitle(parsed.body, fileStemTitle(relative));
   return {
     path: toPosix(relative),

@@ -11,19 +11,17 @@ import {
   PROJECTS_DIR,
 } from "../../../shared/task-paths";
 import {
-  formatIssueId,
-  parseIssueIdentifier,
-} from "../../../src/lib/copper/task-settings";
-import {
   isMarkdownPath,
   shouldIndexEntry,
   shouldIndexFile,
 } from "../index/eligibility";
 import { parseFrontmatter } from "../markdown/frontmatter";
 import { toPosix } from "../path";
-import { FRONTMATTER_KEYS, SLUG_MAX_LENGTH } from "./constants";
+import { FRONTMATTER_KEYS } from "./constants";
+import { fallbackTaskId, type TaskKind } from "./task-identity";
 
-export type TaskKind = "issue" | "project";
+export type { TaskKind } from "./task-identity";
+export { parseIssueId, slugifyTitle } from "./task-identity";
 
 export interface DiscoveredTaskIdentity {
   relative: string;
@@ -38,8 +36,6 @@ const TASK_SOURCE_DIRECTORIES: Array<[TaskKind, string]> = [
   ["project", PROJECTS_DIR],
   ["project", ARCHIVED_PROJECTS_DIR],
 ];
-const ISSUE_ID_PATTERN = /^(#\d+|[A-Z][A-Z0-9]{0,7}-\d+)(?=$|[-_.])/i;
-
 function isMarkdownFileInDirectory(relative: string, directory: string) {
   if (!relative.startsWith(`${directory}/`)) return false;
   const name = relative.slice(directory.length + 1);
@@ -68,30 +64,6 @@ function managedTaskKind(relative: string): TaskKind | undefined {
     }
   }
   return undefined;
-}
-
-export function slugifyTitle(title: string): string {
-  const slug = title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, SLUG_MAX_LENGTH);
-  return slug.length > 0 ? slug : "untitled";
-}
-
-export function parseIssueId(text: string): string | undefined {
-  const match = text.trim().match(ISSUE_ID_PATTERN);
-  const parsed = parseIssueIdentifier(match?.[1]);
-  return parsed && parsed.sequence > 0
-    ? formatIssueId(parsed.prefix, parsed.sequence)
-    : undefined;
-}
-
-function fallbackTaskId(relative: string, kind: TaskKind): string {
-  const stem = path.posix.parse(relative).name;
-  if (kind === "issue") return parseIssueId(stem) ?? stem;
-  return slugifyTitle(stem);
 }
 
 function isMissingFileError(error: unknown): boolean {
@@ -136,9 +108,7 @@ export function taskIdentityFromSource(
   const id =
     typeof storedId === "string" && storedId.length > 0
       ? storedId
-      : pathKind
-        ? fallbackTaskId(relative, kind)
-        : path.posix.parse(relative).name;
+      : fallbackTaskId(relative, kind);
   if (!id) return undefined;
   return { relative, kind, id, archived: isArchivedPath(relative) };
 }
