@@ -18,6 +18,18 @@ it("keeps a renamed file in its parent folder and preserves title extensions", (
 });
 
 it.each([
+  ["folder/Note.MD", "Research.md", "folder/Research.md"],
+  ["folder/Note.md", "Research.MD", "folder/Research.MD"],
+  ["folder/Note.Markdown", "Research.MARKDOWN", "folder/Research.MARKDOWN"],
+  ["folder/Note.MD", "Research.v1", "folder/Research.v1.MD"],
+])(
+  "preserves a single extension when renaming %s to %s",
+  (current, requested, expected) => {
+    expect(renamedPath(current, requested, { title: true })).toBe(expected);
+  },
+);
+
+it.each([
   "",
   " ",
   ".",

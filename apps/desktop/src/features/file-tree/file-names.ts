@@ -29,7 +29,7 @@ export function renamedPath(
   const name =
     extension &&
     (title || !requested.includes(".")) &&
-    !requested.endsWith(extension)
+    !requested.toLowerCase().endsWith(extension.toLowerCase())
       ? `${requested}${extension}`
       : requested;
   // Validate before adding an extension so an empty title cannot become .md.
