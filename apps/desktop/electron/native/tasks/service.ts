@@ -50,8 +50,12 @@ import type {
   TaskIssue,
   UpdateIssueInput,
 } from "./types";
-import type { TaskWriteSnapshot } from "./write-rollback";
-import { rollbackTaskWrites } from "./write-rollback";
+import type { TaskCreationSnapshot, TaskWriteSnapshot } from "./write-rollback";
+import {
+  rollbackTaskCreations,
+  rollbackTaskWrites,
+  snapshotTaskCreation,
+} from "./write-rollback";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -208,6 +212,7 @@ export function createIssue(
     ? column.find((issue) => issue.id === input.afterId)
     : undefined;
   const after = named ?? column.at(-1);
+  const creations: TaskCreationSnapshot[] = [];
   return writeAtPosition(
     root,
     dbPath,
@@ -239,10 +244,13 @@ export function createIssue(
           },
         ),
       };
-      createFile(root, relative, writeFrontmatter(parsed, ""));
-      indexFilePath(dbPath, root, relative);
+      const contents = writeFrontmatter(parsed, "");
+      const createdPath = createFile(root, relative, contents);
+      creations.push(snapshotTaskCreation(createdPath, contents));
+      indexFilePath(dbPath, root, createdPath);
       return getIssue(root, id);
     },
+    creations,
   );
 }
 
@@ -431,6 +439,7 @@ function writeAtPosition(
     rank: string,
     onWrite?: (snapshot: TaskWriteSnapshot) => void,
   ) => TaskIssue,
+  creations: TaskCreationSnapshot[] = [],
 ): TaskIssue {
   const { rank, repairs } = insertionRank(column, index);
   const writes: TaskWriteSnapshot[] = [];
@@ -448,6 +457,7 @@ function writeAtPosition(
     return write(rank, trackWrite);
   } catch (error) {
     rollbackTaskWrites(root, dbPath, writes);
+    rollbackTaskCreations(root, dbPath, creations);
     throw error;
   }
 }
