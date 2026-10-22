@@ -1,9 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import {
-  ARCHIVED_PROJECTS_DIR,
-  isArchivedTaskPath,
-} from "../../../shared/task-paths";
+import { isArchivedTaskPath } from "../../../shared/task-paths";
 import { ARCHIVE_DIR } from "../constants";
 import { CopperError } from "../errors";
 import {
@@ -44,6 +41,7 @@ import {
   listIssues,
   updateIssueForTransaction,
 } from "./service";
+import { findTaskPath } from "./task-lookup";
 import type {
   CreateProjectInput,
   TaskProject,
@@ -190,23 +188,7 @@ export function listProjects(dbPath: string): TaskProject[] {
 }
 
 function findProjectPath(root: string, id: string): string {
-  for (const directory of [PROJECTS_DIR, ARCHIVED_PROJECTS_DIR]) {
-    const absolute = path.join(root, directory);
-    if (!fs.existsSync(absolute)) continue;
-    for (const name of fs.readdirSync(absolute)) {
-      if (!/\.(md|markdown)$/i.test(name)) continue;
-      const relative = `${directory}/${name}`;
-      try {
-        const [source] = readFile(root, relative);
-        if (parseFrontmatter(source).values[FRONTMATTER_KEYS.id] === id) {
-          return relative;
-        }
-      } catch {
-        // Skip unreadable files.
-      }
-    }
-  }
-  throw CopperError.notFound(`Project ${id} was not found`);
+  return findTaskPath(root, "project", id, { includeArchived: true });
 }
 
 export function getProject(

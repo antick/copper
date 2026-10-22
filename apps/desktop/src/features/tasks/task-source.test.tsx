@@ -20,6 +20,7 @@ function mount(
   onSave: (body: string) => Promise<void>,
   onOpen = vi.fn(),
   issueId = "ISSUE-1",
+  sourcePath = `.copper/tasks/issues/${issueId}.md`,
 ) {
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -32,7 +33,7 @@ function mount(
             ariaLabel="Issue description"
             onSave={onSave}
           />
-          <TaskSourceButton path={`.copper/tasks/issues/${issueId}.md`} />
+          <TaskSourceButton path={sourcePath} />
         </TaskSourceProvider>
       </TooltipProvider>
     </QueryClientProvider>,
@@ -68,6 +69,32 @@ it("flushes a pending description before reading and opening its source", async 
     "demo",
     ".copper/tasks/issues/ISSUE-1.md",
   );
+});
+
+it.each([
+  "Research/issues/ISSUE-4.md",
+  "Research/projects/nested-project.markdown",
+])("opens a restored nested task source at %s", async (sourcePath) => {
+  let saved = "original";
+  mocks.read.mockImplementation(async () => [
+    `# Restored task\n\n${saved}`,
+    "revision",
+  ]);
+  const open = mount(
+    async (body) => {
+      saved = body;
+    },
+    vi.fn(),
+    "nested-source",
+    sourcePath,
+  );
+
+  await userEvent.click(screen.getByRole("button", { name: "Edit source" }));
+
+  await waitFor(() => expect(open).toHaveBeenCalledWith(sourcePath));
+  expect(mocks.read).toHaveBeenCalledWith("demo", sourcePath);
+  expect(saved).toBe("latest changes");
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
 
 it("keeps the task and its draft open when saving before source editing fails", async () => {

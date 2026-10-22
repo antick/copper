@@ -42,6 +42,7 @@ import {
 } from "./fields";
 import { allocateIssueId, slugifyTitle } from "./ids";
 import { migrateTaskStorage } from "./storage";
+import { findTaskPath, sameTaskIdentity } from "./task-lookup";
 import type {
   CreateIssueInput,
   MoveIssueInput,
@@ -188,25 +189,7 @@ export function getIssue(root: string, id: string): TaskIssue {
 }
 
 function findIssuePath(root: string, id: string): string {
-  const dir = path.join(root, ISSUES_DIR);
-  if (fs.existsSync(dir)) {
-    for (const name of fs.readdirSync(dir)) {
-      if (!/\.(md|markdown)$/i.test(name)) {
-        continue;
-      }
-      const relative = `${ISSUES_DIR}/${name}`;
-      try {
-        const [source] = readFile(root, relative);
-        const parsed = parseFrontmatter(source);
-        if (parsed.values[FRONTMATTER_KEYS.id] === id) {
-          return relative;
-        }
-      } catch {
-        // Skip unreadable files.
-      }
-    }
-  }
-  throw CopperError.notFound(`Issue ${id} was not found`);
+  return findTaskPath(root, "issue", id);
 }
 
 export function createIssue(
@@ -416,13 +399,18 @@ export function moveIssue(
   input: MoveIssueInput,
 ): TaskIssue {
   const issues = listIssues(dbPath);
-  const current = issues.find((issue) => issue.id === id);
+  const current =
+    issues.find((issue) => issue.id === id) ??
+    issues.find((issue) => sameTaskIdentity("issue", issue.id, id));
   if (!current) {
     throw CopperError.notFound(`Issue ${id} was not found`);
   }
   const status = input.status ?? current.status;
   const column = issues
-    .filter((issue) => issue.status === status && issue.id !== id)
+    .filter(
+      (issue) =>
+        issue.status === status && !sameTaskIdentity("issue", issue.id, id),
+    )
     .sort(compareTaskOrder);
   return writeAtPosition(
     root,

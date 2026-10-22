@@ -1,26 +1,12 @@
 import fs from "node:fs";
 import { isArchivedPath } from "../../../shared/task-paths";
-import {
-  formatIssueId,
-  parseIssueIdentifier,
-} from "../../../src/lib/copper/task-settings";
 import { CopperError } from "../errors";
 import { shouldIndexFile } from "../index/eligibility";
 import {
   discoverTaskIdentities,
   taskIdentityFromSource,
 } from "./task-discovery";
-
-function identityIdForComparison(
-  kind: "issue" | "project",
-  id: string,
-): string {
-  if (kind !== "issue") return id;
-  const parsed = parseIssueIdentifier(id);
-  return parsed && parsed.sequence > 0
-    ? formatIssueId(parsed.prefix, parsed.sequence)
-    : id;
-}
+import { sameTaskIdentity } from "./task-lookup";
 
 export function assertNoActiveTaskIdentityCollision(
   root: string,
@@ -43,8 +29,7 @@ export function assertNoActiveTaskIdentityCollision(
       !task.archived &&
       task.relative !== destinationPath &&
       task.kind === sourceIdentity.kind &&
-      identityIdForComparison(task.kind, task.id) ===
-        identityIdForComparison(sourceIdentity.kind, sourceIdentity.id),
+      sameTaskIdentity(task.kind, task.id, sourceIdentity.id),
   );
   if (!collision) return;
 

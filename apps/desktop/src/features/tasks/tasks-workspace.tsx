@@ -197,6 +197,8 @@ export function TasksWorkspace({
     activeProjectId: destination === "project" ? project : null,
     onTabsAction,
   });
+  const projectOverviewReady =
+    projectView !== "overview" || Boolean(projectQuery.data);
 
   useTaskWorkspaceShortcuts({
     issues,
@@ -408,7 +410,7 @@ export function TasksWorkspace({
           onProjectAction={management.openProjectAction}
         />
       ) : destination === "project" ? (
-        selectedProject ? (
+        selectedProject && projectOverviewReady ? (
           <ProjectWorkspace
             vaultId={vaultId}
             key={selectedProject.id}

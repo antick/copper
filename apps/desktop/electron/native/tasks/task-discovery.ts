@@ -94,6 +94,27 @@ function fallbackTaskId(relative: string, kind: TaskKind): string {
   return slugifyTitle(stem);
 }
 
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "ENOENT"
+  );
+}
+
+function discoveryError(
+  operation: "list directory" | "read file",
+  relative: string,
+  error: unknown,
+): Error {
+  const detail = error instanceof Error ? error.message : String(error);
+  return new Error(
+    `Cannot discover task identities: failed to ${operation} "${relative}": ${detail}`,
+    { cause: error },
+  );
+}
+
 export function taskIdentityFromSource(
   relative: string,
   source: string,
@@ -128,11 +149,13 @@ export function discoverTaskIdentities(
   const tasks: DiscoveredTaskIdentity[] = [];
 
   function visit(directory: string): void {
+    const relativeDirectory =
+      toPosix(path.relative(vaultRoot, directory)) || ".";
     let entries: fs.Dirent[];
     try {
       entries = fs.readdirSync(directory, { withFileTypes: true });
-    } catch {
-      return;
+    } catch (error) {
+      throw discoveryError("list directory", relativeDirectory, error);
     }
 
     for (const entry of entries) {
@@ -152,8 +175,9 @@ export function discoverTaskIdentities(
           fs.readFileSync(absolute, "utf8"),
         );
         if (identity) tasks.push(identity);
-      } catch {
-        // Keep scanning other files if one disappears or cannot be read.
+      } catch (error) {
+        if (isMissingFileError(error)) continue;
+        throw discoveryError("read file", relative, error);
       }
     }
   }
