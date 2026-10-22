@@ -38,7 +38,7 @@ Notes and Tasks are now both represented in the landing hero, navigation, dedica
 
 ## Native acceptance
 
-Latest review-fix checks: `mise run check` passed with 345 frontend tests, 235 native tests, and two cached landing checks; one case-sensitive-filesystem regression was skipped locally. Typecheck, Biome, production builds, the browser build, and the dependency audit passed. The audit retains the two reviewed exceptions documented above. These local checks do not replace signed installed-app acceptance.
+Latest review-fix checks: `mise run check` passed with 359 frontend tests, 246 native tests, and two cached landing checks; one case-sensitive-filesystem regression was skipped locally. Native watcher tests required execution outside the filesystem sandbox; the sandboxed run failed with `EMFILE`. Typecheck, Biome, production builds, the browser build, the dependency audit, and the history/worktree secret scan passed. Vitest is pinned to 5.0.5 (published October 15, 2026, verified against npm), clearing the newly reported mocker advisories while meeting the two-day dependency rule. The audit retains the two reviewed exceptions documented above. These local checks do not replace signed installed-app acceptance.
 
 - [ ] Verify Vault-scoped draft barriers in the next signed macOS build. Local regressions cover persisted drafts, failed queues, global restart protection, and switching Vaults or task documents without crossing save callbacks. A disposable native-Vault browser flow confirmed note rename, task save/source editing, and archive restore succeed while another Vault's draft remains intact.
 
