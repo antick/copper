@@ -19,4 +19,24 @@ describe("attachment folder validation", () => {
       folder: "Notes and Images/Raw Uploads",
     });
   });
+
+  it.each([
+    "COM¹",
+    "COM²",
+    "COM³",
+    "LPT¹",
+    "LPT²",
+    "LPT³",
+    "images/com¹.png",
+    "images/lpt³.backup",
+  ])("rejects the Windows-reserved device name %s", (folder) => {
+    expect(validateAttachmentFolder(folder).valid).toBe(false);
+  });
+
+  it.each(["COM0", "COM10", "COM⁴", "LPT10", "COM¹-images"])(
+    "accepts the ordinary folder name %s",
+    (folder) => {
+      expect(validateAttachmentFolder(folder)).toEqual({ valid: true, folder });
+    },
+  );
 });

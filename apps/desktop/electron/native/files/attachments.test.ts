@@ -79,3 +79,20 @@ it("rejects absolute and traversal attachment folders and allows nested names wi
     ),
   ).toBe("attachment");
 });
+
+it("rejects Windows-reserved superscript device folders before importing", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "copper-reserved-attachment-folder-"),
+  );
+  roots.push(root);
+  const vault = path.join(root, "vault");
+  fs.mkdirSync(vault);
+  const source = path.join(root, "sample.txt");
+  fs.writeFileSync(source, "attachment to preserve");
+
+  for (const folder of ["COM¹", "LPT³", "images/com².png"]) {
+    expect(() => importAttachment(vault, folder, source)).toThrow();
+    expect(fs.readdirSync(vault)).toEqual([]);
+    expect(fs.readFileSync(source, "utf8")).toBe("attachment to preserve");
+  }
+});
