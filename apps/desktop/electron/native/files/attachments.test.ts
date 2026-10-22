@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, expect, it } from "vitest";
+import { loadSettings, saveSettings } from "../settings";
 import { importAttachment } from "./attachments";
 
 const roots: string[] = [];
@@ -78,6 +79,29 @@ it("rejects absolute and traversal attachment folders and allows nested names wi
       "utf8",
     ),
   ).toBe("attachment");
+});
+
+it("imports into a saved attachment folder whose name starts with two dots", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "copper-attachment-prefix-"),
+  );
+  roots.push(root);
+  const vault = path.join(root, "vault");
+  const config = path.join(root, "config");
+  fs.mkdirSync(vault);
+  const source = path.join(root, "sample.txt");
+  fs.writeFileSync(source, "safe attachment");
+
+  saveSettings(config, { attachmentFolder: "..attachments" });
+  const attachmentFolder = loadSettings(config).attachmentFolder;
+
+  expect(attachmentFolder).toBe("..attachments");
+  expect(importAttachment(vault, attachmentFolder, source)).toBe(
+    "..attachments/sample.txt",
+  );
+  expect(
+    fs.readFileSync(path.join(vault, "..attachments", "sample.txt"), "utf8"),
+  ).toBe("safe attachment");
 });
 
 it("rejects Windows-reserved superscript device folders before importing", () => {

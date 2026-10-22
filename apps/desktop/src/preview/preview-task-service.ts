@@ -11,7 +11,7 @@ import {
 import {
   ARCHIVED_PROJECTS_DIR,
   ISSUES_DIR,
-  isArchivedTaskPath,
+  isArchivedPath,
   PROJECTS_DIR,
 } from "../../shared/task-paths";
 
@@ -78,11 +78,7 @@ function projectFromPath(files: Map<string, string>, filePath: string) {
   for (const issue of [...files.keys()].map((path) =>
     issueFromPath(files, path),
   )) {
-    if (
-      issue?.project === id &&
-      !isArchivedTaskPath(issue.path) &&
-      !issue.path.startsWith("Archive/")
-    )
+    if (issue?.project === id && !isArchivedPath(issue.path))
       counts[issue.status] = (counts[issue.status] ?? 0) + 1;
   }
   return {
@@ -100,7 +96,7 @@ function projectFromPath(files: Map<string, string>, filePath: string) {
         ? "folder"
         : String(parsed.values.icon ?? "folder"),
     workflow: parsePreviewWorkflow(parsed.values.workflow),
-    archived: filePath.startsWith("Archive/") || isArchivedTaskPath(filePath),
+    archived: isArchivedPath(filePath),
     counts,
     body: parsed.body,
   };
@@ -131,9 +127,7 @@ export function dispatchPreviewTask(
       return issues(files)
         .filter(
           (issue) =>
-            payload.includeArchived === true ||
-            (!isArchivedTaskPath(issue.path) &&
-              !issue.path.startsWith("Archive/")),
+            payload.includeArchived === true || !isArchivedPath(issue.path),
         )
         .sort(
           (a, b) => a.rank.localeCompare(b.rank) || a.id.localeCompare(b.id),

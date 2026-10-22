@@ -8,7 +8,7 @@ import { openIndex } from "./db";
 import { indexVault } from "./indexer";
 
 const roots: string[] = [];
-const LEGACY_TASK_IDENTITY_SCHEMA_VERSION = 2;
+const LEGACY_TASK_IDENTITY_SCHEMA_VERSION = 3;
 
 afterEach(() => {
   for (const root of roots.splice(0))
@@ -16,11 +16,11 @@ afterEach(() => {
 });
 
 it.each([
-  ["project", "Research Plan", "research-plan"],
-  ["issue", "ISSUE-17-title", "ISSUE-17"],
+  ["project", "Research Plan", "research-plan", "Research Plan"],
+  ["issue", "ISSUE-17-title", "ISSUE-17-title", "ISSUE-17"],
 ] as const)(
-  "refreshes unchanged %s identities cached by the old index",
-  (kind, stem, id) => {
+  "refreshes unchanged %s identities cached by schema 3",
+  (kind, stem, cachedId, id) => {
     const root = fs.mkdtempSync(
       path.join(os.tmpdir(), "copper-identity-cache-"),
     );
@@ -33,7 +33,10 @@ it.each([
     fs.writeFileSync(absolute, source);
     indexVault(dbPath, root);
     const db = openIndex(dbPath);
-    db.prepare("UPDATE tasks SET id = ? WHERE path = ?").run(stem, relative);
+    db.prepare("UPDATE tasks SET id = ? WHERE path = ?").run(
+      cachedId,
+      relative,
+    );
     db.pragma(`user_version = ${LEGACY_TASK_IDENTITY_SCHEMA_VERSION}`);
     db.close();
 

@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 
-export const INDEX_SCHEMA_VERSION = 3;
+export const INDEX_SCHEMA_VERSION = 4;
 
 export const INITIAL_SCHEMA = `
 PRAGMA journal_mode = WAL;

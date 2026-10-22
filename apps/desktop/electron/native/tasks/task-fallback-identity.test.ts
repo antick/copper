@@ -38,9 +38,9 @@ function writeTask(
 
 describe("task fallback identity", () => {
   it.each([
-    ["Research Plan.md", "research-plan"],
-    ["RESEARCH Plan.MARKDOWN", "research-plan"],
-    ["Über Café.Markdown", "ber-caf"],
+    ["Research Plan.md", "Research Plan"],
+    ["RESEARCH Plan.MARKDOWN", "RESEARCH Plan"],
+    ["Über Café.Markdown", "Über Café"],
   ])("indexes and reads ID-less project %s as %s", (filename, expectedId) => {
     const { root, dbPath } = makeVault();
     const relative = `.copper/tasks/projects/${filename}`;
@@ -69,8 +69,8 @@ describe("task fallback identity", () => {
     indexVault(dbPath, root);
 
     expect(restored).toBe(".copper/tasks/projects/Research Plan.md");
-    expect(listProjects(dbPath)[0]?.id).toBe("research-plan");
-    expect(getProject(root, dbPath, "research-plan").path).toBe(restored);
+    expect(listProjects(dbPath)[0]?.id).toBe("Research Plan");
+    expect(getProject(root, dbPath, "Research Plan").path).toBe(restored);
   });
 
   it.each([
@@ -86,9 +86,9 @@ describe("task fallback identity", () => {
       const listed = listProjects(dbPath).find(
         (project) => project.path === relative,
       );
-      expect(listed?.id).toBe("research-plan");
-      expect(getProject(root, dbPath, "research-plan")).toMatchObject({
-        id: "research-plan",
+      expect(listed?.id).toBe("Research Plan");
+      expect(getProject(root, dbPath, "Research Plan")).toMatchObject({
+        id: "Research Plan",
         path: relative,
       });
     },
@@ -97,7 +97,7 @@ describe("task fallback identity", () => {
   it("blocks restoring an ID-less project with a matching fallback identity", () => {
     const { root } = makeVault();
     const active = ".copper/tasks/projects/Research Plan.md";
-    const archived = ".copper/tasks/archive/projects/RESEARCH_PLAN.markdown";
+    const archived = ".copper/tasks/archive/projects/Research Plan.markdown";
     writeTask(root, active, "project");
     writeTask(root, archived, "project");
 

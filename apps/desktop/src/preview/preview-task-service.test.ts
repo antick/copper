@@ -70,33 +70,36 @@ describe("preview task workflow compatibility", () => {
   });
 });
 
-it("keeps archived issues out of active counts while exposing them for recovery", () => {
-  const files = new Map([
-    [
-      ".copper/tasks/projects/test.md",
-      "---\ntype: project\nid: test\n---\n# Test\n",
-    ],
-    [
-      ".copper/tasks/issues/ISSUE-1.md",
-      "---\ntype: issue\nid: ISSUE-1\nproject: test\nstatus: todo\n---\n# Active\n",
-    ],
-    [
-      ".copper/tasks/archive/issues/ISSUE-2.md",
-      "---\ntype: issue\nid: ISSUE-2\nproject: test\nstatus: todo\n---\n# Archived\n",
-    ],
-  ]);
-  expect(dispatchPreviewTask("list_issues", {}, files)).toEqual([
-    expect.objectContaining({ id: "ISSUE-1" }),
-  ]);
-  expect(
-    dispatchPreviewTask("list_issues", { includeArchived: true }, files),
-  ).toEqual(
-    expect.arrayContaining([
+it.each([".copper/tasks/archive/issues", "Archive/Research"])(
+  "keeps archived issues in %s out of active counts while exposing them for recovery",
+  (archive) => {
+    const files = new Map([
+      [
+        ".copper/tasks/projects/test.md",
+        "---\ntype: project\nid: test\n---\n# Test\n",
+      ],
+      [
+        ".copper/tasks/issues/ISSUE-1.md",
+        "---\ntype: issue\nid: ISSUE-1\nproject: test\nstatus: todo\n---\n# Active\n",
+      ],
+      [
+        `${archive}/ISSUE-2.md`,
+        "---\ntype: issue\nid: ISSUE-2\nproject: test\nstatus: todo\n---\n# Archived\n",
+      ],
+    ]);
+    expect(dispatchPreviewTask("list_issues", {}, files)).toEqual([
       expect.objectContaining({ id: "ISSUE-1" }),
-      expect.objectContaining({ id: "ISSUE-2" }),
-    ]),
-  );
-  expect(
-    dispatchPreviewTask("get_project", { id: "test" }, files),
-  ).toMatchObject({ counts: { todo: 1 } });
-});
+    ]);
+    expect(
+      dispatchPreviewTask("list_issues", { includeArchived: true }, files),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "ISSUE-1" }),
+        expect.objectContaining({ id: "ISSUE-2" }),
+      ]),
+    );
+    expect(
+      dispatchPreviewTask("get_project", { id: "test" }, files),
+    ).toMatchObject({ counts: { todo: 1 } });
+  },
+);

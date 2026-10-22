@@ -30,5 +30,5 @@ export function parseIssueId(text: string): string | undefined {
 export function fallbackTaskId(relative: string, kind: TaskKind): string {
   const stem = path.posix.parse(relative).name;
   if (kind === "issue") return parseIssueId(stem) ?? stem;
-  return slugifyTitle(stem);
+  return stem;
 }

@@ -34,10 +34,8 @@ export function normalizeRelative(input: string): string {
 
 export function isInsideRoot(root: string, candidate: string): boolean {
   const relative = path.relative(root, candidate);
-  return (
-    relative === "" ||
-    (!relative.startsWith("..") && !path.isAbsolute(relative))
-  );
+  const escapesRoot = relative === ".." || relative.startsWith(`..${path.sep}`);
+  return relative === "" || (!escapesRoot && !path.isAbsolute(relative));
 }
 
 export function canonicalizeDir(dir: string): string {
