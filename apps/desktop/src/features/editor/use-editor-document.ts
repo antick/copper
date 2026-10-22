@@ -266,6 +266,7 @@ export function useEditorDocument(
   const draft = useCallback(() => readDocumentDraft(key), [key]);
   return {
     query,
+    initializing: !initialized.current && query.isFetching,
     dirty,
     conflict,
     missing,

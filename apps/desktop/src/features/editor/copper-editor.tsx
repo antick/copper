@@ -101,7 +101,7 @@ export function CopperEditor({
   useLayoutEffect(() => {
     const host = hostRef.current;
     const payload = document.query.data;
-    if (!host || !payload || document.missing) return;
+    if (!host || !payload || document.initializing || document.missing) return;
     if (viewRef.current) {
       const next = payload[0];
       const view = viewRef.current;
@@ -165,6 +165,7 @@ export function CopperEditor({
   }, [
     document.query.data,
     document.draft,
+    document.initializing,
     document.missing,
     fileKind,
     livePreviewEnabled,
@@ -212,7 +213,7 @@ export function CopperEditor({
     return (
       <div className="copper-empty">This file could not be opened safely.</div>
     );
-  if (!document.query.data)
+  if (!document.query.data || document.initializing)
     return <div className="copper-empty">Opening file…</div>;
   return (
     <div className="copper-editor-document">
