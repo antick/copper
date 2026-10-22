@@ -22,7 +22,10 @@ import type { SupportedFileKind } from "@/features/file-tree/types";
 import { useSettings } from "@/features/settings/settings-provider";
 import { copper } from "@/lib/copper";
 import type { FlushDocumentsDetail } from "@/lib/copper/events";
-import { DOCUMENT_WRITE_EVENT } from "../../../shared/document-save";
+import {
+  DOCUMENT_WRITE_EVENT,
+  MISSING_DOCUMENT_MESSAGE,
+} from "../../../shared/document-save";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif)$/i;
 
@@ -98,7 +101,7 @@ export function CopperEditor({
   useLayoutEffect(() => {
     const host = hostRef.current;
     const payload = document.query.data;
-    if (!host || !payload) return;
+    if (!host || !payload || document.missing) return;
     if (viewRef.current) {
       const next = payload[0];
       const view = viewRef.current;
@@ -162,6 +165,7 @@ export function CopperEditor({
   }, [
     document.query.data,
     document.draft,
+    document.missing,
     fileKind,
     livePreviewEnabled,
     path,
@@ -169,6 +173,12 @@ export function CopperEditor({
     settings.wrapping,
     vaultId,
   ]);
+
+  useLayoutEffect(() => {
+    if (!document.missing) return;
+    viewRef.current?.destroy();
+    viewRef.current = null;
+  }, [document.missing]);
 
   useLayoutEffect(() => {
     if (viewRef.current)
@@ -186,16 +196,15 @@ export function CopperEditor({
     [],
   );
 
-  if (document.query.isError && !document.query.data && document.draft()) {
+  if (
+    document.missing ||
+    (document.query.isError && !document.query.data && document.draft())
+  ) {
     return (
       <UnavailableDocumentDraft
-        vaultId={vaultId}
-        path={path}
-        contents={document.draft()?.contents ?? ""}
-        onDiscard={() => {
-          scheduleSave.cancel();
-          void document.query.refetch();
-        }}
+        contents={document.draft()?.contents}
+        message={document.missing ? MISSING_DOCUMENT_MESSAGE : undefined}
+        onDiscard={document.discardRecovery}
       />
     );
   }

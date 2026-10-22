@@ -24,10 +24,21 @@ import {
 import type { DiskRevision } from "@/lib/copper/files";
 import {
   DOCUMENT_CONFLICT_CODE,
+  DOCUMENT_NOT_FOUND_CODE,
   DOCUMENT_SAVE_DELAY_MS,
+  MISSING_DOCUMENT_MESSAGE,
 } from "../../../shared/document-save";
 
 export type DocumentSaveStatus = "saved" | "dirty" | "saving" | "error";
+
+function isMissingDocumentError(cause: unknown) {
+  return (
+    typeof cause === "object" &&
+    cause !== null &&
+    "code" in cause &&
+    cause.code === DOCUMENT_NOT_FOUND_CODE
+  );
+}
 
 export function useEditorDocument(
   vaultId: string,
@@ -38,16 +49,20 @@ export function useEditorDocument(
   const key = documentDraftKey(vaultId, path);
   const revision = useRef<DiskRevision | undefined>(undefined);
   const initialized = useRef(false);
+  const missingRef = useRef(false);
   const mounted = useRef(true);
   const [dirty, setDirty] = useState(Boolean(readDocumentDraft(key)));
   const [conflict, setConflict] = useState(false);
+  const [missing, setMissing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const callbacks = useRef({ onSaveStatus });
   callbacks.current = { onSaveStatus };
   const query = useQuery({
     queryKey: fileKeys.detail(vaultId, path),
     queryFn: () => copper.files.read(vaultId, path),
+    refetchOnMount: "always",
   });
+
   const status = useCallback((next: DocumentSaveStatus) => {
     if (mounted.current) callbacks.current.onSaveStatus?.(next);
   }, []);
@@ -64,6 +79,16 @@ export function useEditorDocument(
           contents,
           expectedHash,
         );
+        if (missingRef.current) {
+          const remaining = readDocumentDraft(key);
+          markDocumentDirty(vaultId, path, Boolean(remaining));
+          if (mounted.current) {
+            setDirty(Boolean(remaining));
+            setError(MISSING_DOCUMENT_MESSAGE);
+          }
+          status("error");
+          return;
+        }
         revision.current = saved;
         clearDocumentDraft(key, contents);
         const remaining = readDocumentDraft(key);
@@ -80,7 +105,9 @@ export function useEditorDocument(
         }
         status(remaining ? "dirty" : "saved");
       } catch (cause) {
-        if (mounted.current) {
+        const missingFile = isMissingDocumentError(cause);
+        if (missingFile) markMissingDocument();
+        if (mounted.current && !missingFile) {
           setError(
             cause instanceof Error
               ? cause.message
@@ -100,6 +127,21 @@ export function useEditorDocument(
     vaultId,
   );
 
+  const markMissingDocument = useCallback(() => {
+    if (missingRef.current) return;
+    missingRef.current = true;
+    scheduleSave.cancel();
+    const hasDraft = Boolean(readDocumentDraft(key));
+    markDocumentDirty(vaultId, path, hasDraft);
+    if (mounted.current) {
+      setMissing(true);
+      setConflict(false);
+      setDirty(hasDraft);
+      setError(MISSING_DOCUMENT_MESSAGE);
+    }
+    status("error");
+  }, [key, path, scheduleSave, status, vaultId]);
+
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -108,6 +150,12 @@ export function useEditorDocument(
   }, []);
 
   useLayoutEffect(() => {
+    if (query.isFetching) return;
+    if (query.isError && isMissingDocumentError(query.error)) {
+      initialized.current = true;
+      markMissingDocument();
+      return;
+    }
     if (!query.data) return;
     const draft = readDocumentDraft(key);
     if (!initialized.current) {
@@ -125,7 +173,18 @@ export function useEditorDocument(
     } else if (!draft || draft.baseHash === query.data[1].hash) {
       revision.current = query.data[1];
     }
-  }, [key, path, query.data, scheduleSave, status, vaultId]);
+  }, [
+    key,
+    path,
+    query.data,
+    query.error,
+    query.isError,
+    query.isFetching,
+    markMissingDocument,
+    scheduleSave,
+    status,
+    vaultId,
+  ]);
 
   useEffect(
     () =>
@@ -134,16 +193,20 @@ export function useEditorDocument(
           "path" in event
             ? event.path === path
             : event.from === path || event.to === path;
-        if (
-          matches &&
-          readDocumentDraft(key) &&
-          !isRecentCopperSave(vaultId, path)
-        ) {
+        if (!matches || missingRef.current) return;
+        const removed =
+          (event.type === "removed" && event.path === path) ||
+          (event.type === "renamed" && event.from === path);
+        if (removed) {
+          markMissingDocument();
+          return;
+        }
+        if (readDocumentDraft(key) && !isRecentCopperSave(vaultId, path)) {
           scheduleSave.pause();
           setConflict(true);
         }
       }),
-    [key, path, scheduleSave, vaultId],
+    [key, markMissingDocument, path, scheduleSave, vaultId],
   );
 
   function changed(contents: string) {
@@ -157,7 +220,8 @@ export function useEditorDocument(
     setDirty(true);
     markDocumentDirty(vaultId, path, true);
     status("dirty");
-    scheduleSave(contents);
+    if (!missingRef.current && (initialized.current || !query.isFetching))
+      scheduleSave(contents);
   }
 
   async function reload() {
@@ -189,16 +253,28 @@ export function useEditorDocument(
     setError(null);
   }
 
+  function discardRecovery(contents: string) {
+    scheduleSave.cancel();
+    clearDocumentDraft(key, contents);
+    const remaining = readDocumentDraft(key);
+    markDocumentDirty(vaultId, path, Boolean(remaining));
+    setDirty(Boolean(remaining));
+    setError(remaining ? MISSING_DOCUMENT_MESSAGE : null);
+    status(remaining ? "dirty" : "error");
+  }
+
   const draft = useCallback(() => readDocumentDraft(key), [key]);
   return {
     query,
     dirty,
     conflict,
+    missing,
     error,
     setError,
     changed,
     reload,
     keep,
+    discardRecovery,
     scheduleSave,
     draft,
     acceptRevision: (saved: DiskRevision) => {

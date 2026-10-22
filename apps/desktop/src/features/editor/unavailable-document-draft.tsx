@@ -1,19 +1,13 @@
-import {
-  clearDocumentDraft,
-  documentDraftKey,
-} from "@/features/editor/document-drafts";
 import "./unavailable-document-draft.css";
 
 export function UnavailableDocumentDraft({
-  vaultId,
-  path,
   contents,
+  message,
   onDiscard,
 }: {
-  vaultId: string;
-  path: string;
-  contents: string;
-  onDiscard: () => void;
+  contents?: string;
+  message?: string;
+  onDiscard: (contents: string) => void;
 }) {
   return (
     <section
@@ -21,25 +15,29 @@ export function UnavailableDocumentDraft({
       aria-label="Recovered note draft"
     >
       <p role="alert">
-        This file could not be opened. Your unsaved draft is kept below. You can
-        select and copy it to another note.
+        {message ?? "This file could not be opened."}{" "}
+        {contents === undefined
+          ? "No unsaved draft is available to recover."
+          : "Your unsaved draft is kept below. Select and copy it to another note."}
       </p>
-      <textarea readOnly aria-label="Recovered draft" value={contents} />
-      <button
-        type="button"
-        onClick={() => {
-          if (
-            !window.confirm(
-              "Discard this recovered draft? This cannot be undone.",
-            )
-          )
-            return;
-          clearDocumentDraft(documentDraftKey(vaultId, path));
-          onDiscard();
-        }}
-      >
-        Discard recovered draft
-      </button>
+      {contents === undefined ? null : (
+        <>
+          <textarea readOnly aria-label="Recovered draft" value={contents} />
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                window.confirm(
+                  "Discard this recovered draft? This cannot be undone.",
+                )
+              )
+                onDiscard(contents);
+            }}
+          >
+            Discard recovered draft
+          </button>
+        </>
+      )}
     </section>
   );
 }
