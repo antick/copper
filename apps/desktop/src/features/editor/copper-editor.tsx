@@ -101,7 +101,14 @@ export function CopperEditor({
   useLayoutEffect(() => {
     const host = hostRef.current;
     const payload = document.query.data;
-    if (!host || !payload || document.initializing || document.missing) return;
+    if (
+      !host ||
+      !payload ||
+      document.initializing ||
+      document.initialReadFailed ||
+      document.missing
+    )
+      return;
     if (viewRef.current) {
       const next = payload[0];
       const view = viewRef.current;
@@ -165,6 +172,7 @@ export function CopperEditor({
   }, [
     document.query.data,
     document.draft,
+    document.initialReadFailed,
     document.initializing,
     document.missing,
     fileKind,
@@ -199,20 +207,24 @@ export function CopperEditor({
 
   if (
     document.missing ||
-    (document.query.isError && !document.query.data && document.draft())
+    document.initialReadFailed ||
+    (document.query.isError && !document.query.data)
   ) {
     return (
       <UnavailableDocumentDraft
         contents={document.draft()?.contents}
-        message={document.missing ? MISSING_DOCUMENT_MESSAGE : undefined}
+        message={
+          document.missing
+            ? MISSING_DOCUMENT_MESSAGE
+            : document.query.error instanceof Error
+              ? document.query.error.message
+              : undefined
+        }
         onDiscard={document.discardRecovery}
+        onRetry={document.missing ? undefined : () => document.query.refetch()}
       />
     );
   }
-  if (document.query.isError && !document.query.data)
-    return (
-      <div className="copper-empty">This file could not be opened safely.</div>
-    );
   if (!document.query.data || document.initializing)
     return <div className="copper-empty">Opening file…</div>;
   return (

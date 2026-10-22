@@ -12,6 +12,7 @@ import {
   keepDocumentDraft,
   readDocumentDraft,
 } from "@/features/editor/document-drafts";
+import { withDocumentWriteLock } from "@/features/editor/document-write-lock";
 import { fileKeys } from "@/features/editor/file-keys";
 import { useDocumentSave } from "@/features/editor/use-document-save";
 import { copper } from "@/lib/copper";
@@ -156,6 +157,7 @@ export function useEditorDocument(
       markMissingDocument();
       return;
     }
+    if (query.isError) return;
     if (!query.data) return;
     const draft = readDocumentDraft(key);
     if (!initialized.current) {
@@ -225,18 +227,21 @@ export function useEditorDocument(
   }
 
   async function reload() {
-    scheduleSave.pause();
-    await scheduleSave.settle();
-    const payload = await copper.files.read(vaultId, path);
-    scheduleSave.cancel();
-    clearDocumentDraft(key);
-    revision.current = payload[1];
-    markDocumentDirty(vaultId, path, false);
-    setDirty(false);
-    setConflict(false);
-    setError(null);
-    client.setQueryData(fileKeys.detail(vaultId, path), payload);
-    status("saved");
+    await withDocumentWriteLock(vaultId, path, async () => {
+      scheduleSave.pause();
+      await scheduleSave.settle();
+      const payload = await copper.files.read(vaultId, path);
+      scheduleSave.cancel();
+      clearDocumentDraft(key);
+      revision.current = payload[1];
+      markDocumentDirty(vaultId, path, false);
+      setDirty(false);
+      setConflict(false);
+      setError(null);
+      client.setQueryData(fileKeys.detail(vaultId, path), payload);
+      status("saved");
+      return payload;
+    });
   }
 
   async function keep() {
@@ -267,6 +272,7 @@ export function useEditorDocument(
   return {
     query,
     initializing: !initialized.current && query.isFetching,
+    initialReadFailed: query.isError && !initialized.current,
     dirty,
     conflict,
     missing,

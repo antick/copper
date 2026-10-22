@@ -7,12 +7,12 @@ export interface DocumentWriteDetail {
   locked: boolean;
   payload?: [string, DiskRevision];
 }
-const lockedDocuments = new Set<string>();
+const lockedDocuments = new Map<string, number>();
 const keyFor = (vaultId: string, path: string) =>
   JSON.stringify([vaultId, path]);
 
 export function isDocumentWriteLocked(vaultId: string, path: string) {
-  return lockedDocuments.has(keyFor(vaultId, path));
+  return (lockedDocuments.get(keyFor(vaultId, path)) ?? 0) > 0;
 }
 
 export async function withDocumentWriteLock(
@@ -21,7 +21,7 @@ export async function withDocumentWriteLock(
   write: () => Promise<[string, DiskRevision]>,
 ) {
   const key = keyFor(vaultId, path);
-  lockedDocuments.add(key);
+  lockedDocuments.set(key, (lockedDocuments.get(key) ?? 0) + 1);
   const notify = (detail: DocumentWriteDetail) =>
     window.dispatchEvent(new CustomEvent(DOCUMENT_WRITE_EVENT, { detail }));
   notify({ vaultId, path, locked: true });
@@ -30,8 +30,10 @@ export async function withDocumentWriteLock(
     payload = await write();
     return payload;
   } finally {
-    lockedDocuments.delete(key);
-    notify({ vaultId, path, locked: false, payload });
+    const remaining = Math.max(0, (lockedDocuments.get(key) ?? 1) - 1);
+    if (remaining > 0) lockedDocuments.set(key, remaining);
+    else lockedDocuments.delete(key);
+    notify({ vaultId, path, locked: remaining > 0, payload });
   }
 }
 

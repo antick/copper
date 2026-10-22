@@ -362,3 +362,67 @@ it("blocks checkbox widgets and other document changes while a property write is
   expect(mocks.disk).toContain("status: done");
   expect(mocks.disk).toContain("[x] Keep my task");
 });
+
+it("keeps the editor locked until every overlapping property write finishes", async () => {
+  const { withDocumentWriteLock } = await import("./document-write-lock");
+  mount();
+  const editor = await view();
+  let finishFirst!: () => void;
+  let finishSecond!: () => void;
+  const firstReady = new Promise<void>((resolve) => {
+    finishFirst = resolve;
+  });
+  const secondReady = new Promise<void>((resolve) => {
+    finishSecond = resolve;
+  });
+  let first!: Promise<unknown>;
+  let second!: Promise<unknown>;
+  act(() => {
+    first = withDocumentWriteLock("v", "Note.md", async () => {
+      await firstReady;
+      return [
+        "Intermediate property value",
+        {
+          path: "Note.md",
+          hash: "intermediate",
+          size: 26,
+          mtimeNs: 4,
+        },
+      ];
+    });
+    second = withDocumentWriteLock("v", "Note.md", async () => {
+      await secondReady;
+      return [
+        "Final property value",
+        {
+          path: "Note.md",
+          hash: "final",
+          size: 20,
+          mtimeNs: 5,
+        },
+      ];
+    });
+  });
+
+  try {
+    expect(editor.state.readOnly).toBe(true);
+    await act(async () => {
+      finishFirst();
+      await first;
+    });
+    expect(editor.state.readOnly).toBe(true);
+    act(() => editor.dispatch({ changes: { from: 0, insert: "Blocked" } }));
+    expect(editor.state.doc.toString()).toBe("Intermediate property value");
+
+    await act(async () => {
+      finishSecond();
+      await second;
+    });
+    expect(editor.state.readOnly).toBe(false);
+    expect(editor.state.doc.toString()).toBe("Final property value");
+  } finally {
+    finishFirst();
+    finishSecond();
+    await act(async () => Promise.all([first, second]));
+  }
+});

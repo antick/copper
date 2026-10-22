@@ -1,6 +1,13 @@
 import { EditorView } from "@codemirror/view";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { flushOpenDocuments } from "@/lib/copper/events";
 import type { DiskRevision } from "@/lib/copper/files";
@@ -212,6 +219,116 @@ it("preserves a property write lock when the initial disk read completes", async
     completeWrite();
     await act(async () => writing);
   }
+});
+
+it("locks body edits and checkbox widgets while reloading the disk version", async () => {
+  mocks.disk = "- [ ] Current task\n";
+  mountCached();
+  const view = await editorView();
+  edit(view, "- [ ] My draft\n");
+  await screen.findByRole("checkbox");
+
+  mocks.disk = "- [ ] External version\n";
+  await act(async () => {
+    await expect(flushOpenDocuments(vaultId)).rejects.toThrow(
+      /changed on disk/i,
+    );
+  });
+  const read = pendingRead();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Reload Disk Version" }),
+  );
+
+  try {
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Reload Disk Version" }),
+      ).toBeDisabled(),
+    );
+    expect(view.state.readOnly).toBe(true);
+    expect(view.contentDOM).toHaveAttribute("contenteditable", "false");
+
+    fireEvent.click(screen.getByRole("checkbox"));
+    edit(view, "Typing must wait for Reload to finish");
+    expect(view.state.doc.toString()).toBe("- [ ] My draft\n");
+    expect(readDocumentDraft(key)?.contents).toBe("- [ ] My draft\n");
+
+    await act(async () => read.resolve(payload()));
+    await waitFor(() =>
+      expect(view.state.doc.toString()).toBe("- [ ] External version\n"),
+    );
+    expect(readDocumentDraft(key)).toBeUndefined();
+  } finally {
+    await act(async () => read.resolve(payload()));
+  }
+});
+
+it("keeps the draft after a failed Reload read and enables retry", async () => {
+  mountCached();
+  const view = await editorView();
+  edit(view, "Draft to keep after a failed reload");
+  mocks.disk = "External version";
+  await act(async () => {
+    await expect(flushOpenDocuments(vaultId)).rejects.toThrow(
+      /changed on disk/i,
+    );
+  });
+
+  const failedRead = pendingRead();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Reload Disk Version" }),
+  );
+  await act(async () => {
+    failedRead.reject(
+      Object.assign(new Error("Read denied"), { code: "EACCES" }),
+    );
+  });
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Read denied");
+  expect(
+    screen.getByRole("button", { name: "Reload Disk Version" }),
+  ).toBeEnabled();
+  expect(view.state.doc.toString()).toBe("Draft to keep after a failed reload");
+  expect(readDocumentDraft(key)?.contents).toBe(
+    "Draft to keep after a failed reload",
+  );
+
+  const retryRead = pendingRead();
+  fireEvent.click(screen.getByRole("button", { name: "Reload Disk Version" }));
+  await act(async () => retryRead.resolve(payload()));
+  await waitFor(() =>
+    expect(view.state.doc.toString()).toBe("External version"),
+  );
+  expect(readDocumentDraft(key)).toBeUndefined();
+});
+
+it("keeps cached drafts recoverable after an initial read error and retries fresh", async () => {
+  keepDocumentDraft(key, {
+    contents: "My preserved draft",
+    baseHash: "Original",
+  });
+  const read = pendingRead();
+  mountCached();
+
+  await act(async () => {
+    read.reject(Object.assign(new Error("Read denied"), { code: "EACCES" }));
+  });
+
+  expect(
+    await screen.findByRole("textbox", { name: "Recovered draft" }),
+  ).toHaveValue("My preserved draft");
+  expect(screen.queryByRole("textbox", { name: "Markdown editor" })).toBeNull();
+  expect(screen.getByRole("alert")).toHaveTextContent("Read denied");
+  expect(
+    screen.getByRole("button", { name: "Discard recovered draft" }),
+  ).toBeVisible();
+
+  mocks.disk = "Fresh disk version";
+  fireEvent.click(screen.getByRole("button", { name: "Retry opening" }));
+  const view = await editorView();
+  await screen.findByRole("button", { name: "Reload Disk Version" });
+  expect(view.state.doc.toString()).toBe("My preserved draft");
+  expect(readDocumentDraft(key)?.contents).toBe("My preserved draft");
 });
 
 it("recovers a retained draft when the cached note's fresh read finds no file", async () => {
