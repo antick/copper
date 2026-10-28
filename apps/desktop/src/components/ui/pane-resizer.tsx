@@ -23,6 +23,7 @@ export function PaneResizer({
     <div
       role="separator"
       aria-orientation="vertical"
+      aria-label="Resize pane"
       className="copper-resizer"
       data-line-below-header={lineBelowHeader || undefined}
       onPointerDown={(event) => {

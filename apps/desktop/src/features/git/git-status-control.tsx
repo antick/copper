@@ -34,6 +34,7 @@ function VaultGitStatusControl({ vaultId }: { vaultId?: string }) {
     result: running ? null : result,
   });
   const paths = status.kind === "git" ? status.paths : [];
+  const firstPath = paths[0];
   const count =
     status.kind === "git" ? Math.max(status.noteCount, status.behind) : 0;
   const diff = useQuery({
@@ -59,8 +60,8 @@ function VaultGitStatusControl({ vaultId }: { vaultId?: string }) {
     if (!open) {
       return;
     }
-    setSelected(paths[0]);
-  }, [open, paths]);
+    setSelected(firstPath);
+  }, [open, firstPath]);
 
   useEffect(
     () =>

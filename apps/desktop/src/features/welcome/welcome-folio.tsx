@@ -13,6 +13,7 @@ export function WelcomeFolio({
       className="copper-welcome-folio"
       onClick={onOpen}
       title={vault.path}
+      aria-label={`Open vault ${vault.name}`}
     >
       <span className="copper-welcome-folio-spine" aria-hidden="true" />
       <span className="copper-welcome-folio-body">

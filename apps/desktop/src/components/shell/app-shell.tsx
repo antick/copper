@@ -193,6 +193,7 @@ export function AppShell({
     return () => {
       void unlisten.then((stop) => stop());
     };
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- noteActions identity changes each render; restoreHistory is the intended dependency
   }, [noteActions.restoreHistory, vaultId]);
 
   useEffect(() => {

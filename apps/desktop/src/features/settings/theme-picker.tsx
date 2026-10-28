@@ -68,6 +68,7 @@ export function ThemeGallery({
             data-selected={checked}
             data-effective={active}
             style={style}
+            aria-label={theme.name}
           >
             <input
               type="radio"

@@ -170,6 +170,7 @@ export function CopperEditor({
     viewRef.current = view;
     setCopperEditorReadOnly(view, isDocumentWriteLocked(vaultId, path));
   }, [
+    document,
     document.query.data,
     document.draft,
     document.initialReadFailed,

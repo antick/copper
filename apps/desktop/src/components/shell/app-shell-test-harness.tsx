@@ -1,3 +1,4 @@
+import type * as TanstackRouter from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { vi } from "vitest";
@@ -47,8 +48,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual = await importOriginal<typeof TanstackRouter>();
   return {
     ...actual,
     useNavigate: () => vi.fn(),
