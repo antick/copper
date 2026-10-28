@@ -186,8 +186,9 @@ function VaultGitStatusControl({ vaultId }: { vaultId?: string }) {
                 onClick={() => {
                   if (running) return;
                   void publish(commitMessage)
-                    .then((result) => {
-                      if (result.kind !== "error") setCommitMessage("");
+                    .then((publishResult) => {
+                      if (publishResult.kind !== "error") setCommitMessage("");
+                      return undefined;
                     })
                     .catch(() => undefined);
                 }}

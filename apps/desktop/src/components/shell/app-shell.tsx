@@ -150,6 +150,7 @@ export function AppShell({
         await queryClient.invalidateQueries({
           queryKey: ["vault", vaultId, "notes"],
         });
+        return undefined;
       })
       .catch(() => setIndexState("error"));
     void copper.settings.loadSession(vaultId).then((saved) => {
@@ -188,12 +189,16 @@ export function AppShell({
         noteActions.restoreHistory(activePath);
       }
       setRestoredVaultId(vaultId);
+      return undefined;
     });
     const unlisten = copper.events.listenToVaultEvents(vaultId);
     return () => {
-      void unlisten.then((stop) => stop());
+      void unlisten.then((stop) => {
+        stop();
+        return undefined;
+      });
     };
-  // oxlint-disable-next-line react-hooks/exhaustive-deps -- noteActions identity changes each render; restoreHistory is the intended dependency
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- noteActions identity changes each render; restoreHistory is the intended dependency
   }, [noteActions.restoreHistory, vaultId]);
 
   useEffect(() => {
@@ -416,6 +421,7 @@ export function AppShell({
                           },
                         });
                       }
+                      return undefined;
                     });
                   }
                 : undefined

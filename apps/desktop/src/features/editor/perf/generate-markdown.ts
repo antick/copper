@@ -1,5 +1,5 @@
-export function generateMarkdown(targetBytes: number, seed = "copper"): string {
-  const section = (n: number) => `## Heading ${n}
+function markdownSection(n: number) {
+  return `## Heading ${n}
 
 This is a long paragraph of sample Markdown used to exercise Copper's editor. It includes **bold**, *italic*, ~~strike~~, \`inline code\`, and a [link](https://example.com/${n}). Wiki link [[Architecture]] and a heading link [[projects/copper/architecture#Performance]] also appear here.
 
@@ -21,7 +21,9 @@ export function sample${n}(value: number): number {
 #tag-${n} more text about Copper performance fixtures and live preview decorations.
 
 `;
+}
 
+export function generateMarkdown(targetBytes: number, seed = "copper"): string {
   const chunks = [
     `---\ntype: fixture\nstatus: generated\nseed: ${seed}\n---\n\n# Copper performance fixture\n\n`,
   ];
@@ -29,7 +31,7 @@ export function sample${n}(value: number): number {
   let size = new TextEncoder().encode(chunks[0]).length;
 
   while (size < targetBytes) {
-    const next = section(n);
+    const next = markdownSection(n);
     chunks.push(next);
     size += new TextEncoder().encode(next).length;
     n += 1;

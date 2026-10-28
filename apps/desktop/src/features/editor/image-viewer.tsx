@@ -27,10 +27,11 @@ export function ImageViewer({
       .then(({ url, mimeType }) => {
         if (disposed) {
           URL.revokeObjectURL(url);
-          return;
+          return undefined;
         }
         objectUrl = url;
         setState({ url, mimeType });
+        return undefined;
       })
       .catch((error: unknown) => {
         if (!disposed) {
@@ -41,6 +42,7 @@ export function ImageViewer({
                 : "The image could not be opened safely.",
           });
         }
+        return undefined;
       });
     return () => {
       disposed = true;

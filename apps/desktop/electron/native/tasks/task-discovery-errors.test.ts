@@ -31,10 +31,12 @@ function writeIssue(root: string, relative: string, id: string): void {
 }
 
 function readIndexedIssues(dbPath: string) {
-  return listIssues(dbPath, { includeArchived: true }).map(({ id, path }) => ({
-    id,
-    path,
-  }));
+  return listIssues(dbPath, { includeArchived: true }).map(
+    ({ id, path: issuePath }) => ({
+      id,
+      path: issuePath,
+    }),
+  );
 }
 
 function indexIssues(root: string, dbPath: string) {
