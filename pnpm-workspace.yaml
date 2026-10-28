@@ -22,3 +22,5 @@ auditConfig:
   ignoreGhsas:
     - GHSA-vfj7-8cjw-p6xm # braces: stack-exhaustion DoS on deeply nested patterns (build tooling only)
     - GHSA-hp3w-g68c-fv3c # sprintf-js: unbounded precision DoS (electron-builder, build time only)
+minimumReleaseAgeExclude:
+  - electron@44.10.0
