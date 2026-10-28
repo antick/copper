@@ -18,6 +18,7 @@
     ".cursor/**",
     ".agents/**",
     "pnpm-lock.yaml",
-    "**/public/tauri.svg"
+    "**/public/tauri.svg",
+    "**/vercel.json"
   ]
 }
