@@ -16,11 +16,14 @@ overrides:
   http-cache-semantics: ">=4.3.0"
   source-map-js: ">=1.2.2"
   sharp: ">=0.35.5"
+  "undici@>=6.0.0 <7": ">=6.29.1 <7"
+  "undici@>=7.0.0 <8": ">=7.30.1 <8"
+  "undici@>=8.0.0 <9": ">=8.12.3 <9"
+  zod: ">=4.6.7 <5"
+  fast-uri: ">=3.1.9 <4"
 
 auditConfig:
   # No patched release exists yet for these. Remove each entry when a fix ships.
   ignoreGhsas:
     - GHSA-vfj7-8cjw-p6xm # braces: stack-exhaustion DoS on deeply nested patterns (build tooling only)
     - GHSA-hp3w-g68c-fv3c # sprintf-js: unbounded precision DoS (electron-builder, build time only)
-minimumReleaseAgeExclude:
-  - electron@44.10.0
