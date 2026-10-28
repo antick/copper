@@ -30,7 +30,7 @@ export function rollbackTaskWrites(
   dbPath: string,
   writes: TaskWriteSnapshot[],
 ): void {
-  for (const write of writes.toReversed()) {
+  for (const write of [...writes].reverse()) {
     try {
       const absolute = resolveInVault(root, write.path);
       if (fs.existsSync(absolute)) {
@@ -58,7 +58,7 @@ export function rollbackTaskCreations(
   dbPath: string,
   creations: TaskCreationSnapshot[],
 ): void {
-  for (const creation of creations.toReversed()) {
+  for (const creation of [...creations].reverse()) {
     let absolute: string;
     try {
       absolute = resolveInVault(root, creation.path);

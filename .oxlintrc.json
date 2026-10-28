@@ -179,7 +179,10 @@
       }
     },
     {
-      "files": ["apps/desktop/src/features/file-tree/file-tree.tsx"],
+      "files": [
+        "apps/desktop/src/features/file-tree/file-tree.tsx",
+        "apps/desktop/electron/native/tasks/write-rollback.ts"
+      ],
       "rules": {
         "unicorn/no-array-reverse": "off"
       }
