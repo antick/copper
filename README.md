@@ -106,7 +106,7 @@ New dependencies are pinned to releases at least two days old. Turbo 2.11.3
 is used because 2.11.4 had not reached that age when this change was made.
 TypeScript 6.0.3 is the newest supported by Astro’s checker; TypeScript 7 is not
 yet compatible. Existing desktop dependency versions are preserved. Astro’s
-checker validates its templates; Biome checks their frontmatter and the other
+checker validates its templates; Oxlint and Oxfmt cover their frontmatter and the other
 source files.
 
 ## Supported files and file safety
@@ -201,7 +201,7 @@ mise run typecheck
 mise run lint
 ```
 
-`mise run lint` and `mise run format` use [Biome](https://biomejs.dev/). Use `mise run test` (Vitest), not a separate test runner.
+`mise run lint` and `mise run format` use [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter). Use `mise run test` (Vitest), not a separate test runner.
 
 Or run them together:
 

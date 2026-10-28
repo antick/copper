@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "singleQuote": false,
+  "semi": true,
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "astro": true,
+  "ignorePatterns": [
+    "**/routeTree.gen.ts",
+    "**/out/**",
+    "**/release/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "**/.turbo/**",
+    "docs/images/**",
+    "**/tests/fixtures/**",
+    ".cursor/**",
+    ".agents/**",
+    "pnpm-lock.yaml",
+    "**/public/tauri.svg"
+  ]
+}

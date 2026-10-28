@@ -15,6 +15,12 @@
     },
     "typecheck": {
       "outputs": []
+    },
+    "lint": {
+      "outputs": []
+    },
+    "format:check": {
+      "outputs": []
     }
   },
   "globalPassThroughEnv": ["GITHUB_REF"],

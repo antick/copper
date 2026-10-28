@@ -10,7 +10,7 @@ Work from the user's request, inspect the affected code, implement the change, a
 
 Every implementation must be verified before handoff or commit. Select the full relevant verification set for the affected surface rather than stopping at a single happy-path test:
 
-- run focused tests first, then the related frontend tests, native Node tests, typecheck, and Biome checks;
+- run focused tests first, then the related frontend tests, native Node tests, typecheck, and Oxlint/Oxfmt checks;
 - run Electron/native tests when the desktop bridge, persistence, or main process is affected;
 - run the production web build and relevant browser/accessibility or responsive checks for shell and settings changes;
 - inspect the final diff and run `git diff --check` to catch whitespace and patch errors; and
