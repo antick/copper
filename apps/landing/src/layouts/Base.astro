@@ -13,6 +13,7 @@ const socialImage = await getImage({
 const favicon = await getImage({ src: icon, width: 64, format: "png" });
 const touchIcon = await getImage({ src: icon, width: 180, format: "png" });
 ---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -28,12 +29,20 @@ const touchIcon = await getImage({ src: icon, width: 180, format: "png" });
     <meta property="og:title" content={site.title} />
     <meta property="og:description" content={site.description} />
     <meta property="og:url" content={site.url} />
-    <meta property="og:image" content={new URL(socialImage.src, site.url).href} />
-    <meta property="og:image:alt" content="Copper Tasks: a project board in the same local workspace as your Markdown notes" />
+    <meta
+      property="og:image"
+      content={new URL(socialImage.src, site.url).href}
+    />
+    <meta
+      property="og:image:alt"
+      content="Copper Tasks: a project board in the same local workspace as your Markdown notes"
+    />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
     <slot />
   </body>
 </html>

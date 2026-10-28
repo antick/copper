@@ -61,10 +61,10 @@ export function useNoteList(
     // valid even while the tree refresh is still in flight.
     isPending: Boolean(
       vaultId &&
-        !data.length &&
-        (indexed.isPending ||
-          tree.isPlaceholderData ||
-          (tree.isPending && !activeTree)),
+      !data.length &&
+      (indexed.isPending ||
+        tree.isPlaceholderData ||
+        (tree.isPending && !activeTree)),
     ),
   };
 }

@@ -26,18 +26,16 @@ const mocks = vi.hoisted(() => ({
     size: 7,
     mtimeNs: 1,
   })),
-  loadSession: vi.fn(
-    async (): Promise<Record<string, unknown>> => ({
-      tabs: [],
-      activePath: null,
-      leftCollapsed: false,
-      rightCollapsed: false,
-      favorites: [],
-      tasksProjectOrder: [],
-      tasksPinnedProjects: [],
-      tasksListColumnWidths: {},
-    }),
-  ),
+  loadSession: vi.fn(async (): Promise<Record<string, unknown>> => ({
+    tabs: [],
+    activePath: null,
+    leftCollapsed: false,
+    rightCollapsed: false,
+    favorites: [],
+    tasksProjectOrder: [],
+    tasksPinnedProjects: [],
+    tasksListColumnWidths: {},
+  })),
   saveSession: vi.fn(async () => undefined),
   archiveFile: vi.fn(
     async (_vaultId: string, path: string) => `Archive/${path}`,

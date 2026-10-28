@@ -100,16 +100,15 @@ describe("useNoteList scope transitions", () => {
   });
 
   it("does not render folder A rows while folder B is still loading", async () => {
-    const folderB =
-      deferred<
-        {
-          path: string;
-          title: string;
-          snippet: string;
-          tags: string[];
-          mtimeNs: number;
-        }[]
-      >();
+    const folderB = deferred<
+      {
+        path: string;
+        title: string;
+        snippet: string;
+        tags: string[];
+        mtimeNs: number;
+      }[]
+    >();
     copperMock.files.tree.mockResolvedValue(tree("A/tree.md"));
     copperMock.search.notes.mockImplementation(
       (_vaultId: string, scope: string) =>
@@ -152,16 +151,15 @@ describe("useNoteList scope transitions", () => {
   });
 
   it("drops search A rows before the delayed search B response resolves", async () => {
-    const searchB =
-      deferred<
-        {
-          path: string;
-          title: string;
-          snippet: string;
-          tags: string[];
-          mtimeNs: number;
-        }[]
-      >();
+    const searchB = deferred<
+      {
+        path: string;
+        title: string;
+        snippet: string;
+        tags: string[];
+        mtimeNs: number;
+      }[]
+    >();
     copperMock.files.tree.mockResolvedValue(tree());
     copperMock.search.query.mockImplementation(
       (_vaultId: string, query: string) =>
@@ -229,16 +227,15 @@ describe("useNoteList scope transitions", () => {
 
   it("does not carry Vault A tree rows into a delayed Vault B query", async () => {
     const vaultBTree = deferred<ReturnType<typeof tree>>();
-    const vaultBNotes =
-      deferred<
-        {
-          path: string;
-          title: string;
-          snippet: string;
-          tags: string[];
-          mtimeNs: number;
-        }[]
-      >();
+    const vaultBNotes = deferred<
+      {
+        path: string;
+        title: string;
+        snippet: string;
+        tags: string[];
+        mtimeNs: number;
+      }[]
+    >();
     copperMock.files.tree.mockImplementation((vaultId: string) =>
       vaultId === "A" ? Promise.resolve(tree("A/note.md")) : vaultBTree.promise,
     );

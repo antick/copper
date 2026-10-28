@@ -1,9 +1,14 @@
 {
   "name": "@copper/desktop",
-  "productName": "Copper",
-  "private": true,
   "version": "0.2.2",
+  "private": true,
+  "description": "A local-first workspace for notes, tasks, and projects.",
+  "homepage": "https://copper.potion.sh",
   "license": "AGPL-3.0-only",
+  "author": {
+    "name": "Pankaj",
+    "email": "antick@users.noreply.github.com"
+  },
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
@@ -172,10 +177,5 @@
       "artifactName": "copper_${version}_${arch}.${ext}"
     }
   },
-  "description": "A local-first workspace for notes, tasks, and projects.",
-  "homepage": "https://copper.potion.sh",
-  "author": {
-    "name": "Pankaj",
-    "email": "antick@users.noreply.github.com"
-  }
+  "productName": "Copper"
 }

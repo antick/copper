@@ -2,8 +2,8 @@
   "name": "@copper/landing",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "license": "AGPL-3.0-only",
+  "type": "module",
   "scripts": {
     "dev": "astro dev --host 127.0.0.1",
     "build": "astro build",

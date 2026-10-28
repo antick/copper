@@ -10,19 +10,19 @@ folder. There is no account and no cloud. The SQLite search index lives in app d
 
 ![Copper editor showing demo notes and properties in the Linen theme](docs/images/editor.png)
 
-*Browse notes, edit Markdown, and manage properties in one workspace.*
+_Browse notes, edit Markdown, and manage properties in one workspace._
 
 ![Copper Tasks showing the All issues list with statuses, priorities, and projects](docs/images/tasks-list.png)
 
-*Plan work in Tasks: find issues, set priorities, and keep projects close at hand.*
+_Plan work in Tasks: find issues, set priorities, and keep projects close at hand._
 
 ![Copper project board showing demo issues organized by workflow status](docs/images/tasks-board.png)
 
-*Switch between project overview, issue list, and board. Move cards as work progresses.*
+_Switch between project overview, issue list, and board. Move cards as work progresses._
 
 ![Appearance settings](docs/images/settings.png)
 
-*Choose light and dark palettes, or follow your system appearance.*
+_Choose light and dark palettes, or follow your system appearance._
 
 ## Prerequisites
 

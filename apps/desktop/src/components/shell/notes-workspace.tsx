@@ -172,8 +172,8 @@ export function NotesWorkspace({
         archived={activeIsArchived}
         favorited={Boolean(
           activeIsMarkdown &&
-            selectedPath &&
-            session.favorites.includes(selectedPath),
+          selectedPath &&
+          session.favorites.includes(selectedPath),
         )}
         livePreviewEnabled={livePreviewEnabled}
         onToggleFavorite={() =>

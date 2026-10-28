@@ -2,12 +2,12 @@
 
 Download the latest stable version from [Copper releases](https://github.com/antick/copper/releases/latest).
 
-| Computer | Download |
-| --- | --- |
-| Mac with Apple Silicon (M-series chip) | `Copper-<version>-mac-arm64.dmg` |
-| Windows x64 | `Copper-Setup-<version>-x64.exe` |
-| Linux x64 | `Copper-<version>-x86_64.AppImage` or `copper_<version>_amd64.deb` |
-| Linux ARM64 | `Copper-<version>-arm64.AppImage` or `copper_<version>_arm64.deb` |
+| Computer                               | Download                                                           |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| Mac with Apple Silicon (M-series chip) | `Copper-<version>-mac-arm64.dmg`                                   |
+| Windows x64                            | `Copper-Setup-<version>-x64.exe`                                   |
+| Linux x64                              | `Copper-<version>-x86_64.AppImage` or `copper_<version>_amd64.deb` |
+| Linux ARM64                            | `Copper-<version>-arm64.AppImage` or `copper_<version>_arm64.deb`  |
 
 GitHub's source archives are for developers, not installers.
 

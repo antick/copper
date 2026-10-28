@@ -85,7 +85,12 @@
       }
     },
     {
-      "files": ["**/*.{config,mjs}", "scripts/**", "apps/**/electron/**", "apps/**/scripts/**"],
+      "files": [
+        "**/*.{config,mjs}",
+        "scripts/**",
+        "apps/**/electron/**",
+        "apps/**/scripts/**"
+      ],
       "rules": {
         "import/no-nodejs-modules": "off"
       }

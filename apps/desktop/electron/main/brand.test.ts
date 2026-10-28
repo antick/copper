@@ -16,7 +16,7 @@ function readIcnsPng(
   const source = fs.readFileSync(iconPath);
   expect(source.subarray(0, 4).toString("ascii")).toBe("icns");
   expect(source.readUInt32BE(4)).toBe(source.length);
-  for (let offset = 8; offset < source.length; ) {
+  for (let offset = 8; offset < source.length;) {
     const length = source.readUInt32BE(offset + 4);
     if (source.subarray(offset, offset + 4).toString("ascii") === type) {
       return decodePng(source.subarray(offset + 8, offset + length));

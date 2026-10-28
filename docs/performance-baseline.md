@@ -21,20 +21,20 @@ jsdom does not paint a WebView. These numbers prove the **input path stays cheap
 Average of 10 insert-at-start transactions after editor create:
 
 | Fixture | Create | Keystroke dispatch | Scroll-into-view |
-|---|---:|---:|---:|
-| 100 KB | 32 ms | 2.9 ms | 3.0 ms |
-| 1 MB | 12 ms | 1.2 ms | 1.9 ms |
-| 5 MB | 23 ms | 1.4 ms | 1.8 ms |
-| 25 MB | 72 ms | 2.3 ms | 4.4 ms |
+| ------- | -----: | -----------------: | ---------------: |
+| 100 KB  |  32 ms |             2.9 ms |           3.0 ms |
+| 1 MB    |  12 ms |             1.2 ms |           1.9 ms |
+| 5 MB    |  23 ms |             1.4 ms |           1.8 ms |
+| 25 MB   |  72 ms |             2.3 ms |           4.4 ms |
 
 Re-checked 2026-08-16 after Live Preview markers, wiki/tag/task decorations, and search/index work. jsdom dispatch remains inside the 16.7 ms frame budget:
 
 | Fixture | Create | Keystroke dispatch | Scroll-into-view |
-|---|---:|---:|---|
-| 100 KB | 56 ms | 4.9 ms | 7.4 ms |
-| 1 MB | 24 ms | 1.9 ms | 2.7 ms |
-| 5 MB | 30 ms | 4.4 ms | 3.6 ms |
-| 25 MB | 80 ms | 1.6 ms | 3.1 ms |
+| ------- | -----: | -----------------: | ---------------- |
+| 100 KB  |  56 ms |             4.9 ms | 7.4 ms           |
+| 1 MB    |  24 ms |             1.9 ms | 2.7 ms           |
+| 5 MB    |  30 ms |             4.4 ms | 3.6 ms           |
+| 25 MB   |  80 ms |             1.6 ms | 3.1 ms           |
 
 No architectural blocker was found. 1 MB and 5 MB typing stay well inside a 16.7 ms frame budget on this machine in jsdom. 25 MB remains responsive for dispatch; expensive Live Preview enrichments must stay viewport-scoped.
 
