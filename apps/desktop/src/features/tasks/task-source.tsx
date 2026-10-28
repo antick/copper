@@ -44,8 +44,8 @@ export function TaskSourceProvider({
         title="Couldn’t open source"
         description={error ?? ""}
         open={Boolean(error)}
-        onOpenChange={(open) => {
-          if (!open) setError(null);
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setError(null);
         }}
       >
         {null}

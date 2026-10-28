@@ -231,7 +231,9 @@ export function IssueList({
               );
             }
             const issue = item.issue;
-            const targets = issues.filter((item) => selectedIds.has(item.id));
+            const targets = issues.filter((candidate) =>
+              selectedIds.has(candidate.id),
+            );
             return (
               <IssueContextMenu
                 key={issue.id}
@@ -279,9 +281,7 @@ export function IssueList({
                         value={issue.status}
                         label={statusLabel(
                           issue.status,
-                          projects.find(
-                            (project) => project.id === issue.project,
-                          ),
+                          projects.find((entry) => entry.id === issue.project),
                         )}
                       />
                     </td>
@@ -296,14 +296,12 @@ export function IssueList({
                       {issue.project ? (
                         <TaskProjectChip
                           icon={
-                            projects.find(
-                              (project) => project.id === issue.project,
-                            )?.icon
+                            projects.find((entry) => entry.id === issue.project)
+                              ?.icon
                           }
                         >
-                          {projects.find(
-                            (project) => project.id === issue.project,
-                          )?.title ?? issue.project}
+                          {projects.find((entry) => entry.id === issue.project)
+                            ?.title ?? issue.project}
                         </TaskProjectChip>
                       ) : null}
                     </td>

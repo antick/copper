@@ -65,13 +65,15 @@ export class ImageWidget extends WidgetType {
         .then((url) => {
           if (disposed) {
             URL.revokeObjectURL(url);
-            return;
+            return undefined;
           }
           objectUrl = url;
           show(url);
+          return undefined;
         })
         .catch(() => {
           if (!disposed) container.textContent = "Image unavailable";
+          return undefined;
         });
     } else {
       container.textContent = "Image blocked: unsupported address";

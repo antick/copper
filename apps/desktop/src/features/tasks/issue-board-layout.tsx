@@ -380,7 +380,7 @@ export function IssueBoard({
         className="copper-task-board"
         role="region"
         aria-label="Kanban board"
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the scroll region needs direct keyboard access.
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- scroll region needs direct keyboard access
         tabIndex={0}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget) return;

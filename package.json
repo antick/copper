@@ -1,13 +1,8 @@
 {
   "name": "copper",
-  "private": true,
   "version": "0.2.2",
+  "private": true,
   "license": "AGPL-3.0-only",
-  "packageManager": "pnpm@12.14.0",
-  "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=11.22.0"
-  },
   "scripts": {
     "dev": "pnpm dev:desktop",
     "dev:desktop": "pnpm --filter @copper/desktop dev",
@@ -23,9 +18,11 @@
     "test": "turbo run test",
     "test:watch": "pnpm --filter @copper/desktop test:watch",
     "typecheck": "turbo run typecheck",
-    "lint": "biome check .",
-    "format": "biome check --write .",
-    "check": "pnpm test && pnpm typecheck && pnpm lint",
+    "lint": "oxlint --deny-warnings .",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test",
     "fixtures:perf": "pnpm --filter @copper/desktop fixtures:perf",
     "icons:generate": "pnpm --filter @copper/desktop icons:generate",
     "security:scan": "node scripts/scan-secrets.mjs",
@@ -33,7 +30,14 @@
     "release:publish": "pnpm --filter @copper/desktop release:publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.8",
+    "@astrojs/compiler-rs": "0.5.2",
+    "oxfmt": "0.74.0",
+    "oxlint": "1.89.0",
     "turbo": "2.11.3"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=11.22.0"
+  },
+  "packageManager": "pnpm@12.14.0"
 }

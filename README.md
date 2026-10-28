@@ -10,19 +10,19 @@ folder. There is no account and no cloud. The SQLite search index lives in app d
 
 ![Copper editor showing demo notes and properties in the Linen theme](docs/images/editor.png)
 
-*Browse notes, edit Markdown, and manage properties in one workspace.*
+_Browse notes, edit Markdown, and manage properties in one workspace._
 
 ![Copper Tasks showing the All issues list with statuses, priorities, and projects](docs/images/tasks-list.png)
 
-*Plan work in Tasks: find issues, set priorities, and keep projects close at hand.*
+_Plan work in Tasks: find issues, set priorities, and keep projects close at hand._
 
 ![Copper project board showing demo issues organized by workflow status](docs/images/tasks-board.png)
 
-*Switch between project overview, issue list, and board. Move cards as work progresses.*
+_Switch between project overview, issue list, and board. Move cards as work progresses._
 
 ![Appearance settings](docs/images/settings.png)
 
-*Choose light and dark palettes, or follow your system appearance.*
+_Choose light and dark palettes, or follow your system appearance._
 
 ## Prerequisites
 
@@ -106,7 +106,7 @@ New dependencies are pinned to releases at least two days old. Turbo 2.11.3
 is used because 2.11.4 had not reached that age when this change was made.
 TypeScript 6.0.3 is the newest supported by Astro’s checker; TypeScript 7 is not
 yet compatible. Existing desktop dependency versions are preserved. Astro’s
-checker validates its templates; Biome checks their frontmatter and the other
+checker validates its templates; Oxlint and Oxfmt cover their frontmatter and the other
 source files.
 
 ## Supported files and file safety
@@ -201,7 +201,7 @@ mise run typecheck
 mise run lint
 ```
 
-`mise run lint` and `mise run format` use [Biome](https://biomejs.dev/). Use `mise run test` (Vitest), not a separate test runner.
+`mise run lint` and `mise run format` use [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter). Use `mise run test` (Vitest), not a separate test runner.
 
 Or run them together:
 

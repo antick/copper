@@ -1,0 +1,305 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "import",
+    "unicorn",
+    "promise",
+    "oxc",
+    "react",
+    "jsx-a11y"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true
+  },
+  "rules": {
+    "no-console": "off",
+    "react/react-in-jsx-scope": "off",
+    "import/no-unassigned-import": "off",
+    "unicorn/no-array-sort": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-imports": "error",
+    "eqeqeq": ["error", "smart"],
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-template": "warn",
+    "no-useless-constructor": "error",
+    "react/jsx-no-useless-fragment": "warn",
+    "unicorn/prefer-array-flat-map": "warn",
+    "unicorn/no-array-for-each": "warn",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/interactive-supports-focus": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/role-has-required-aria-props": "off"
+  },
+  "ignorePatterns": [
+    "**/routeTree.gen.ts",
+    "**/out/**",
+    "**/release/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "**/.turbo/**",
+    "docs/images/**",
+    "**/tests/fixtures/**",
+    ".cursor/**",
+    ".agents/**",
+    "pnpm-lock.yaml",
+    "**/public/tauri.svg"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.astro"],
+      "rules": {
+        "typescript/no-unused-vars": "off",
+        "no-unused-vars": "off"
+      }
+    },
+    {
+      "files": ["**/*.{test,spec}.{ts,tsx,mjs}", "**/test/setup.ts"],
+      "rules": {
+        "typescript/consistent-type-imports": "off",
+        "vitest/require-mock-type-parameters": "off",
+        "vitest/no-conditional-expect": "off",
+        "vitest/require-to-throw-message": "off",
+        "react/globals": "off",
+        "oxc/no-map-spread": "off",
+        "eslint/prefer-template": "off",
+        "unicorn/consistent-function-scoping": "off",
+        "promise/always-return": "off"
+      }
+    },
+    {
+      "files": [
+        "**/*.{config,mjs}",
+        "scripts/**",
+        "apps/**/electron/**",
+        "apps/**/scripts/**"
+      ],
+      "rules": {
+        "import/no-nodejs-modules": "off"
+      }
+    },
+    {
+      "files": ["**/components/ui/**"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+        "jsx-a11y/click-events-have-key-events": "off",
+        "react/set-state-in-effect": "off",
+        "react/purity": "off",
+        "eqeqeq": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/electron/preload/index.ts"],
+      "rules": {
+        "eslint/no-underscore-dangle": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/electron/main/watch.ts"],
+      "rules": {
+        "import/no-named-as-default-member": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/scripts/release-policy.mjs"],
+      "rules": {
+        "eslint/preserve-caught-error": "off"
+      }
+    },
+    {
+      "files": ["scripts/scan-secrets.mjs", "scripts/screenshot-demo.js"],
+      "rules": {
+        "eslint/no-await-in-loop": "off",
+        "eslint/no-magic-numbers": "off",
+        "eslint/no-continue": "off",
+        "eslint/no-ternary": "off",
+        "eslint/one-var": "off",
+        "eslint/curly": "off",
+        "eslint/sort-imports": "off",
+        "eslint/sort-keys": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/test/setup.ts"],
+      "rules": {
+        "unicorn/prefer-global-this": "off",
+        "unicorn/consistent-function-scoping": "off",
+        "unicorn/no-null": "off",
+        "eslint/sort-keys": "off",
+        "vitest/require-top-level-describe": "off",
+        "vitest/no-importing-vitest-globals": "off",
+        "vitest/no-hooks": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/features/editor/**"],
+      "rules": {
+        "react/refs": "off",
+        "react/immutability": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/features/tasks/task-description-editor.tsx",
+        "apps/desktop/src/features/tasks/project-nav-list.tsx",
+        "apps/desktop/src/features/updates/update-provider.tsx",
+        "apps/desktop/src/features/tasks/issue-board-layout.tsx"
+      ],
+      "rules": {
+        "react/refs": "off",
+        "react/incompatible-library": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/electron/main/index.ts",
+        "apps/desktop/electron/main/window.ts",
+        "apps/desktop/electron/main/updater.ts",
+        "apps/desktop/src/lib/copper/events.test.ts"
+      ],
+      "rules": {
+        "promise/always-return": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/electron/native/tasks/project-service.test.ts"],
+      "rules": {
+        "eslint/no-shadow": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/features/file-tree/file-tree.tsx",
+        "apps/desktop/electron/native/tasks/write-rollback.ts"
+      ],
+      "rules": {
+        "unicorn/no-array-reverse": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/vite.config.ts", "apps/landing/astro.config.mjs"],
+      "rules": {
+        "eslint/sort-imports": "off",
+        "eslint/sort-keys": "off",
+        "import/no-nodejs-modules": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/lib/copper-desktop.d.ts"],
+      "rules": {
+        "unicorn/require-module-specifiers": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/lib/copper/settings.ts",
+        "apps/desktop/electron/native/settings.ts",
+        "apps/desktop/src/features/tasks/task-management.tsx",
+        "apps/desktop/src/features/tasks/queries.ts",
+        "apps/desktop/src/preview/mock-desktop.ts"
+      ],
+      "rules": {
+        "unicorn/no-useless-fallback-in-spread": "off",
+        "oxc/no-map-spread": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/features/editor/document-save-queue.ts",
+        "apps/desktop/src/features/editor/copper-editor.tsx",
+        "apps/desktop/electron/native/git/keep-both.ts",
+        "apps/desktop/scripts/generate-perf-fixtures.mjs"
+      ],
+      "rules": {
+        "eslint/no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/scripts/generate-dev-icon.mjs"],
+      "rules": {
+        "unicorn/no-array-for-each": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/components/shell/editor-pane.tsx",
+        "apps/desktop/src/features/tasks/tasks-workspace.tsx",
+        "apps/desktop/src/components/ui/command-menu.tsx"
+      ],
+      "rules": {
+        "react/no-object-type-as-default-prop": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/features/tasks/task-source.tsx"],
+      "rules": {
+        "react/jsx-no-constructed-context-values": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/features/settings/editor-typography-controls.tsx",
+        "apps/desktop/src/features/tasks/task-label-dialog.tsx",
+        "apps/desktop/src/features/tasks/issue-view.tsx",
+        "apps/desktop/src/features/editor/use-editor-document.ts",
+        "apps/desktop/src/features/tasks/task-ui.tsx",
+        "apps/desktop/src/features/tasks/project-action-dialog.tsx",
+        "apps/desktop/src/features/tasks/workflow-dialog.tsx",
+        "apps/desktop/src/features/tasks/task-create-dialog.tsx",
+        "apps/desktop/src/routes/settings/files.tsx",
+        "apps/desktop/src/features/settings/issue-prefix-setting.tsx",
+        "apps/desktop/src/features/git/git-status-control.tsx",
+        "apps/desktop/src/features/editor/image-viewer.tsx"
+      ],
+      "rules": {
+        "react/set-state-in-effect": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/features/tasks/issue-board-layout.tsx"],
+      "rules": {
+        "jsx-a11y/no-noninteractive-element-interactions": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/desktop/src/features/tasks/issue-list.tsx",
+        "apps/desktop/src/features/file-tree/file-tree.tsx",
+        "apps/desktop/src/features/search/search-results.tsx"
+      ],
+      "rules": {
+        "react/incompatible-library": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/lib/updates/release-policy.ts"],
+      "rules": {
+        "eslint/no-underscore-dangle": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/features/editor/document-write-lock.ts"],
+      "rules": {
+        "unicorn/consistent-function-scoping": "off"
+      }
+    },
+    {
+      "files": ["apps/desktop/src/features/editor/copper-editor.tsx"],
+      "rules": {
+        "react-hooks/exhaustive-deps": "off",
+        "react/exhaustive-effect-dependencies": "off"
+      }
+    }
+  ]
+}

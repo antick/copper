@@ -81,12 +81,14 @@ Earlier reference applications considered included permissively licensed project
 ### 2.2 Dependency rule
 
 Prefer:
+
 - MIT
 - BSD
 - Apache-2.0
 - similarly permissive dependencies
 
 Before introducing a dependency that becomes fundamental to Copper, record:
+
 - license
 - maintenance status
 - bundle/runtime impact
@@ -148,19 +150,23 @@ Copper
 ### 3.2 Tauri vs alternatives
 
 #### Swift/AppKit/TextKit 2
+
 Best raw macOS-native performance ceiling and excellent large-text primitives. If Copper were guaranteed to remain macOS-only, Swift/AppKit would be a serious first choice.
 
 Rejected as the default because Copper should preserve a realistic Windows/Linux path without rewriting the whole UI.
 
 #### Qt
+
 Excellent native performance and mature large-text support. Cross-platform.
 
 Rejected as the default because achieving Copper's highly polished custom interface would cost substantially more UI development time, while the React/CSS ecosystem gives much faster design iteration.
 
 #### Electron
+
 Chosen for one Chromium renderer on every OS, Node.js as the native core language, and a denser upcoming UI (boards, canvases). RAM and installer size are accepted costs. Native work stays in the main process; the renderer stays sandboxed and talks only through `copper.*`.
 
 #### Tauri
+
 Used by the legacy Tauri app. Replaced with Electron because system WebViews (WKWebView / WebView2 / WebKitGTK) would make later issue-board and Excalidraw surfaces non-deterministic across platforms.
 
 **Important:** Electron does not automatically guarantee a smooth UI. Bad React work, synchronous parsing, excessive CodeMirror decorations, DOM churn, or chatty IPC can still make Copper slow.
@@ -174,30 +180,32 @@ The following are product requirements, not stretch goals.
 ### 4.1 Frame budgets
 
 At 60 Hz:
+
 - total frame budget: ~16.67 ms
 
 At 120 Hz:
+
 - total frame budget: ~8.33 ms
 
 Copper must be designed so routine editor/UI interactions stay inside the current display's frame budget whenever possible.
 
 ### 4.2 Interaction targets
 
-| Interaction | Target |
-|---|---:|
-| Keystroke -> visible character | <16 ms, target <8 ms on capable hardware |
-| Cursor movement | next frame |
-| Selection drag | locked to display refresh where possible |
-| Normal editor scrolling | 60/120 FPS with no sustained dropped frames |
-| Hover/pressed state | next frame |
-| Sidebar expand/collapse | animation remains inside frame budget |
-| Open context menu | <30 ms perceived |
-| Open command palette | <30-50 ms |
-| Switch already-open note | <30 ms |
-| Open normal Markdown note | <50 ms perceived |
-| Search UI typing | never blocks input |
-| Background index work | must never starve typing/scrolling |
-| Idle CPU | approximately 0-1% under normal idle conditions |
+| Interaction                    |                                          Target |
+| ------------------------------ | ----------------------------------------------: |
+| Keystroke -> visible character |        <16 ms, target <8 ms on capable hardware |
+| Cursor movement                |                                      next frame |
+| Selection drag                 |        locked to display refresh where possible |
+| Normal editor scrolling        |     60/120 FPS with no sustained dropped frames |
+| Hover/pressed state            |                                      next frame |
+| Sidebar expand/collapse        |           animation remains inside frame budget |
+| Open context menu              |                                <30 ms perceived |
+| Open command palette           |                                       <30-50 ms |
+| Switch already-open note       |                                          <30 ms |
+| Open normal Markdown note      |                                <50 ms perceived |
+| Search UI typing               |                              never blocks input |
+| Background index work          |              must never starve typing/scrolling |
+| Idle CPU                       | approximately 0-1% under normal idle conditions |
 
 A 100 ms response is **not** acceptable for common UI/editor actions.
 
@@ -215,6 +223,7 @@ Maintain generated test notes in development fixtures:
 ```
 
 Suggested content should include:
+
 - headings
 - lists
 - long paragraphs
@@ -240,6 +249,7 @@ Performance expectations:
 **Do not build months of product functionality before proving the editor stack.**
 
 The first technical milestone must exercise:
+
 - Tauri window
 - React shell
 - CodeMirror 6
@@ -260,12 +270,12 @@ If Tauri + CodeMirror cannot meet Copper's performance bar after competent optim
 
 These are planning estimates, not promises; benchmark actual release builds.
 
-| Stack | Approx installed app | Approx idle RAM | Approx active working RAM | Performance ceiling |
-|---|---:|---:|---:|---|
-| Swift/AppKit | 5-25 MB | 30-80 MB | 60-180 MB | Best |
-| Qt | 40-100 MB | 60-130 MB | 100-250 MB | Excellent |
-| Tauri/Rust/React | 10-35 MB | 70-150 MB | 120-300 MB | Very high |
-| Electron/React | 180-300+ MB | 180-300 MB | 250-600+ MB | Very high if well engineered |
+| Stack            | Approx installed app | Approx idle RAM | Approx active working RAM | Performance ceiling          |
+| ---------------- | -------------------: | --------------: | ------------------------: | ---------------------------- |
+| Swift/AppKit     |              5-25 MB |        30-80 MB |                 60-180 MB | Best                         |
+| Qt               |            40-100 MB |       60-130 MB |                100-250 MB | Excellent                    |
+| Tauri/Rust/React |             10-35 MB |       70-150 MB |                120-300 MB | Very high                    |
+| Electron/React   |          180-300+ MB |      180-300 MB |               250-600+ MB | Very high if well engineered |
 
 Copper's actual performance should be measured and tracked in CI/release testing rather than judged from framework averages.
 
@@ -278,6 +288,7 @@ This separation is critical.
 ### 6.1 CodeMirror owns document/editor state
 
 CodeMirror owns:
+
 - current document text
 - cursor
 - selection
@@ -292,7 +303,7 @@ CodeMirror owns:
 Forbidden pattern:
 
 ```tsx
-const [markdown, setMarkdown] = useState("")
+const [markdown, setMarkdown] = useState("");
 ```
 
 if `setMarkdown` is called with the entire document on every editor transaction.
@@ -300,6 +311,7 @@ if `setMarkdown` is called with the entire document on every editor transaction.
 ### 6.2 React owns application chrome
 
 React owns:
+
 - sidebars
 - toolbars
 - dialogs
@@ -330,6 +342,7 @@ Do **not** model every Markdown file/pane as a URL route. Tabs, split panes, pre
 ### 6.4 TanStack Query owns asynchronous Rust-backed state
 
 Examples:
+
 - vault tree
 - note list queries
 - file metadata
@@ -346,6 +359,7 @@ Treat Tauri `invoke()` the same way a web app treats an async data source.
 Do not add Zustand/Redux by default.
 
 Use:
+
 - CodeMirror state for editor state
 - Router for navigation
 - Query for async/native data
@@ -398,7 +412,7 @@ export const copper = {
     read,
     update,
   },
-}
+};
 ```
 
 UI components depend on this layer, not directly on `invoke`.
@@ -425,6 +439,7 @@ NativeIntegration
 ```
 
 Rust responsibilities:
+
 - canonicalize Vault paths
 - enforce Vault path boundaries
 - scan folders
@@ -528,6 +543,7 @@ fts_notes (FTS5)
 ```
 
 Requirements:
+
 - WAL mode
 - FTS5
 - schema migrations
@@ -537,9 +553,11 @@ Requirements:
 ### 9.3 Settings
 
 Global settings:
+
 - OS app config directory
 
 Per-Vault session settings:
+
 - app-data directory keyed by Vault
 - do not create `.copper/` inside a Vault by default
 
@@ -576,6 +594,7 @@ update known disk revision
 ### 10.2 Dirty state and disk revisions
 
 For each open file, track:
+
 - path
 - last known disk mtime
 - size
@@ -590,11 +609,13 @@ Rust `notify` watches the Vault.
 If another editor changes a file:
 
 **If Copper buffer is clean**
+
 - reload/update buffer
 - preserve cursor/scroll where reasonable
 - update Query caches/index
 
 **If Copper buffer is dirty**
+
 - do not overwrite either version
 - show a non-destructive conflict banner
 - actions:
@@ -665,6 +686,7 @@ Markdown source | Preview
 ```
 
 Instead build a Live Preview mode:
+
 - formatted Markdown appears visually clean when cursor is elsewhere
 - syntax markers become editable/revealed when relevant
 - checkboxes behave interactively
@@ -677,6 +699,7 @@ A raw/source mode may still exist.
 ### 11.4 Large-document performance mode
 
 For large/huge documents:
+
 - compute decorations incrementally
 - decorate visible viewport + limited lookahead
 - do not eagerly render every image/Mermaid/expensive block in the whole file
@@ -694,6 +717,7 @@ For large/huge documents:
 The provided Tolaria screenshot is the **initial visual baseline**.
 
 The first UI milestone should deliberately reproduce its:
+
 - density
 - pane structure
 - restrained line-icon style
@@ -712,6 +736,7 @@ This is a starting point. Do not copy Tolaria branding, logos, proprietary asset
 A previous design iteration changed many unrelated parts when only one change was requested. Do **not** repeat that behavior.
 
 When implementing a requested UI adjustment:
+
 - change only the requested area unless a dependency makes another change unavoidable
 - preserve accepted layout/spacing/actions elsewhere
 - use screenshot/regression comparison for visual changes
@@ -770,6 +795,7 @@ The point is to visibly demonstrate **nested folders and files**, not a flat fol
 Use **Vault** / **Vaults**, not "Workspace", for top-level user folders.
 
 Concept:
+
 - choose/open a directory -> open a Vault
 - one Vault is a normal filesystem folder
 - support recent Vaults
@@ -798,6 +824,7 @@ Initial desktop layout:
 All major side panes must be resizable within sane min/max widths.
 
 Suggested starting widths:
+
 - left sidebar: 240-260 px
 - note list: 280-320 px
 - properties/right sidebar: 270-300 px
@@ -808,6 +835,7 @@ Suggested starting widths:
 The top/header area must be compact.
 
 Target visual height:
+
 - approximately 40-44 px per aligned top header row on macOS
 - avoid oversized SaaS-style 56-64 px headers
 
@@ -818,12 +846,14 @@ No giant central command/search field occupying the titlebar by default.
 These were explicitly missing in an earlier mockup.
 
 **Left sidebar**
+
 - visible collapse/toggle button in the upper-left/titlebar region near navigation/window controls
 - discoverable tooltip
 - keyboard shortcut
 - when collapsed, editor/list area reflows immediately
 
 **Right sidebar**
+
 - close/collapse button at the **top-most right of the right sidebar header**
 - in the Tolaria-style Properties header, the close `X` belongs there
 - do not replace this important affordance with a global Settings button
@@ -833,6 +863,7 @@ These were explicitly missing in an earlier mockup.
 Do not clutter the upper-right editor/titlebar area with Settings.
 
 Use:
+
 - application menu/command palette
 - compact gear in lower/status area if desired
 - dedicated Settings route/window
@@ -844,6 +875,7 @@ The top-right of the properties panel must remain available for closing that pan
 Use **Lucide React** as the initial icon set because it provides a coherent simple line language.
 
 Rules:
+
 - standard UI icon sizes: 14/16 px
 - major toolbar actions: 16/18 px
 - consistent stroke width
@@ -853,6 +885,7 @@ Rules:
 - avoid decorative icons that do not communicate state/action
 
 Important icon roles:
+
 - sidebar toggle
 - back/forward
 - search
@@ -874,6 +907,7 @@ Important icon roles:
 ### 12.10 Left file tree behavior
 
 Rows:
+
 - compact ~24-28 px
 - folder disclosure chevron
 - folder icon
@@ -883,6 +917,7 @@ Rows:
 - indentation ~14-16 px per level
 
 Behavior:
+
 - single click selects
 - double-click can pin/open depending on final tab behavior
 - right-click context menu
@@ -897,6 +932,7 @@ For very large trees, flatten only expanded visible nodes and virtualize the ren
 ### 12.11 Note list
 
 Match the compact Tolaria-style density:
+
 - title
 - snippet
 - small tag/property chips where useful
@@ -905,6 +941,7 @@ Match the compact Tolaria-style density:
 - no oversized cards
 
 The list is contextual:
+
 - Inbox -> inbox notes
 - All Notes -> all indexed Markdown notes
 - Archive -> archive folder/query
@@ -914,6 +951,7 @@ The list is contextual:
 ### 12.12 Editor header
 
 Keep compact:
+
 - breadcrumb/location on left
 - document title/path context
 - favorite/star and relevant document actions on right
@@ -939,6 +977,7 @@ tags:
 ```
 
 The panel can show:
+
 - Type
 - Status
 - Date
@@ -953,6 +992,7 @@ Property editing must write valid YAML/frontmatter without damaging note content
 Keep compact and desktop-like.
 
 Initial useful items:
+
 - current Vault name
 - index state
 - file type/mode
@@ -996,22 +1036,13 @@ src/components/ui/
 Use system fonts first for native feel and small footprint:
 
 ```css
-font-family:
-  -apple-system,
-  BlinkMacSystemFont,
-  "Segoe UI",
-  sans-serif;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 ```
 
 Code:
 
 ```css
-font-family:
-  ui-monospace,
-  "SFMono-Regular",
-  Menlo,
-  Consolas,
-  monospace;
+font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 ```
 
 Do not bundle unnecessary font families in the first release.
@@ -1021,6 +1052,7 @@ Do not bundle unnecessary font families in the first release.
 The supplied Tolaria reference gives the initial **light theme** direction.
 
 Before public beta, provide:
+
 - light
 - dark
 - system
@@ -1028,6 +1060,7 @@ Before public beta, provide:
 Do not simply invert colors. Define semantic tokens.
 
 Example token groups:
+
 - app background
 - pane background
 - elevated/hover background
@@ -1043,11 +1076,13 @@ Example token groups:
 ### 13.4 Motion
 
 Use Motion sparingly:
+
 - pane collapse
 - menus/popovers if useful
 - selection/hover feedback where it improves clarity
 
 Never animate:
+
 - typing
 - cursor movement
 - scrolling content
@@ -1146,16 +1181,15 @@ export const vaultKeys = {
   tree: (vaultId: string) => ["vault", vaultId, "tree"] as const,
   notes: (vaultId: string, scope: string) =>
     ["vault", vaultId, "notes", scope] as const,
-}
+};
 
 export const fileKeys = {
-  detail: (vaultId: string, path: string) =>
-    ["file", vaultId, path] as const,
+  detail: (vaultId: string, path: string) => ["file", vaultId, path] as const,
   properties: (vaultId: string, path: string) =>
     ["file", vaultId, path, "properties"] as const,
   backlinks: (vaultId: string, path: string) =>
     ["file", vaultId, path, "backlinks"] as const,
-}
+};
 ```
 
 ### 15.2 Mutation invalidation
@@ -1163,17 +1197,20 @@ export const fileKeys = {
 Examples:
 
 Create file:
+
 - invalidate Vault tree
 - invalidate contextual note list
 - optimistically select/open created note if appropriate
 
 Rename/move:
+
 - update affected tree cache
 - invalidate file metadata
 - invalidate links/backlinks
 - update open-tab/session references
 
 Delete:
+
 - remove file-related cache entries
 - update tree/list
 - close or mark affected editor tabs
@@ -1187,7 +1224,7 @@ type FileSystemEvent =
   | { type: "created"; path: string }
   | { type: "modified"; path: string }
   | { type: "removed"; path: string }
-  | { type: "renamed"; from: string; to: string }
+  | { type: "renamed"; from: string; to: string };
 ```
 
 Frontend listener maps events to targeted Query invalidation, not blanket `invalidateQueries()` for the entire app on every filesystem event.
@@ -1197,6 +1234,7 @@ Frontend listener maps events to targeted Query invalidation, not blanket `inval
 ## 16. Routing
 
 TanStack Router file-based routes are selected because they provide:
+
 - type-safe app navigation
 - clean route ownership
 - settings sub-routes
@@ -1204,12 +1242,14 @@ TanStack Router file-based routes are selected because they provide:
 - future deep links
 
 Use Router for:
+
 - Welcome
 - Vault shell
 - Settings
 - About/help screens if added
 
 Do not force:
+
 - tabs
 - pane layouts
 - every selected note
@@ -1227,6 +1267,7 @@ into URL state.
 Do not introduce Tantivy in v1 without profiling evidence.
 
 Search should support:
+
 - filename/title
 - body content
 - path
@@ -1236,6 +1277,7 @@ Search should support:
 ### 17.2 Indexing behavior
 
 On Vault open:
+
 1. display shell quickly
 2. load cached tree/index if valid
 3. scan changed metadata in background
@@ -1262,6 +1304,7 @@ Do not block opening the editor until the entire Vault is indexed.
 Frontmatter parsing/writing must be structurally safe.
 
 Requirements:
+
 - preserve unknown keys
 - preserve note body exactly outside frontmatter
 - deterministic formatting
@@ -1270,6 +1313,7 @@ Requirements:
 - malformed YAML should not destroy the note; show an error state and preserve raw source
 
 Initial property types:
+
 - text
 - number
 - boolean
@@ -1291,17 +1335,20 @@ Initial wiki-link syntax:
 ```
 
 Indexer should store:
+
 - raw target
 - resolved path if known
 - source file
 - heading target where present
 
 Backlinks UI:
+
 - can live in right sidebar beneath Properties or in a dedicated section
 - computed from derived index
 - clicking opens source note at relevant context when possible
 
 Unresolved wiki links:
+
 - visually distinguish
 - offer create-note action later
 
@@ -1322,6 +1369,7 @@ Progression:
 Session state is not canonical content and can be stored in app data.
 
 When splits arrive:
+
 - same file may be shown in multiple panes
 - each pane can have independent cursor/scroll state
 - avoid storing all pane state in Router
@@ -1334,6 +1382,7 @@ When splits arrive:
 Copper must feel like a desktop editor.
 
 Initial shortcuts (platform-adapted):
+
 - New note
 - Open Vault
 - Quick open
@@ -1350,6 +1399,7 @@ Initial shortcuts (platform-adapted):
 - Settings
 
 All commands should be represented in a central command registry so:
+
 - menu items
 - command palette
 - shortcuts
@@ -1362,6 +1412,7 @@ refer to the same command definitions.
 ## 22. Accessibility
 
 Required:
+
 - full keyboard navigation
 - visible focus
 - semantic/ARIA labels for icon-only controls
@@ -1379,6 +1430,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 1: Bootstrap Copper and prove the Tauri/React boundary
 
 **Files:**
+
 - Create: `package.json`
 - Create: `vite.config.ts`
 - Create: `src/main.tsx`
@@ -1393,6 +1445,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/commands/system.rs` unit test module
 
 **Produces:**
+
 - bootable Tauri 2 app
 - React 19 frontend
 - Vite
@@ -1411,6 +1464,7 @@ Do not trade accessibility for visual minimalism.
 - [ ] Commit: `chore: bootstrap Copper desktop app`
 
 **Acceptance:**
+
 - app launches in development and release
 - no Next.js/TanStack Start
 - Router + Query are wired
@@ -1422,6 +1476,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 2: Build the performance proof before product features
 
 **Files:**
+
 - Create: `src/features/editor/perf/perf-editor.tsx`
 - Create: `src/features/editor/create-editor.ts`
 - Create: `src/features/editor/editor-theme.ts`
@@ -1431,6 +1486,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/features/editor/perf/perf-editor.test.tsx`
 
 **Produces:**
+
 - CodeMirror editor prototype
 - 10KB/100KB/1MB/5MB/25MB/50MB fixtures
 - repeatable manual/profiling checklist
@@ -1447,6 +1503,7 @@ Do not trade accessibility for visual minimalism.
 - [ ] Commit: `perf: establish Copper editor performance baseline`
 
 **Acceptance:**
+
 - 1 MB note has no perceptible input lag
 - 5 MB note remains comfortable to type/scroll
 - 25 MB note remains responsive
@@ -1458,6 +1515,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 3: Create Copper's design tokens and Tolaria-baseline shell
 
 **Files:**
+
 - Create: `src/styles/tokens.css`
 - Create: `src/styles/globals.css`
 - Create: `src/components/shell/app-shell.tsx`
@@ -1472,6 +1530,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/components/shell/app-shell.test.tsx`
 
 **Produces:**
+
 - four-pane desktop shell
 - compact header
 - resizable/collapsible side panes
@@ -1489,6 +1548,7 @@ Do not trade accessibility for visual minimalism.
 - [ ] Commit: `feat: add Copper desktop shell`
 
 **Acceptance:**
+
 - visually close to supplied Tolaria baseline
 - compact, not oversized
 - no Views/Types implementation yet
@@ -1500,6 +1560,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 4: Implement Vault selection and path safety
 
 **Files:**
+
 - Create: `src-tauri/src/vault/mod.rs`
 - Create: `src-tauri/src/vault/manager.rs`
 - Create: `src-tauri/src/commands/vaults.rs`
@@ -1511,6 +1572,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/features/vault/queries.test.ts`
 
 **Interfaces:**
+
 - Produce Rust commands:
   - `open_vault(path) -> VaultInfo`
   - `list_recent_vaults() -> Vec<VaultInfo>`
@@ -1526,6 +1588,7 @@ Do not trade accessibility for visual minimalism.
 - [ ] Commit: `feat: add local vault management`
 
 **Acceptance:**
+
 - normal folder opens as Vault
 - no `.copper` folder is created
 - path traversal outside root is rejected
@@ -1536,6 +1599,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 5: Build nested filesystem tree — replace Tolaria Views/Types only
 
 **Files:**
+
 - Create: `src-tauri/src/files/tree.rs`
 - Create: `src-tauri/src/commands/files.rs`
 - Create: `src/lib/copper/files.ts`
@@ -1548,6 +1612,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/files/tree.rs`
 
 **Produces:**
+
 - actual nested directory/file tree
 - virtualizable visible-node model
 
@@ -1565,6 +1630,7 @@ Do not trade accessibility for visual minimalism.
 - [ ] Commit: `feat: add nested vault file tree`
 
 **Acceptance:**
+
 - nested folders/files are obvious
 - no Views section
 - no Types section
@@ -1575,6 +1641,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 6: File read/create/rename/move/delete API
 
 **Files:**
+
 - Create: `src-tauri/src/files/service.rs`
 - Create: `src-tauri/src/files/path.rs`
 - Modify: `src-tauri/src/commands/files.rs`
@@ -1583,6 +1650,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/files/service.rs`
 
 **Produces:**
+
 - safe file CRUD inside Vault
 
 - [ ] Write failing tests for create/read/rename/move/delete.
@@ -1600,6 +1668,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 7: Reliable editor file loading and atomic save
 
 **Files:**
+
 - Create: `src-tauri/src/files/atomic_writer.rs`
 - Create: `src-tauri/src/files/revision.rs`
 - Modify: `src-tauri/src/files/service.rs`
@@ -1609,6 +1678,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/features/editor/use-document-save.test.ts`
 
 **Produces:**
+
 - safe read/save
 - disk revision tracking
 - debounced background save
@@ -1628,6 +1698,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 8: External file watcher and conflict protection
 
 **Files:**
+
 - Create: `src-tauri/src/watcher/mod.rs`
 - Create: `src-tauri/src/watcher/service.rs`
 - Create: `src/lib/copper/events.ts`
@@ -1635,6 +1706,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/watcher/service.rs`
 
 **Produces:**
+
 - external file synchronization
 - conflict UI
 
@@ -1653,11 +1725,13 @@ Do not trade accessibility for visual minimalism.
 ## Task 9: Build the real Markdown editor
 
 **Files:**
+
 - Create: `src/features/editor/copper-editor.tsx`
 - Create editor extension files listed in Section 11
 - Test: `src/features/editor/*.test.ts`
 
 **Produces:**
+
 - polished CodeMirror Markdown editor
 - baseline editing feature set
 
@@ -1678,12 +1752,14 @@ Do not trade accessibility for visual minimalism.
 ## Task 10: Implement Live Preview without sacrificing performance
 
 **Files:**
+
 - Create: `src/features/editor/extensions/live-preview.ts`
 - Create: `src/features/editor/extensions/live-preview-decorations.ts`
 - Create: `src/features/editor/extensions/performance-mode.ts`
 - Test: `src/features/editor/extensions/live-preview.test.ts`
 
 **Produces:**
+
 - Obsidian-like source-aware Live Preview
 - large-document degradation strategy
 
@@ -1702,6 +1778,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 11: SQLite derived index
 
 **Files:**
+
 - Create: `src-tauri/src/index/mod.rs`
 - Create: `src-tauri/src/index/db.rs`
 - Create: `src-tauri/src/index/schema.rs`
@@ -1710,6 +1787,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/index/indexer.rs`
 
 **Produces:**
+
 - WAL/FTS5 derived index
 - incremental scan
 
@@ -1728,6 +1806,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 12: Fast search and contextual note list
 
 **Files:**
+
 - Create: `src-tauri/src/search/mod.rs`
 - Create: `src-tauri/src/commands/search.rs`
 - Create: `src/lib/copper/search.ts`
@@ -1738,6 +1817,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/features/search/search-results.test.tsx`
 
 **Produces:**
+
 - FTS search
 - virtualized note/results list
 
@@ -1755,6 +1835,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 13: Frontmatter-backed Properties panel
 
 **Files:**
+
 - Create: `src-tauri/src/markdown/frontmatter.rs`
 - Create: `src-tauri/src/commands/properties.rs`
 - Create: `src/lib/copper/properties.ts`
@@ -1763,6 +1844,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/markdown/frontmatter.rs`
 
 **Produces:**
+
 - actual Properties panel matching reference placement
 - safe YAML frontmatter updates
 
@@ -1779,6 +1861,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 14: Wiki-link index and backlinks
 
 **Files:**
+
 - Create: `src-tauri/src/markdown/links.rs`
 - Create: `src-tauri/src/index/backlinks.rs`
 - Create: `src-tauri/src/commands/backlinks.rs`
@@ -1787,6 +1870,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src-tauri/src/markdown/links.rs`
 
 **Produces:**
+
 - wiki-link resolution
 - backlinks
 
@@ -1803,6 +1887,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 15: Command registry and keyboard workflow
 
 **Files:**
+
 - Create: `src/app/commands/registry.ts`
 - Create: `src/app/commands/types.ts`
 - Create: `src/components/ui/command-menu.tsx`
@@ -1810,6 +1895,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/app/commands/registry.test.ts`
 
 **Produces:**
+
 - command palette
 - central shortcut definitions
 
@@ -1827,6 +1913,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 16: Tabs and session restore
 
 **Files:**
+
 - Create: `src/features/tabs/types.ts`
 - Create: `src/features/tabs/session-reducer.ts`
 - Create: `src/features/tabs/tab-strip.tsx`
@@ -1834,6 +1921,7 @@ Do not trade accessibility for visual minimalism.
 - Test: `src/features/tabs/session-reducer.test.ts`
 
 **Produces:**
+
 - multi-tab editing
 - saved local session
 
@@ -1850,6 +1938,7 @@ Do not trade accessibility for visual minimalism.
 ## Task 17: Settings and themes
 
 **Files:**
+
 - Use routes under `src/routes/settings/`
 - Create: `src/features/settings/settings-layout.tsx`
 - Create: `src-tauri/src/settings/repository.rs`
@@ -1857,6 +1946,7 @@ Do not trade accessibility for visual minimalism.
 - Test: settings repository/frontend tests
 
 **Produces:**
+
 - Appearance
 - Editor
 - Files
@@ -1876,11 +1966,13 @@ Do not trade accessibility for visual minimalism.
 ## Task 18: Drag/drop attachments and links
 
 **Files:**
+
 - Create: `src-tauri/src/files/attachments.rs`
 - Create: `src/features/editor/extensions/drop-files.ts`
 - Test: attachment service/editor tests
 
 **Produces:**
+
 - local attachment import
 - Markdown insertion
 
@@ -1896,12 +1988,14 @@ Do not trade accessibility for visual minimalism.
 ## Task 19: Performance hardening pass
 
 **Files:**
+
 - Update: `docs/performance-baseline.md`
 - Create: `docs/performance-budget.md`
 - Add benchmark/profiling scripts as needed
 - Modify only bottlenecked production files identified by profiling
 
 **Produces:**
+
 - measured release candidate performance
 
 - [ ] Re-profile 10KB/100KB/1MB/5MB/25MB/50MB documents.
@@ -1921,10 +2015,12 @@ Do not trade accessibility for visual minimalism.
 ## Task 20: Reliability / destructive-operation pass
 
 **Files:**
+
 - Add targeted integration tests under `src-tauri/tests/`
 - Add frontend conflict/destructive-action tests
 
 **Produces:**
+
 - confidence against data loss
 
 - [ ] Simulate save failure/disk-full style errors where testable.
@@ -1941,11 +2037,13 @@ Do not trade accessibility for visual minimalism.
 ## Task 21: Packaging and platform QA
 
 **Files:**
+
 - Update: `src-tauri/tauri.conf.json`
 - Create platform packaging documentation under `docs/release/`
 - Create CI workflows
 
 **Produces:**
+
 - macOS-first distributable
 - Windows/Linux readiness checks
 
@@ -2015,7 +2113,7 @@ Reject PRs that introduce these patterns without compelling profiling evidence:
 ### React owns the whole Markdown document
 
 ```tsx
-const [markdown, setMarkdown] = useState(fullDocument)
+const [markdown, setMarkdown] = useState(fullDocument);
 ```
 
 updated on every keypress.
@@ -2055,6 +2153,7 @@ one character typed
 ### Giant application store
 
 Do not put:
+
 - CodeMirror document
 - query cache
 - router state
@@ -2241,22 +2340,29 @@ Do not move search, graph, AI, or other attractive features ahead of file reliab
 If implementation decisions become ambiguous, resolve them in favor of these:
 
 **Performance**
+
 > No perceptible typing lag. No routine dropped-frame scrolling. No UI action waiting on filesystem/database IPC unnecessarily.
 
 **Reliability**
+
 > User Markdown is sacred. Save atomically. Detect external changes. Never silently overwrite conflicting work.
 
 **Ownership**
+
 > Markdown is canonical. SQLite is disposable.
 
 **UI**
+
 > Compact, beautiful, desktop-native feeling, consistent icons, deliberate placement, no random toolbar clutter.
 
 **Scope**
+
 > Desktop-first local Markdown editor before becoming anything broader.
 
 **Architecture**
+
 > Rust does native/heavy work. CodeMirror owns the editor. React owns chrome. Query owns async data. Router owns screens.
 
 **Development behavior**
+
 > Change exactly what was requested. Do not "improve" ten unrelated UI areas while implementing one requested adjustment.

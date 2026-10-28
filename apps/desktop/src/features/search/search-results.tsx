@@ -112,6 +112,7 @@ function NoteRow({
         className="copper-note-row"
         data-selected={selected}
         aria-current={selected ? "true" : undefined}
+        aria-label={note.title || note.path}
         onClick={() => onOpen(note.path)}
         onDoubleClick={() => onPin?.(note.path)}
         onKeyDown={(event) => {

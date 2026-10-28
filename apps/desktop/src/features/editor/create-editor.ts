@@ -137,6 +137,7 @@ export function createCopperEditor({
         // never make a newly opened file eligible for autosave.
         view.dispatch({ effects: language.reconfigure(support) });
       }
+      return undefined;
     });
   }
   return view;

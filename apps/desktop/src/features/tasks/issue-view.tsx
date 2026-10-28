@@ -206,6 +206,7 @@ export function IssueView({
               }).then((updated) => {
                 if (reset && updated)
                   setNotice("Status reset to Todo for the new project.");
+                return undefined;
               });
             }}
           />
