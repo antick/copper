@@ -228,16 +228,14 @@ Public releases follow the approved installer policy and checks in
 
 Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
 
-## OpenSpec
+## Planning and specifications
 
-Behavior specs for the shipped product live under [`openspec/`](openspec/). They describe current Notes, Tasks, search, and desktop behavior, not planned work from [PLAN.md](PLAN.md) or [TODO.md](TODO.md).
-
-```sh
-pnpm specs        # validate specs and changes
-pnpm specs:check  # strict validation (same as CI should use before merging spec updates)
-```
-
-See [`openspec/README.md`](openspec/README.md) for layout and workflow entry points.
+Use the repo-local OpenSpec workflow for future changes. Start with
+[the workflow guide](openspec/README.md) and
+[existing-product baseline](openspec/baseline.md). Current specs capture core
+contracts; the linked source inventory preserves the existing docs and tests,
+including areas that still need deeper specification. Run `pnpm run specs:check`
+to validate specs and `pnpm run specs list --specs` to browse capabilities.
 
 ## License
 

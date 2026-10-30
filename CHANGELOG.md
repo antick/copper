@@ -2,9 +2,7 @@
 
 ## Unreleased
 
-### Documentation
-
-- Add OpenSpec layout, existing-product baseline specs under `openspec/specs/`, and `pnpm specs` / `pnpm specs:check` validation scripts.
+- Install pinned, repository-local OpenSpec tooling and workflow skills. Add current-behavior baseline specs, a source inventory and a workflow for planning, implementation and ongoing spec maintenance, with coverage gaps recorded explicitly.
 
 ## 0.2.2 — 2026-10-18
 

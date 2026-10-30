@@ -1,31 +1,53 @@
 # Existing-product baseline
 
-This baseline was captured from the Copper codebase on branch `chore/openspec` at version 0.2.2. It documents shipped behavior only.
+## Provenance
 
-## Method
+Created from freshly fetched `origin/main` at
+`3d3924ea2e223c2c12b786827aed6aa308102cfa` on 2026-10-30.
+The adoption branch `chore/openspec` was created from that revision.
+No production vaults, private user data or release signing artifacts were imported.
 
-1. Read repository context from `README.md`, `AGENTS.md`, and architecture notes in `docs/` without treating `PLAN.md` or `TODO.md` as requirements.
-2. Map product surfaces to capabilities aligned with user-visible modules and the IPC contract in `apps/desktop/src/lib/copper/command-contract.ts`.
-3. For each capability, write `openspec/specs/<capability>/spec.md` with Purpose, Requirements, and scenarios grounded in the files listed in `source-inventory.md`.
-4. Validate with `pnpm specs:check` (`openspec validate --all --strict --no-interactive`).
+This is a source-inspected baseline of core contracts. References to tests mean
+existing coverage was identified, not that every test or packaged desktop workflow passed
+in this adoption. See the PR validation report for commands actually run.
 
-## Capabilities in this baseline
+## Coverage
 
-| Capability | Scope |
-| --- | --- |
-| vault | Open, close, recents, vault id, tree |
-| notes-workspace | Shell layout, tabs, tree mutations, welcome |
-| markdown-editor | CM6 editing, autosave, preview, attachments |
-| tasks | Issues, projects, board, id prefix |
-| search-index | FTS index, search, reindex, app-data storage |
-| properties-backlinks | Frontmatter, backlinks |
-| application-shell | Shared chrome, routing, status bar |
-| settings-session | Global settings and per-vault session |
-| commands | Registry, palette, IPC validation |
-| git-integration | Enable, status, diff, publish |
-| desktop-platform | Electron bridge, watcher, updates, dev identity |
-| landing-site | Astro marketing site |
+| Existing area | Baseline spec | Remaining depth to audit |
+| --- | --- | --- |
+| Vault open, recents, tree | vault | Full permission revocation, cross-platform path edge cases |
+| Notes shell, tabs, file tree | notes-workspace | Every tree mutation, archive view and pinned workflow |
+| Markdown editor and saves | markdown-editor | Every extension, performance mode and conflict branch |
+| Tasks issues, projects, board | tasks | Full recurrence, comments, attachments and signed macOS board acceptance |
+| Search and SQLite index | search-index | Reindex failure recovery and large vault performance gates |
+| Properties and backlinks | properties-backlinks | Every property type and link variant in live preview |
+| Shared shell and routing | application-shell | Full keyboard map, transparency and responsive overflow |
+| Settings and session | settings-session | Every settings route and migration of legacy session fields |
+| Commands and palette | commands | Complete shortcut matrix across Notes and Tasks |
+| Git publish in vault | git-integration | Live remote credentials, trust prompts and case renames |
+| Electron IPC, watcher, updates | desktop-platform | Packaged update acceptance on every release platform |
+| Marketing site | landing-site | Accessibility, responsive layout and download link policy |
 
-## Corrections
+Detailed product intent in `PLAN.md` and release checklists in `TODO.md` remain
+indexed in [source-inventory.md](source-inventory.md). Being indexed is not
+equivalent to being fully specified or behaviorally verified.
 
-If a requirement no longer matches the code, fix the spec through a normal OpenSpec change (proposal, delta specs, archive) rather than editing baseline history in place without a change record.
+## Known documentation conflicts
+
+- `PLAN.md` describes an earlier Tauri-oriented architecture. The shipped product
+  is Electron with the layout documented in `README.md` and `apps/desktop/`.
+- `TODO.md` lists signed macOS acceptance and verification gaps. Those items are
+  not baseline requirements until recorded in specs after verified implementation.
+
+The adoption does not rewrite those historical documents wholesale. When changing
+an affected area, reconcile live docs with verified code and update the spec and
+this gap record together.
+
+## Completing and maintaining the baseline
+
+For each row above, expand the named depth into observable requirements and
+success, conflict, failure and recovery scenarios. Attach implementation and test
+references in the source inventory. Add missing behavior tests before claiming
+coverage. Mark an area fully audited only with recorded evidence; do not mass-convert
+old plan tasks into completed requirements. Keep proposed improvements in `changes/`,
+separate from what the current system actually does.

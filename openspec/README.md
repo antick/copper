@@ -1,27 +1,75 @@
 # OpenSpec in Copper
 
-This directory holds the spec-driven workflow for Copper: living behavior specs, proposed changes, and archived deltas.
+OpenSpec is the default workflow for planning and implementing product changes.
+The pinned CLI and generated agent skills are committed with the project.
 
-## Layout
+## Start here
 
-- `config.yaml` project context and artifact rules for OpenSpec workflows
-- `baseline.md` snapshot of how the existing-product baseline was captured
-- `source-inventory.md` maps each capability to traceable source files
-- `specs/<capability>/spec.md` current behavior contracts (source of truth)
-- `changes/` active change proposals (one folder per change)
-- `changes/archive/` completed changes kept for history
-
-## Commands
-
-From the repository root:
-
-```sh
-pnpm specs        # validate all specs and changes (non-strict)
-pnpm specs:check  # validate with --strict (CI-friendly)
+```bash
+pnpm install --frozen-lockfile
+pnpm run specs list --specs
+pnpm run specs:check
 ```
 
-Workflow skills live under `.agents/skills/`, `.claude/skills/`, `.cursor/skills/`, and `.dsh/skills/` (see each `openspec-*` skill). Start exploration with the explore skill, then propose, apply, update, sync, and archive changes through the matching skills.
+Skills are generated for Codex (`.agents/skills`, also the shared location other
+agents read), Claude Code (`.claude/skills`), DeepSeek Harness (`.dsh/skills`),
+and Cursor (`.cursor/skills`). Codex invokes them as `$openspec-propose`; the
+others use `/openspec-propose`.
 
-## Baseline policy
+Use `$openspec-explore` to investigate, `$openspec-propose` to create a
+proposal, design, spec deltas and tasks, and `$openspec-apply-change` to implement an
+authorized change. Use `$openspec-update-change` when the plan changes,
+`$openspec-sync-specs` to reconcile accepted deltas into current specs, and
+`$openspec-archive-change` when the work and verification are complete. Repo-local skills
+are available on the next turn after the client discovers them; reopen the session
+if the client has not refreshed its skill list.
 
-Baseline requirements describe behavior that exists in the codebase today. Planned work in `PLAN.md` or `TODO.md` is not baseline until it ships. When behavior changes, open a change under `changes/` with delta specs and archive into `specs/` when done.
+The CLI is local. For an agent shell that expects the bare `openspec` command,
+use `pnpm run specs <arguments>` or `pnpm exec openspec <arguments>`.
+Refresh every installed tool's skills after an intentional dependency upgrade with:
+
+```bash
+OPENSPEC_TELEMETRY=0 pnpm exec openspec update
+```
+
+Add another tool with the initializer, keeping the existing list:
+
+```bash
+OPENSPEC_TELEMETRY=0 pnpm exec openspec init --no-animation --no-copilot-cloud \
+  --tools agents,claude,cursor,dsh,<new-tool>
+```
+
+Do not hand-edit generated skills to encode Copper policy. Put project constraints
+in `config.yaml` and `AGENTS.md`. The per-tool copies differ only in how they name
+the next command, so regenerate them rather than editing one. No global CLI
+installation is required.
+
+## Existing behavior and future changes
+
+- `specs/<capability>/spec.md` describes current behavioral contracts.
+- `changes/<name>/` holds proposed changes and their implementation tasks.
+- `changes/archive/` retains completed changes after accepted deltas are synced.
+- [baseline.md](baseline.md) records provenance, coverage and known gaps.
+- [source-inventory.md](source-inventory.md) preserves discoverability of existing
+  docs, routes, modules and behavior tests at the adoption commit.
+
+The initial specs cover core invariants and representative workflows. They are
+not an exhaustive translation of every implemented feature. The inventory retains
+links to the detailed material so a future agent can find it before planning.
+
+For each affected capability, read its spec and referenced source/tests first.
+If behavior is missing, inspect the implementation and existing behavior tests,
+add a current-behavior requirement with scenarios and evidence, then describe the
+requested delta separately. Do not implement old plans merely because they appear
+in the inventory. Record contradictions and uncertainty instead of guessing.
+
+For a deliberate full backfill, work through every inventory area: enumerate its
+user actions and IPC contracts, map each to requirements and scenarios, compare
+with code and tests, exercise missing behaviors using isolated local fixtures,
+and record unresolved gaps. An area is fully audited only after that review.
+Keep inventory and evidence links current as capabilities are added or removed.
+
+Before finishing a change, run `pnpm run specs:check` and the applicable repository
+checks, update the changelog, sync the accepted specs and archive the change.
+Spec validation checks document structure; behavior tests establish implementation
+coverage. Neither a valid spec nor a checked task proves a packaged desktop workflow works.
