@@ -228,6 +228,15 @@ Public releases follow the approved installer policy and checks in
 
 Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
 
+## Planning and specifications
+
+Use the repo-local OpenSpec workflow for future changes. Start with
+[the workflow guide](openspec/README.md) and
+[existing-product baseline](openspec/baseline.md). Current specs capture core
+contracts; the linked source inventory preserves the existing docs and tests,
+including areas that still need deeper specification. Run `pnpm run specs:check`
+to validate specs and `pnpm run specs list --specs` to browse capabilities.
+
 ## License
 
 Copper is licensed under the [GNU Affero General Public License v3.0](LICENSE).

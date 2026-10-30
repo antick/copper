@@ -1,0 +1,36 @@
+schema: spec-driven
+
+context: |
+  Copper is an existing local-first desktop workspace, not a greenfield app.
+  Follow AGENTS.md and read openspec/README.md and openspec/baseline.md first.
+  Existing capability specs are a bounded baseline, not proof of exhaustive coverage.
+  Inspect implementation and behavior tests before changing or extending a requirement.
+  Historical plans in PLAN.md or TODO.md are intent, not evidence that a feature shipped.
+  Preserve vault ownership, atomic writes, revision checks, and visible save outcomes.
+  Markdown and task files live in the user vault; the SQLite search index lives in app data.
+  Issue id prefix changes apply only to newly allocated ids on the main process boundary.
+  Keep plain punctuation in authored artifacts; do not use em dashes.
+
+rules:
+  proposal:
+    - Identify affected existing capability specs and consult their source references.
+    - Separate current behavior, requested behavior, non-goals and unresolved questions.
+  specs:
+    - Write observable SHALL requirements with WHEN/THEN scenarios.
+    - Cover stale writes, failure recovery and reload where relevant.
+    - If baseline coverage is missing, establish current behavior from code and tests before proposing a delta.
+  design:
+    - Reference applicable docs under docs/ when relevant.
+    - State data compatibility and verification implications without expanding scope.
+  tasks:
+    - Include behavior tests, relevant repository checks, documentation and CHANGELOG updates.
+    - Include spec synchronization and baseline inventory maintenance before archiving.
+
+operations:
+  apply:
+    guidance:
+      - Work within the user's authorized scope and follow AGENTS.md verification and commit rules.
+      - Do not treat a baseline spec or historical plan as permission to implement unrelated work.
+  archive:
+    guidance:
+      - Sync accepted deltas into specs and report verification gaps honestly before archiving.

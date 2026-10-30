@@ -53,3 +53,33 @@ Keep edits limited to the user's requested task and owned paths. Ask the coordin
 - Treat issue-id prefixes as a native persistence boundary: renderer validation is only feedback, while the main process must normalize and validate before allocating a filename or id. Never rewrite existing issue ids when the prefix changes.
 - Window transparency applies only to large background surfaces. Interactive content, cards, fields, menus, dialogs, focus rings, and drag overlays remain opaque, and reduced-transparency or unsupported platforms must use solid surfaces.
 - When a request explicitly asks for Linear parity, inspect current verified Linear behavior and documentation before proposing the change, record the concrete reference behavior with the implementation, and verify the implemented core flows in Copper. Match interaction quality and information hierarchy while keeping Copper's local-first data model and design tokens.
+
+## OpenSpec workflow
+
+Use the repository-local OpenSpec skills for future product planning and implementation.
+Start with `openspec/README.md`, `openspec/baseline.md` and the affected specs.
+Use `pnpm run specs` for the pinned CLI and read the relevant skill before using it.
+For features and behavior changes, follow this workflow:
+
+1. Read existing specs and active changes (`pnpm run specs list --specs` and
+   `pnpm run specs list`). Reuse the applicable change instead of duplicating it.
+2. Use `$openspec-explore` for investigation and `$openspec-propose` to capture the
+   proposal, design, requirement scenarios and implementation tasks before coding.
+3. Use `$openspec-apply-change` for authorized implementation. Keep task status
+   current and use `$openspec-update-change` when planning decisions change.
+4. Verify the real behavior, run `pnpm run specs:check`, update the changelog and
+   use `$openspec-sync-specs` to reconcile accepted deltas into current specs.
+5. Use `$openspec-archive-change` only when the change and verification are complete.
+   Report unresolved failures or coverage gaps rather than marking them complete.
+
+Routine merges, dependency refreshes and documentation corrections that do not
+change product behavior do not need an artificial product-change proposal. Preserve
+existing OpenSpec artifacts and update guidance or evidence affected by that work.
+Existing user authorization remains authoritative; setup does not introduce a new
+approval requirement for work already requested.
+
+Before changing an area with incomplete baseline coverage, inspect its current code,
+behavior tests and linked docs. Capture verified existing behavior separately from the
+proposed change. Historical plans are not proof of shipped functionality. Maintain
+spec evidence and the source inventory, run `pnpm run specs:check`, and report gaps.
+OpenSpec does not replace the verification or commit rules above.
