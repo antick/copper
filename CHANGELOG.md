@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+
+- Add OpenSpec layout, existing-product baseline specs under `openspec/specs/`, and `pnpm specs` / `pnpm specs:check` validation scripts.
+
 ## 0.2.2 — 2026-10-18
 
 - Support Apple Silicon only for macOS releases; remove Intel builds and download guidance.

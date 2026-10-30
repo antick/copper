@@ -228,6 +228,17 @@ Public releases follow the approved installer policy and checks in
 
 Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
 
+## OpenSpec
+
+Behavior specs for the shipped product live under [`openspec/`](openspec/). They describe current Notes, Tasks, search, and desktop behavior, not planned work from [PLAN.md](PLAN.md) or [TODO.md](TODO.md).
+
+```sh
+pnpm specs        # validate specs and changes
+pnpm specs:check  # strict validation (same as CI should use before merging spec updates)
+```
+
+See [`openspec/README.md`](openspec/README.md) for layout and workflow entry points.
+
 ## License
 
 Copper is licensed under the [GNU Affero General Public License v3.0](LICENSE).

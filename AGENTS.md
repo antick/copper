@@ -53,3 +53,9 @@ Keep edits limited to the user's requested task and owned paths. Ask the coordin
 - Treat issue-id prefixes as a native persistence boundary: renderer validation is only feedback, while the main process must normalize and validate before allocating a filename or id. Never rewrite existing issue ids when the prefix changes.
 - Window transparency applies only to large background surfaces. Interactive content, cards, fields, menus, dialogs, focus rings, and drag overlays remain opaque, and reduced-transparency or unsupported platforms must use solid surfaces.
 - When a request explicitly asks for Linear parity, inspect current verified Linear behavior and documentation before proposing the change, record the concrete reference behavior with the implementation, and verify the implemented core flows in Copper. Match interaction quality and information hierarchy while keeping Copper's local-first data model and design tokens.
+
+## OpenSpec
+
+Copper uses [OpenSpec](https://openspec.dev/) for spec-driven changes. Baseline behavior lives in `openspec/specs/<capability>/spec.md`. Trace requirements to code via `openspec/source-inventory.md`. Proposed work goes under `openspec/changes/` and merges into baseline specs when archived.
+
+Before changing spec-level behavior, read the relevant capability spec and run `pnpm specs:check`. Do not treat `PLAN.md` or `TODO.md` items as spec requirements until they are implemented and reflected in specs through a normal change workflow.

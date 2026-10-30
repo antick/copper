@@ -1,0 +1,32 @@
+schema: spec-driven
+
+context: |
+  Copper is a local-first AGPL desktop workspace (Electron + React) with Notes and
+  Tasks in one app. A Vault is any folder the user chooses; notes, projects, and
+  issues are Markdown on disk. A derived SQLite FTS index lives in app data, not
+  in the vault. Monorepo: apps/desktop (@copper/desktop), apps/landing
+  (@copper/landing), pnpm 12 + Turborepo, Biome lint/format, mise-pinned Node
+  24.22.0. Native work crosses the validated copper:invoke IPC contract in
+  apps/desktop/src/lib/copper/command-contract.ts. Do not encode UI session
+  state in Markdown. Issue id prefix changes apply only to new issues on the
+  main process boundary. Read openspec/source-inventory.md before asserting
+  behavior; baseline specs describe shipped behavior only, not PLAN.md or
+  TODO.md future work.
+
+rules:
+  proposal:
+    - Name capabilities with kebab-case paths under openspec/specs/
+    - List affected IPC commands when behavior crosses the native boundary
+  specs:
+    - Use SHALL or MUST in requirement text
+    - Ground each requirement in files listed in source-inventory.md
+  tasks:
+    - Include verification commands from package.json scripts or mise tasks
+
+operations:
+  apply:
+    guidance:
+      - Run focused tests for touched packages before pnpm check
+  archive:
+    guidance:
+      - Merge deltas into openspec/specs/ and run pnpm specs:check before finishing
