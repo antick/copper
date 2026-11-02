@@ -15,7 +15,7 @@ plans distinguishable from implementation evidence.
 - [AGENTS.md](../AGENTS.md)
 - [CHANGELOG.md](../CHANGELOG.md)
 - [PLAN.md](../PLAN.md) (historical intent, not baseline proof)
-- [TODO.md](../TODO.md) (verification gaps, not baseline proof)
+- [GitHub issues](https://github.com/antick/copper/issues) (verification gaps, not baseline proof)
 - [SECURITY.md](../SECURITY.md)
 
 ## Architecture and release docs

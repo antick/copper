@@ -18,15 +18,17 @@ Every implementation must be verified before handoff or commit. Select the full 
 
 For documentation-only changes, at minimum check Markdown structure/links with the available project tooling, run `git diff --check`, and review the rendered intent manually.
 
-## TODO.md must stay synchronized
+## GitHub issues must stay synchronized
 
-`TODO.md` tracks outstanding product work, verification gaps, and release prerequisites. Update it when work is completed or a concrete follow-up is discovered. Keep future ideas separate from active work and remove obsolete completed checklists.
+[GitHub issues](https://github.com/antick/copper/issues) track outstanding product work,
+verification gaps, and release prerequisites. Update them when work is completed or a concrete
+follow-up is discovered.
 
 Before handoff and each commit, check that the tracker agrees with the implementation and actual verification results.
 
 ## Coherent commits and integration ownership
 
-Make commits small, reviewable, and logically coherent. Do not mix unrelated cleanup, generated output, speculative features, or drive-by formatting into a product commit. A coherent increment should have a clear purpose, its tests/checks, and the corresponding `TODO.md` progress.
+Make commits small, reviewable, and logically coherent. Do not mix unrelated cleanup, generated output, speculative features, or drive-by formatting into a product commit. A coherent increment should have a clear purpose, its tests/checks, and the corresponding GitHub issue progress.
 
 After verification for an implemented change, the primary agent creates the commit(s) automatically. Do not stop at suggesting a commit message and waiting for another prompt. Supervised workers must not commit. The primary agent owns integration, conflict resolution, final verification, and the commit sequence. Do not push unless the user explicitly asks.
 
@@ -34,7 +36,7 @@ After verification for an implemented change, the primary agent creates the comm
 
 For non-trivial work, the primary agent should by default coordinate **3-5 supervised Luna Max workers** through Orca when Orca and Luna Max model access are available. Delegate read-only investigations/reviews or explicitly non-overlapping implementation paths, and give every worker a bounded objective, file ownership, expected deliverable, and verification request. Workers must not edit the same files or competing state; they report findings or changes back to the primary agent.
 
-The primary agent remains responsible for integrating worker output, resolving conflicts, reviewing all changes, running the complete verification set, synchronizing `TODO.md`, and creating coherent commits. Parallel work is an aid to integration, not a substitute for primary-agent ownership.
+The primary agent remains responsible for integrating worker output, resolving conflicts, reviewing all changes, running the complete verification set, synchronizing GitHub issues, and creating coherent commits. Parallel work is an aid to integration, not a substitute for primary-agent ownership.
 
 If Orca or Luna Max access is unavailable, say so explicitly in the plan/handoff and use the documented fallback: the primary agent proceeds sequentially with the available local agent/model, or coordinates only the capabilities that are actually available. Do **not** silently substitute an unapproved model, claim that unavailable workers ran, or create fake parallel work merely to satisfy the default.
 

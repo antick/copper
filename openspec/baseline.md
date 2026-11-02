@@ -28,7 +28,8 @@ in this adoption. See the PR validation report for commands actually run.
 | Electron IPC, watcher, updates | desktop-platform | Packaged update acceptance on every release platform |
 | Marketing site | landing-site | Accessibility, responsive layout and download link policy |
 
-Detailed product intent in `PLAN.md` and release checklists in `TODO.md` remain
+Detailed product intent in `PLAN.md` and release checklists in
+[GitHub issues](https://github.com/antick/copper/issues) remain
 indexed in [source-inventory.md](source-inventory.md). Being indexed is not
 equivalent to being fully specified or behaviorally verified.
 
@@ -36,7 +37,8 @@ equivalent to being fully specified or behaviorally verified.
 
 - `PLAN.md` describes an earlier Tauri-oriented architecture. The shipped product
   is Electron with the layout documented in `README.md` and `apps/desktop/`.
-- `TODO.md` lists signed macOS acceptance and verification gaps. Those items are
+- [GitHub issues](https://github.com/antick/copper/issues) list signed macOS acceptance and
+  verification gaps. Those items are
   not baseline requirements until recorded in specs after verified implementation.
 
 The adoption does not rewrite those historical documents wholesale. When changing

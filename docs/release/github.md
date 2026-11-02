@@ -26,8 +26,9 @@ No signing or GitHub credentials are included in the app.
 
 ## Ship a version
 
-1. Update versions, `CHANGELOG.md`, and `docs/release/<version>.md`. Synchronize `TODO.md` with
-   actual verification. Do not claim platform acceptance based only on a passing build.
+1. Update versions, `CHANGELOG.md`, and `docs/release/<version>.md`. Synchronize
+   [GitHub issues](https://github.com/antick/copper/issues) with actual verification. Do not
+   claim platform acceptance based only on a passing build.
 2. Run `pnpm check`, `pnpm build:web`, `pnpm build`, `pnpm audit --audit-level=moderate`,
    `pnpm security:scan`, and `git diff --check`. Review any configured audit exceptions.
 3. Commit and push the verified change to main. Create and push the matching `v<version>` tag.

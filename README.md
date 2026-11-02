@@ -226,7 +226,8 @@ This produces local test artifacts under `apps/desktop/release/` and never publi
 Public releases follow the approved installer policy and checks in
 [SECURITY.md](SECURITY.md) and [docs/release/github.md](docs/release/github.md).
 
-Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
+Outstanding work and release prerequisites are tracked in
+[GitHub issues](https://github.com/antick/copper/issues).
 
 ## Planning and specifications
 

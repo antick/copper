@@ -5,7 +5,7 @@ context: |
   Follow AGENTS.md and read openspec/README.md and openspec/baseline.md first.
   Existing capability specs are a bounded baseline, not proof of exhaustive coverage.
   Inspect implementation and behavior tests before changing or extending a requirement.
-  Historical plans in PLAN.md or TODO.md are intent, not evidence that a feature shipped.
+  Historical plans in PLAN.md or open GitHub issues are intent, not evidence that a feature shipped.
   Preserve vault ownership, atomic writes, revision checks, and visible save outcomes.
   Markdown and task files live in the user vault; the SQLite search index lives in app data.
   Issue id prefix changes apply only to newly allocated ids on the main process boundary.
