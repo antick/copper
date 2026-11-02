@@ -21,6 +21,8 @@ overrides:
   "undici@>=8.0.0 <9": ">=8.12.3 <9"
   zod: ">=4.6.7 <5"
   fast-uri: ">=3.1.9 <4"
+  # GHSA-g3hv-75wg-m249: not compatible with mac universal/x64 merges, Squirrel.Windows,
+  # or legacy @electron/asar createPackage*; revisit before enabling any of those.
   minimatch: ">=11.0.1 <11.1.0"
 
 auditConfig:
