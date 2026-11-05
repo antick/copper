@@ -33,8 +33,22 @@ folder. There is no account and no cloud. The SQLite search index lives in app d
   - **Linux:** see [docs/release/linux.md](docs/release/linux.md)
   - **Windows:** see [docs/release/windows.md](docs/release/windows.md)
 
-Native module `better-sqlite3` is rebuilt for Electron during `mise run setup`
+Native module `better-sqlite3` is rebuilt for Electron during `mise run install`
 (`electron-builder install-app-deps`).
+
+## Mise tasks
+
+Pinned tools: Node.js 24.22.0 and pnpm 12.14.0 (same as CI and `package.json`).
+
+| Task | Purpose |
+| --- | --- |
+| `install` (`setup`) | Install dependencies from the lockfile |
+| `dev`, `dev:web`, `dev:landing`, `dev:all` | Start development servers |
+| `build`, `build:desktop`, `build:landing`, `build:web` | Production builds |
+| `test`, `typecheck`, `lint`, `format`, `check` | Tests and quality checks |
+| `preview` | Preview the built landing site |
+
+Run `mise tasks` for the full list (packaging, release helpers, and more).
 
 ## Run locally
 
@@ -43,7 +57,7 @@ One-time setup from the repository root:
 ```sh
 mise trust
 mise install
-mise run setup
+mise run install
 ```
 
 Then start development:
@@ -218,7 +232,7 @@ and Apple-notarized, with in-app updates. Windows installers remain unsigned;
 Windows and Linux updates use the latest installer. The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh
-mise run setup
+mise run install
 mise run package
 ```
 
