@@ -86,11 +86,9 @@ browser version of the desktop renderer.
 
 The landing page source is retained for local previews and future hosting.
 Set `SITE_URL` when building for a public address to include canonical and social URLs and a sitemap entry.
-The `copper` Vercel project connects to this repository with its root directory
-left at the repository root. `vercel.json` installs only the landing workspace
-with install scripts disabled, builds the site, and serves `apps/landing/dist`.
-Pushes to `main` deploy the production site. This does not package or publish
-the desktop app.
+Automatic Vercel deployments are disabled by `git.deploymentEnabled: false`
+in `vercel.json`. There is no landing deployment workflow: pushes, pull requests,
+merges, and desktop releases do not deploy it. Local landing commands remain available.
 
 The landing page and README share the current Notes, Tasks list, project board,
 and Appearance screenshots in `docs/images`. They show the real renderer with
