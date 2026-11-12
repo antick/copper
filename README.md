@@ -31,8 +31,22 @@ folder. There is no account and no cloud. The SQLite search index lives in app d
   - **Linux:** see [docs/release/linux.md](docs/release/linux.md)
   - **Windows:** see [docs/release/windows.md](docs/release/windows.md)
 
-Native module `better-sqlite3` is rebuilt for Electron during `mise run setup`
+Native module `better-sqlite3` is rebuilt for Electron during `mise run install`
 (`electron-builder install-app-deps`).
+
+## Mise tasks
+
+Pinned tools: Node.js 24.22.0 and pnpm 12.14.0 (same as CI and `package.json`).
+
+| Task | Purpose |
+| --- | --- |
+| `install` (`setup`) | Install dependencies from the lockfile |
+| `dev`, `dev:web`, `dev:landing`, `dev:all` | Start development servers |
+| `build`, `build:desktop`, `build:landing`, `build:web` | Production builds |
+| `test`, `typecheck`, `lint`, `format`, `check` | Tests and quality checks |
+| `preview` | Preview the built landing site |
+
+Run `mise tasks` for the full list (packaging, release helpers, and more).
 
 ## Run locally
 
@@ -41,7 +55,7 @@ One-time setup from the repository root:
 ```sh
 mise trust
 mise install
-mise run setup
+mise run install
 ```
 
 Then start development:
@@ -215,7 +229,7 @@ and Apple-notarized, with in-app updates. Windows installers remain unsigned;
 Windows and Linux updates use the latest installer. The maintainer process is in [docs/release/github.md](docs/release/github.md).
 
 ```sh
-mise run setup
+mise run install
 mise run package
 ```
 
@@ -223,7 +237,17 @@ This produces local test artifacts under `apps/desktop/release/` and never publi
 Public releases follow the approved installer policy and checks in
 [SECURITY.md](SECURITY.md) and [docs/release/github.md](docs/release/github.md).
 
-Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
+Outstanding work and release prerequisites are tracked in
+[GitHub issues](https://github.com/antick/copper/issues).
+
+## Planning and specifications
+
+Use the repo-local OpenSpec workflow for future changes. Start with
+[the workflow guide](openspec/README.md) and
+[existing-product baseline](openspec/baseline.md). Current specs capture core
+contracts; the linked source inventory preserves the existing docs and tests,
+including areas that still need deeper specification. Run `pnpm run specs:check`
+to validate specs and `pnpm run specs list --specs` to browse capabilities.
 
 ## License
 

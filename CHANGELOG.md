@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Install pinned, repository-local OpenSpec tooling and workflow skills. Add current-behavior baseline specs, a source inventory and a workflow for planning, implementation and ongoing spec maintenance, with coverage gaps recorded explicitly.
+
 ## 0.2.2 — 2026-10-18
 
 - Support Apple Silicon only for macOS releases; remove Intel builds and download guidance.
