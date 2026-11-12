@@ -1,6 +1,6 @@
 export const site = {
   name: "Copper",
-  url: "https://copper.potion.sh",
+  url: process.env.SITE_URL?.replace(/\/+$/, "") || undefined,
   title: "Copper — Notes, tasks, and projects. Yours.",
   description:
     "A calm desktop workspace for your notes, tasks, and projects. Plain Markdown files, stored on your computer. No account. No cloud required.",
