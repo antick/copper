@@ -3,6 +3,7 @@
   "ui": "stream",
   "tasks": {
     "build": {
+      "env": ["SITE_URL"],
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "out/**"]
     },
@@ -11,6 +12,7 @@
       "persistent": true
     },
     "test": {
+      "env": ["SITE_URL"],
       "outputs": []
     },
     "typecheck": {

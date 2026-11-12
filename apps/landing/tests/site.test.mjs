@@ -4,6 +4,8 @@ import { join } from "node:path";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
 
+const siteUrl = process.env.SITE_URL?.replace(/\/+$/, "");
+
 // Check the actual static output, including React-rendered links and Astro images.
 test("the landing page ships working navigation, assets, and honest release links", () => {
   const html = readFileSync("dist/index.html", "utf8");
@@ -11,7 +13,12 @@ test("the landing page ships working navigation, assets, and honest release link
   assert.equal((html.match(/<details\b/g) ?? []).length, 5);
   assert.match(html, /Early release for macOS, Windows, and Linux/);
   assert.match(html, /https:\/\/github.com\/antick\/copper\/releases/);
-  assert.match(html, /<link rel="canonical" href="https:\/\/copper.potion.sh"/);
+  if (siteUrl) {
+    assert.ok(html.includes(`<link rel="canonical" href="${siteUrl}"`));
+    assert.ok(html.includes(`<meta property="og:url" content="${siteUrl}"`));
+  } else {
+    assert.doesNotMatch(html, /rel="canonical"|property="og:(?:url|image)"/);
+  }
   assert.doesNotMatch(html, /<astro-island\b/);
   assert.match(html, /Download Copper/);
   assert.match(
@@ -38,14 +45,15 @@ test("the landing page ships working navigation, assets, and honest release link
   )) {
     assert.ok(existsSync(join("dist", asset)), `Missing asset: ${asset}`);
   }
-  assert.match(
-    readFileSync("dist/robots.txt", "utf8"),
-    /Sitemap: https:\/\/copper.potion.sh\/sitemap.xml/,
-  );
-  assert.match(
-    readFileSync("dist/sitemap.xml", "utf8"),
-    /<loc>https:\/\/copper.potion.sh\/<\/loc>/,
-  );
+  const robots = readFileSync("dist/robots.txt", "utf8");
+  const sitemap = readFileSync("dist/sitemap.xml", "utf8");
+  if (siteUrl) {
+    assert.ok(robots.includes(`Sitemap: ${siteUrl}/sitemap.xml`));
+    assert.ok(sitemap.includes(`<loc>${siteUrl}/</loc>`));
+  } else {
+    assert.doesNotMatch(robots, /Sitemap:/);
+    assert.doesNotMatch(sitemap, /<loc>/);
+  }
 });
 
 test("screenshot samples stay in preview and are safe to prepare twice", async () => {

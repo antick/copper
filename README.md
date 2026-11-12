@@ -2,8 +2,6 @@
 
 A local-first workspace for notes, tasks, and projects.
 
-**Website: [copper.potion.sh](https://copper.potion.sh)**
-
 Copper brings **Notes** and **Tasks** into one desktop workspace. A **Vault** is
 any folder you choose. Notes, projects, and issues are Markdown files in that
 folder. There is no account and no cloud. The SQLite search index lives in app data, not inside your notes.
@@ -86,7 +84,7 @@ lives at `apps/desktop/tests/fixtures/demo-vault` if you want sample notes.
 This is a pnpm + Turborepo monorepo:
 
 - `apps/desktop`: the existing Electron app, renderer, native tests, and packaging.
-- `apps/landing`: the Astro site for `copper.potion.sh`, with Tailwind CSS and shadcn/ui.
+- `apps/landing`: the Astro landing site, with Tailwind CSS and shadcn/ui.
 - `docs` and `scripts`: shared documentation, screenshots, and repository security checks.
 
 ```sh
@@ -100,12 +98,11 @@ mise run dev:all      # both apps
 `mise run preview` serves that build locally. `mise run build:web` still builds the
 browser version of the desktop renderer.
 
-The landing page is hosted on Vercel at [copper.potion.sh](https://copper.potion.sh).
-The `copper` Vercel project connects to this repository with its root directory
-left at the repository root. `vercel.json` installs only the landing workspace
-with install scripts disabled, builds the site, and serves `apps/landing/dist`.
-Pushes to `main` deploy the production site. This does not package or publish
-the desktop app. Cloudflare manages the DNS-only CNAME for `copper`.
+The landing page source is retained for local previews and future hosting.
+Set `SITE_URL` when building for a public address to include canonical and social URLs and a sitemap entry.
+Automatic Vercel deployments are disabled by `git.deploymentEnabled: false`
+in `vercel.json`. There is no landing deployment workflow: pushes, pull requests,
+merges, and desktop releases do not deploy it. Local landing commands remain available.
 
 The landing page and README share the current Notes, Tasks list, project board,
 and Appearance screenshots in `docs/images`. They show the real renderer with
@@ -254,4 +251,4 @@ to validate specs and `pnpm run specs list --specs` to browse capabilities.
 
 ## License
 
-Copper is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Copper is licensed under the [MIT License](LICENSE).

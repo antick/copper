@@ -3,7 +3,7 @@
   "productName": "Copper",
   "private": true,
   "version": "0.2.2",
-  "license": "AGPL-3.0-only",
+  "license": "MIT",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
@@ -172,7 +172,7 @@
     }
   },
   "description": "A local-first workspace for notes, tasks, and projects.",
-  "homepage": "https://copper.potion.sh",
+  "homepage": "https://github.com/antick/copper",
   "author": {
     "name": "Pankaj",
     "email": "antick@users.noreply.github.com"

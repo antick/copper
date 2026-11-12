@@ -44,7 +44,7 @@ Electron app replaces the legacy Tauri app and its separate release feed.
 
 - Run on Electron with Copper branding, light and dark palettes, and shared Notes/Tasks navigation.
 - Keep files local without an account, with guarded file access and opt-in Git and remote images.
-- Add the website at https://copper.potion.sh with Notes and Tasks screenshots.
+- Add the landing page with Notes and Tasks screenshots.
 - Organize the desktop app and Astro landing page in a pnpm/Turborepo workspace.
 
 ### Release status

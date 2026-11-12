@@ -43,10 +43,9 @@ No signing or GitHub credentials are included in the app.
 6. Publish the verified draft using the maintainer CLI (`pnpm release:publish` with the matching
    `GITHUB_REF_NAME`). The script revalidates downloaded assets before publication. A maintainer
    GitHub credential is needed for this action; never ship it inside the application.
-7. Confirm public downloads, update metadata, signatures, checksums, and the production website.
-   Publication using a maintainer credential triggers Vercel production. GitHub's automatic
-   `GITHUB_TOKEN` does not trigger a second release-event workflow: if used, manually dispatch
-   `vercel-production.yml` after publication and verify the deployed page.
+7. Confirm public downloads, update metadata, signatures, and checksums.
+   Desktop releases do not deploy the retained landing page. Automatic Vercel Git
+   deployments are disabled, and the former landing deployment workflow is removed.
 
 `workflow_dispatch` can rebuild a candidate from an existing matching version tag without publishing. Ordinary `pnpm build` and
 `pnpm package` never publish. Local packaging is not proof of a verified public release.

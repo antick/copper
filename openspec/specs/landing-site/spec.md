@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Astro landing app at copper.potion.sh describes Copper Notes and Tasks and provides download and marketing content separate from the desktop Electron application.
+The retained Astro landing app describes Copper Notes and Tasks and provides download and marketing content separate from the desktop Electron application. Its source and local build/preview commands remain available; automatic Git and release deployments to Vercel are disabled.
 
 ## Requirements
 
