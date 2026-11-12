@@ -229,4 +229,4 @@ Outstanding work and release prerequisites are tracked in [TODO.md](TODO.md).
 
 ## License
 
-Copper is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Copper is licensed under the [MIT License](LICENSE).

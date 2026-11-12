@@ -3,7 +3,7 @@
   "productName": "Copper",
   "private": true,
   "version": "0.2.2",
-  "license": "AGPL-3.0-only",
+  "license": "MIT",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {

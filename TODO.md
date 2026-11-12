@@ -25,6 +25,10 @@ Do not mark release work complete on source tests alone. Keep published tags and
 Local, CI, public-release, and installed-app verification are recorded in
 [the 0.2.0 verification record](docs/release/verification-0.2.0.md).
 
+## License
+
+Copper now uses the MIT License. The root license, all workspace package declarations, README, and landing FAQ agree. Verified the full workspace test run (one native filesystem-specific test skipped), type checks, Biome, license metadata consistency, and `git diff --check`. No dependencies changed.
+
 ## Landing page and monorepo
 
 The desktop app lives in `apps/desktop`; `apps/landing` is the Astro, Tailwind, and shadcn/ui landing site. Root scripts coordinate both apps with Turborepo.
@@ -33,7 +37,7 @@ Verified: 246 frontend tests, 128 native tests, the landing production-output te
 
 The public landing address has been retired from repository content and desktop metadata. Landing source remains available; public URL metadata now requires `SITE_URL` at build time. DNS and hosting removal are managed separately. Verified landing builds/tests with `SITE_URL` unset and set (including a trailing slash), workspace type checks, Biome, and the reference scan. No dependencies changed.
 
-- [ ] Investigate the native filesystem-watcher test (`electron/main/watch.test.ts`): the domain cleanup verification received modified events instead of the expected created event, including on an isolated native-suite rerun.
+- [ ] Investigate the native filesystem-watcher test (`electron/main/watch.test.ts`): the domain cleanup verification received modified events instead of the expected created event, including on an isolated native-suite rerun. The later full suite passed during MIT-license verification, so this remains an intermittent failure.
 
 Notes and Tasks are now both represented in the landing hero, navigation, dedicated Tasks section, social metadata, README, welcome copy, and demo note. Four refreshed screenshots cover Notes, the Tasks list, the project board, and Appearance. Screenshot preparation uses only demo preview data. Verified: 246 frontend tests, 128 native tests, two landing checks (production output with all four images, plus safe and repeatable demo preparation), both type checks, Biome, both production builds, screenshot helper syntax, and the real capture steps through the shared browser. The production page loads every image and fits 320, 390, and 1440 pixel widths. The standalone screenshot CLI wrapper was syntax-checked; browser steps were executed through T3. The Tasks presentation is published; the landing download link and platform/installation copy now target the first installer release.
 
